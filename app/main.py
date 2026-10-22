@@ -740,7 +740,7 @@ class Api:
             return {"ok": False, "error": "找不到紀錄"}
         models = sorted({(s.get("model") or "") for s in rec.get("segments", []) if s.get("model")})
         try:
-            r = self._cloud("aiTitle", {"category": rec.get("category", ""), "features": rec.get("features", []),
+            r = self._cloud("aiTitle", {"name": rec.get("name", ""), "category": rec.get("category", ""), "features": rec.get("features", []),
                                         "colors": rec.get("colors", []), "models": "、".join(models), "extra": extra, "n": 3})
             return {"ok": True, "titles": r.get("titles", [])}
         except Exception as e:
