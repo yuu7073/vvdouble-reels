@@ -14,9 +14,13 @@ jobs:
         id: ver
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Continue'
           $v = (Select-String -Path app/version.py -Pattern 'VERSION = "([^"]+)"').Matches[0].Groups[1].Value
-          echo "version=$v" >> $env:GITHUB_OUTPUT
-          $exists = (gh release view "v$v" 2>$null); if ($LASTEXITCODE -eq 0) { echo "exists=true" >> $env:GITHUB_OUTPUT } else { echo "exists=false" >> $env:GITHUB_OUTPUT }
+          "version=$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          $code = 0
+          try { gh api "repos/${{ github.repository }}/releases/tags/v$v" *> $null; $code = $LASTEXITCODE } catch { $code = 1 }
+          if ($code -eq 0) { "exists=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8 } else { "exists=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8 }
+          exit 0
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Skip if release exists
