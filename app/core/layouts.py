@@ -39,12 +39,20 @@ COLORS = {"yellow": YEL, "blue": BLU, "purple": PUR}
 # 區塊：color＋index（同色由上到下、左到右第幾塊）→ 角色
 #   M1＝第一位模特（大碼）  M2＝第二位模特（中碼）  D＝近拍  P＝底圖照片
 LAYOUTS = {
-    # LOOKBOOK：照 Vivian 在 CapCut 調好的版本 — 底圖原圖放大 1.28 鋪滿、模特影片幾乎滿版、不放框線、文字用 Modern 字型
+    # LOOKBOOK：照 Vivian 2026-10-23 在 CapCut 調好的草稿逐項讀回來——
+    #   底圖（模糊壓暗）加「色差默片」特效、模特影片照設計框位、不放框線層、
+    #   版型段期間 網址 移到上方、商品名稱不顯示、LOOKBOOK 文字用 Windows「Modern」字型
     "lookbook": {"name": "LOOKBOOK", "file": "1_LOOKBOOK.jpg", "pattern": "#,M,M,D,M,D", "overlay": False,
-                 "regions": [{"color": "purple", "role": "P", "raw": True, "zoom": 1.283, "offset": [0.0402, 0.0136]},
-                             {"color": "yellow", "role": "M1", "box": [50, 60, 1098, 1860]}],
-                 "texts": [{"text": "LOOKBOOK", "pos": [0.0, -0.5437], "font_path": "C:/WINDOWS/Fonts/modern.fon",
-                            "size": 17.0, "scale": 1.73, "color": (0.96, 0.93, 0.86), "letter_spacing": -2, "align": 1}],
+                 "regions": [{"color": "purple", "role": "P", "blur": 10, "dark": 0.10,
+                              "effects": [{"effect_id": "7395465862666390789", "name": "色差默片", "category_id": "8959", "category_name": "復古",
+                                           "params": [("effects_adjust_vertical_chromatic", 0.57, 0.75),
+                                                      ("effects_adjust_horizontal_chromatic", 0.71, 0.75),
+                                                      ("effects_adjust_noise", 0.57, 1.0),
+                                                      ("effects_adjust_filter", 0.36, 1.0)]}]},
+                             {"color": "yellow", "role": "M1"}],
+                 "texts": [{"text": "LOOKBOOK", "pos": [0.0, -0.6341], "font_path": "C:/WINDOWS/Fonts/modern.fon",
+                            "size": 16.417, "scale": 1.4805, "bold": True, "color": (0.96, 0.93, 0.86), "letter_spacing": 0, "align": 1}],
+                 "site_pos": [0.0, 0.6836], "hide_title": True,
                  "erase": [{"box": [60, 1440, 1420, 1660]}]},
     "camera":   {"name": "相機介面", "file": "2_相機.jpg", "pattern": "#,M,M,D,M,D",
                  "regions": [{"color": "yellow", "role": "M1"}]},
@@ -126,7 +134,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v6"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v7"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
@@ -172,6 +180,7 @@ def prepare(layout_id, cache_dir, image_path=None):
             regions.append({"mask": name, "role": spec["role"], "_ord": L["regions"].index(spec),
                             "box": spec.get("box") or [int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1],
                             "raw": bool(spec.get("raw")), "zoom": spec.get("zoom", 1.0), "offset": spec.get("offset", [0, 0]),
+                            "effects": spec.get("effects", []),
                             "blur": spec.get("blur", 0), "dark": spec.get("dark", 0),
                             "noise": spec.get("noise", 0), "still": bool(spec.get("still"))})
     regions.sort(key=lambda r: r.get("_ord", 0))
@@ -196,7 +205,8 @@ def prepare(layout_id, cache_dir, image_path=None):
         else:
             x0, y0, x1, y1 = t["box"]
             texts.append(dict(t, box=[int(x0 * sx), int(y0 * sy), int(x1 * sx), int(y1 * sy)]))
-    meta = {"stamp": stamp, "overlay": "overlay.png" if L.get("overlay", True) else "", "regions": regions, "texts": texts, "dir": out}
+    meta = {"stamp": stamp, "overlay": "overlay.png" if L.get("overlay", True) else "", "regions": regions, "texts": texts, "dir": out,
+            "site_pos": L.get("site_pos"), "hide_title": bool(L.get("hide_title"))}
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False)
     return meta

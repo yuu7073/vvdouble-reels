@@ -419,6 +419,7 @@ def select_clips(clips, closeups, clip_len, close_len):
 STABILIZE_IDS = set()
 MODEL_BY_PATH = {}        # 介面模式：影片路徑 → 模特名字（取代從檔名解析）
 LAYOUT_FONT_PATHS = {}    # 版型文字 → 本機字型檔（例如 C:/WINDOWS/Fonts/modern.fon）
+LAYOUT_EFFECTS = {}       # 片段 id → [CapCut 特效設定]（版型底圖層的特效）
 
 
 def maybe_stabilize(mat, full, start, dur, how):
@@ -729,6 +730,8 @@ def apply_presets(draft_name):
         # 版型自己的文字（LOOKBOOK、DETAIL…）保持版型給的樣式，不套實穿模板
         layout_text = {s["material_id"] for t in d["tracks"]
                        if t["type"] == "text" and str(t.get("name", "")).startswith("版型文字") for s in t["segments"]}
+        keep_pos = {s["material_id"] for t in d["tracks"]
+                    if t["type"] == "text" and str(t.get("name", "")).startswith("網址版型") for s in t["segments"]}
         model_pos = {k.upper(): v for k, v in styles.get("model_positions", {}).items()}
         pos_cycle = list(model_pos.values())
         model_count = 0
@@ -771,6 +774,8 @@ def apply_presets(draft_name):
                     name = text.split("\n")[0].replace("MODEL", "").strip().upper()
                     clip = copy.deepcopy(model_pos.get(name) or pos_cycle[model_count % len(pos_cycle)])
                     model_count += 1
+                if mat["id"] in keep_pos:
+                    clip["transform"] = copy.deepcopy(seg["clip"]["transform"])   # 版型段的網址位置照版型給的
                 seg["clip"] = clip      # 其他位置照「實穿模板」裡擺的
                 for a in src.get("animations", []):
                     a2 = copy.deepcopy(a)
@@ -779,6 +784,28 @@ def apply_presets(draft_name):
                     seg.setdefault("extra_material_refs", []).append(a2["id"])
     else:
         notes.append("找不到 樣式.json，文字維持預設樣式")
+
+    # 版型層的特效（寫法照 CapCut 自己存的 video_effects 素材）
+    if LAYOUT_EFFECTS:
+        m.setdefault("video_effects", [])
+        for t in d["tracks"]:
+            if t["type"] != "video":
+                continue
+            for seg in t["segments"]:
+                for fx in LAYOUT_EFFECTS.get(seg["id"], []):
+                    fid = new_id().upper()
+                    m["video_effects"].append({
+                        "id": fid, "effect_id": fx["effect_id"], "resource_id": fx["effect_id"], "name": fx["name"],
+                        "type": "video_effect", "sub_type": 0, "bind_segment_id": "", "transparent_params": "", "path": "",
+                        "value": 1.0, "category_id": fx.get("category_id", ""), "category_name": fx.get("category_name", ""),
+                        "platform": "all", "apply_target_type": 0, "source_platform": 1, "version": "", "item_effect_type": 0,
+                        "adjust_params": [{"name": n, "value": v, "default_value": dv} for n, v, dv in fx.get("params", [])],
+                        "time_range": None, "formula_id": "", "apply_time_range": None, "render_index": 11000,
+                        "track_render_index": 0, "common_keyframes": [], "request_id": "", "algorithm_artifact_path": "",
+                        "disable_effect_faces": [], "covering_relation_change": 0, "enable_mask": True, "effect_mask": [],
+                        "enable_video_mask_stroke": True, "enable_video_mask_shadow": True,
+                    })
+                    seg.setdefault("extra_material_refs", []).append(fid)
 
     # 原影片靜音（跟 CapCut 手動「關閉原聲」一樣的寫法）
     d.setdefault("config", {})["video_mute"] = True

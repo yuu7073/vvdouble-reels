@@ -360,6 +360,8 @@ def build_draft(spec, models, log=None, progress=None):
                                       clip_settings=ClipSettings(scale_x=scale, scale_y=scale, transform_x=tx, transform_y=ty))
                 tname = "影片" if layer_no == 0 else layout_track(cc.TrackType.video, f"版型層{layer_no + 1}", layer_no)
             script.add_segment(seg, tname)
+            for fx in reg.get("effects") or []:
+                g.LAYOUT_EFFECTS.setdefault(seg.segment_id, []).append(fx)
             layer_no += 1
         # 框線／裝飾（設計稿去掉色塊和文字後的部分）
         if layout_meta.get("overlay"):
@@ -384,6 +386,8 @@ def build_draft(spec, models, log=None, progress=None):
     g.STABILIZE_IDS.clear()
     g.MODEL_BY_PATH.clear()
     g.LAYOUT_FONT_PATHS.clear()
+    g.LAYOUT_EFFECTS.clear()
+    layout_windows = []     # [(t0, dur)] 版型段的時間，網址／商品名稱要避開或改位置
     cursor = 0
     card_runs, close_runs, out_segments = [], [], []
     total_steps = max(1, len(sequence))
@@ -399,6 +403,7 @@ def build_draft(spec, models, log=None, progress=None):
             dur = length_fixed(layouts.LAYOUT_SEC)
             _log(log, f"排版型「{L['name']}」{dur / SEC:.1f} 秒（{len(layout_meta['regions'])} 個區塊，各自一層）…")
             m1_name = build_layout_segment(idx, dur, cursor)
+            layout_windows.append((cursor, dur))
             out_segments.append({"path": os.path.join(layout_meta["dir"], layout_meta["overlay"]), "name": fname,
                                  "closeup": False, "layout": layout_id, "start": 0, "dur": round(dur / SEC, 2),
                                  "how": "版型", "stabilized": False})
@@ -490,13 +495,35 @@ def build_draft(spec, models, log=None, progress=None):
                                               style=TextStyle(size=5.0, bold=True, align=1, letter_spacing=2),
                                               clip_settings=ClipSettings(transform_y=g.CLOSEUP_Y)), "近拍標示")
     title_size = min(5.0, 5.0 * 30 / max(len(name), 1))
-    script.add_segment(cc.TextSegment(name, cc.Timerange(0, cursor),
-                                      style=TextStyle(size=title_size, color=(0.0, 0.0, 0.0), align=1),
-                                      background=TextBackground(color="#FFFFFF", alpha=1.0, height=0.2, width=0.12),
-                                      clip_settings=ClipSettings(transform_y=g.TITLE_Y)), "商品名稱")
-    script.add_segment(cc.TextSegment(g.SITE_TEXT, cc.Timerange(0, cursor),
-                                      style=TextStyle(size=4.0, bold=True, align=1, letter_spacing=2),
-                                      clip_settings=ClipSettings(transform_y=g.SITE_Y)), "網址")
+
+    def outside_windows(total, windows):
+        """把 0~total 扣掉版型段，回傳剩下的 (start, dur) 片段"""
+        pieces, t = [], 0
+        for w0, wd in sorted(windows):
+            if w0 > t:
+                pieces.append((t, w0 - t))
+            t = max(t, w0 + wd)
+        if total > t:
+            pieces.append((t, total - t))
+        return pieces
+
+    title_windows = layout_windows if (layout_meta and layout_meta.get("hide_title")) else []
+    for st, du in outside_windows(cursor, title_windows):
+        script.add_segment(cc.TextSegment(name, cc.Timerange(st, du),
+                                          style=TextStyle(size=title_size, color=(0.0, 0.0, 0.0), align=1),
+                                          background=TextBackground(color="#FFFFFF", alpha=1.0, height=0.2, width=0.12),
+                                          clip_settings=ClipSettings(transform_y=g.TITLE_Y)), "商品名稱")
+    site_style = TextStyle(size=4.0, bold=True, align=1, letter_spacing=2)
+    site_pos = layout_meta.get("site_pos") if layout_meta else None
+    site_windows = layout_windows if site_pos else []
+    for st, du in outside_windows(cursor, site_windows):
+        script.add_segment(cc.TextSegment(g.SITE_TEXT, cc.Timerange(st, du), style=site_style,
+                                          clip_settings=ClipSettings(transform_y=g.SITE_Y)), "網址")
+    if site_windows:
+        script.add_track(cc.TrackType.text, "網址版型", relative_index=8)   # 版型段期間網址換位置（apply_presets 會保留這軌的位置）
+    for st, du in site_windows:
+        script.add_segment(cc.TextSegment(g.SITE_TEXT, cc.Timerange(st, du), style=site_style,
+                                          clip_settings=ClipSettings(transform_x=site_pos[0], transform_y=site_pos[1])), "網址版型")
     if bgm:
         _log(log, "加入音樂…")
         try:
