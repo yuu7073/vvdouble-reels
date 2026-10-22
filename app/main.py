@@ -83,6 +83,7 @@ def _setup_log():
 
 
 _setup_log()
+g.STYLE_FILE = os.path.join(CORE, "樣式.json")
 # 潤飾.json 需要可寫入：打包版放在使用者資料夾，第一次從安裝包複製
 BEAUTY_PATH = os.path.join(CORE, "潤飾.json")
 if FROZEN:
@@ -94,6 +95,7 @@ if FROZEN:
             shutil.copy2(src, BEAUTY_PATH)
     except Exception:
         traceback.print_exc()
+g.BEAUTY_FILE = BEAUTY_PATH
 SETTINGS_FILE = os.path.join(DATA_DIR, "settings.json")
 MODELS_FILE = os.path.join(DATA_DIR, "models.json")
 HISTORY_FILE = os.path.join(DATA_DIR, "history.json")
@@ -683,6 +685,64 @@ class Api:
             return {"ok": True, "titles": r.get("titles", [])}
         except Exception as e:
             return {"ok": False, "error": str(e)}
+
+    def product_lookup(self, q):
+        """製作頁查找商品：先比對待製作清單（試算表），再問 Shopline；回傳合併候選"""
+        q = (q or "").strip()
+        if len(q) < 2:
+            return {"ok": True, "items": []}
+        ql = q.lower().replace(" ", "")
+        out = []
+        seen = set()
+        try:
+            cache = _load_json(TODO_CACHE, None) or {}
+            for t in (cache.get("data") or {}).get("tabs", []):
+                for it in t.get("items", []):
+                    hay = (it.get("name", "") + it.get("sku", "")).lower().replace(" ", "")
+                    if ql in hay:
+                        key = it.get("sku") or it.get("name")
+                        if key in seen:
+                            continue
+                        seen.add(key)
+                        out.append({"source": "sheet", "tab": t.get("tab"), "name": it.get("name"), "sku": it.get("sku", ""),
+                                    "colors": it.get("colors", []), "features": it.get("features", []),
+                                    "category": it.get("category", ""), "models": it.get("models", [])})
+        except Exception:
+            traceback.print_exc()
+        err = ""
+        if (self.settings.get("tool_password") or "").strip():
+            try:
+                r = self._cloud("findProducts", {"name": q}, timeout=30)
+                groups = {}
+                for it in r.get("items", []):
+                    title = it.get("title", "")
+                    base, color = title, ""
+                    if "-" in title:
+                        base, color = title.rsplit("-", 1)
+                        base, color = base.strip(), color.strip()
+                    g_ = groups.setdefault(base, {"source": "shopline", "name": base, "sku": "", "colors": [], "features": [],
+                                                  "category": "", "models": [], "product_ids": [], "statuses": []})
+                    if color and color not in g_["colors"]:
+                        g_["colors"].append(color)
+                    g_["product_ids"].append(it.get("id"))
+                    g_["statuses"].append(it.get("status"))
+                    if not g_["models"] and it.get("models"):
+                        g_["models"] = it["models"]
+                    if not g_["sku"] and it.get("sku"):
+                        g_["sku"] = re.sub(r"[-_ ]?\d{3}[A-Z0-9]*$", "", it["sku"]) if len(it["sku"]) > 8 else it["sku"]
+                for base, g_ in groups.items():
+                    if base in seen or any(x["name"] == base for x in out):
+                        # 試算表已有同名：補上 Shopline 的模特尺碼（如果表上沒有）
+                        for x in out:
+                            if x["name"] == base:
+                                x["product_ids"] = g_["product_ids"]
+                                if not any(m.get("size") for m in x.get("models", [])) and g_["models"]:
+                                    x["models"] = g_["models"]
+                        continue
+                    out.append(g_)
+            except Exception as e:
+                err = str(e)
+        return {"ok": True, "items": out[:20], "error": err}
 
     def find_products(self, name):
         try:

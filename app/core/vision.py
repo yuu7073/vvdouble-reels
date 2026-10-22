@@ -8,7 +8,22 @@ import subprocess
 
 import numpy as np
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+import sys
+
+
+def _asset_dir():
+    """模型檔位置：原始碼模式在本檔同層；打包後在 _internal/core"""
+    cands = [os.path.dirname(os.path.abspath(__file__))]
+    base = getattr(sys, "_MEIPASS", None)
+    if base:
+        cands = [os.path.join(base, "core"), base] + cands
+    for c in cands:
+        if os.path.exists(os.path.join(c, "person_detection.onnx")):
+            return c
+    return cands[0]
+
+
+HERE = _asset_dir()
 MODEL = os.path.join(HERE, "person_detection.onnx")
 _sess = None
 _det = None

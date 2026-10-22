@@ -149,7 +149,7 @@ input.ipt::placeholder{color:var(--faint)}
 
     <div class="center" id="centerPane">
       <div style="display:flex;align-items:center;gap:10px">
-        <input class="ipt" id="prodName" style="height:38px;font-size:15px;font-weight:700" placeholder="商品名稱" oninput="app.renameProduct(this.value)">
+        <div style="position:relative;flex:1;min-width:0"><input class="ipt" id="prodName" style="height:38px;font-size:15px;font-weight:700" placeholder="商品名稱（輸入兩個字以上自動查找）" oninput="app.renameProduct(this.value);app.lookupProduct(this.value)" onfocus="app.lookupProduct(this.value)" onblur="setTimeout(()=>$('#lookup').style.display='none',200)"><div id="lookup" class="card" style="display:none;position:absolute;left:0;right:0;top:42px;z-index:5;max-height:360px;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.15)"></div></div>
         <button class="btn w" onclick="app.pickVideos()">＋ 加入影片</button>
         <button class="btn w" onclick="app.pickFolder()">＋ 加入資料夾</button>
       </div>
@@ -359,6 +359,34 @@ const app = {
 
   toggleTheme(){ const cur=document.documentElement.dataset.theme==='dark'?'light':'dark'; this.applyTheme(cur); try{ localStorage.setItem('vv_theme',cur); }catch(e){} this.call('save_settings',{theme:cur}); },
   applyTheme(t){ document.documentElement.dataset.theme=t; const b=$('#themeBtn'); if(b) b.textContent=t==='dark'?'☀':'☾'; },
+
+  /* ---------- 製作頁查找商品 ---------- */
+  _lk:null,
+  lookupProduct(q){
+    clearTimeout(this._lk); const box=$('#lookup'); q=(q||'').trim();
+    if(q.length<2){ box.style.display='none'; return; }
+    this._lk=setTimeout(async()=>{
+      box.style.display='block'; box.innerHTML=`<div style="padding:12px;font-size:12px;color:var(--mute)">查找中…</div>`;
+      const r=await this.call('product_lookup', q); if(!r) return;
+      if(($('#prodName').value||'').trim()!==q) return;
+      this._lkItems=r.items||[];
+      if(!this._lkItems.length){ box.innerHTML=`<div style="padding:12px;font-size:12px;color:var(--mute)">沒有找到${r.error?'（Shopline：'+esc(r.error)+'）':''}</div>`; return; }
+      box.innerHTML=this._lkItems.map((it,i)=>`<div class="li" style="cursor:pointer;gap:10px" onmousedown="app.applyLookup(${i})">
+        <span class="chip ${it.source==='sheet'?'b':'w'}" style="flex:none">${it.source==='sheet'?esc(it.tab||'排程表'):'Shopline'}</span>
+        <div style="flex:1;min-width:0"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(it.name)}</div>
+        <div style="font-size:12px;color:var(--mute)">${esc(it.sku||'')}${it.colors&&it.colors.length?'・'+esc(it.colors.join('・')):''}${(it.models||[]).filter(m=>m.size).length?'・'+it.models.filter(m=>m.size).map(m=>esc(m.name)+' '+esc(m.size)).join('／'):''}</div></div></div>`).join('');
+    }, 350);
+  },
+  applyLookup(i){
+    const it=this._lkItems[i]; if(!it) return; const P=this.P();
+    P.name=it.name; P.sku=it.sku||''; P.colors=it.colors||[]; P.features=it.features||[]; P.category=it.category||''; P.modelSizes={};
+    (it.models||[]).forEach(m=>{ P.modelSizes[m.name.toUpperCase()]={size:m.size||'',fit:m.fit||''}; });
+    // 已加入的片段也套上模特尺碼
+    P.clips.forEach(c=>{ if(c.closeup||!c.model) return; const sh=P.modelSizes[c.model.toUpperCase()]; if(sh&&sh.size){ c.size=sh.size; if(sh.fit) c.fit=sh.fit; } });
+    $('#lookup').style.display='none'; this.renderAll();
+    const got=(it.models||[]).filter(m=>m.size).length;
+    this.toast(got?`已帶入商品與 ${got} 位模特的著用尺碼`:'已帶入商品（表上沒有模特尺碼）');
+  },
 
   /* ---------- 底圖庫 ---------- */
   bg:null,
