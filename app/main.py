@@ -540,7 +540,7 @@ class Api:
             with urllib.request.urlopen(req, timeout=15) as resp:
                 j = json.loads(resp.read().decode("utf-8"))
             tag = (j.get("tag_name") or "").lstrip("v")
-            asset = next((a for a in j.get("assets", []) if a.get("name", "").endswith("portable.zip")), None)
+            asset = next((a for a in j.get("assets", []) if "portable" in a.get("name", "") and a.get("name", "").endswith(".zip")), None)
             setup = next((a for a in j.get("assets", []) if a.get("name", "").endswith(".exe")), None)
 
             def ver(v):

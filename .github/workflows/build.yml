@@ -47,7 +47,7 @@ jobs:
       - name: Portable zip
         if: steps.ver.outputs.exists != 'true'
         shell: pwsh
-        run: Compress-Archive -Path "dist/VV實穿草稿產生器/*" -DestinationPath "dist/VV實穿草稿產生器-portable.zip" -Force
+        run: Compress-Archive -Path "dist/VV實穿草稿產生器/*" -DestinationPath "dist/VVReels-portable-${{ steps.ver.outputs.version }}.zip" -Force
       - name: Installer (Inno Setup)
         if: steps.ver.outputs.exists != 'true'
         shell: pwsh
@@ -62,5 +62,5 @@ jobs:
           name: v${{ steps.ver.outputs.version }}
           body_path: CHANGELOG.md
           files: |
-            dist/VV實穿草稿產生器-安裝檔.exe
-            dist/VV實穿草稿產生器-portable.zip
+            dist/VVReels-Setup-${{ steps.ver.outputs.version }}.exe
+            dist/VVReels-portable-${{ steps.ver.outputs.version }}.zip
