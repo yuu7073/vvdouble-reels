@@ -62,6 +62,7 @@ SITE_POS_Y = 0.745           # 套預設組後網址位置
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 STYLE_FILE = os.path.join(HERE, "樣式.json")
+LAYOUT_TEXT_TEMPLATE = os.path.join(HERE, "版型文字模板.json")   # CapCut 存過的文字素材，給版型文字當底
 BEAUTY_FILE = os.path.join(HERE, "潤飾.json")
 PRODUCT_ROOT = os.path.join(HERE, "商品")
 MODEL_FILE = os.path.join(HERE, "模特資料.csv")
@@ -740,13 +741,29 @@ def apply_presets(draft_name):
                 content = json.loads(mat["content"])
                 fp = LAYOUT_FONT_PATHS.get(content.get("text", ""))
                 if fp:
-                    mat["font_path"] = fp
-                    mat["font_name"] = ""
-                    mat["font_title"] = "none"
-                    mat["font_id"] = mat["font_resource_id"] = ""
-                    for st in content.get("styles", []):
-                        st["font"] = {"path": fp, "id": ""}
-                    mat["content"] = json.dumps(content, ensure_ascii=False)
+                    # 用 CapCut 自己存過的文字素材當底（欄位齊全，本機字型才會被正確載入），再套上這段的字型／字級／顏色
+                    tpl_path = LAYOUT_TEXT_TEMPLATE
+                    if os.path.exists(tpl_path):
+                        with open(tpl_path, encoding="utf-8") as f:
+                            tpl = json.load(f)
+                        keep = {k: mat.get(k) for k in ("id", "letter_spacing", "line_spacing", "alignment", "typesetting")}
+                        st0 = content["styles"][0]
+                        tpl["font_size"] = float(st0.get("size", tpl.get("font_size", 16)))
+                        tpl["content"] = json.dumps({"text": content["text"], "styles": [{
+                            "fill": st0.get("fill"), "font": {"path": fp, "id": ""},
+                            "size": st0.get("size"), "bold": bool(st0.get("bold")),
+                            "range": [0, len(content["text"].encode("utf-16-le")) // 2]}]}, ensure_ascii=False)
+                        tpl.update({k: v for k, v in keep.items() if v is not None})
+                        tpl["font_path"] = fp
+                        m["texts"][i] = tpl
+                    else:
+                        mat["font_path"] = fp
+                        mat["font_name"] = ""
+                        mat["font_title"] = "none"
+                        mat["font_id"] = mat["font_resource_id"] = ""
+                        for st in content.get("styles", []):
+                            st["font"] = {"path": fp, "id": ""}
+                        mat["content"] = json.dumps(content, ensure_ascii=False)
                 continue
             text = json.loads(mat["content"])["text"]
             role = text_role(text)

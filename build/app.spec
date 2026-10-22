@@ -10,6 +10,7 @@ datas = [
     (os.path.join(root, "core", "person_anchors.npy"), "core"),
     (os.path.join(root, "core", "樣式.json"), "core"),
     (os.path.join(root, "core", "潤飾.json"), "core"),
+    (os.path.join(root, "core", "版型文字模板.json"), "core"),
     (os.path.join(root, "core", "模特資料.csv"), "core"),
     (os.path.join(root, "core", "generator.py"), "core"),
     (os.path.join(root, "core", "engine.py"), "core"),

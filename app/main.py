@@ -90,6 +90,7 @@ def _setup_log():
 
 _setup_log()
 g.STYLE_FILE = os.path.join(CORE, "樣式.json")
+g.LAYOUT_TEXT_TEMPLATE = os.path.join(CORE, "版型文字模板.json")
 # 潤飾.json 需要可寫入：打包版放在使用者資料夾，第一次從安裝包複製
 BEAUTY_PATH = os.path.join(CORE, "潤飾.json")
 if FROZEN:
