@@ -100,6 +100,9 @@ HISTORY_FILE = os.path.join(DATA_DIR, "history.json")
 THUMB_DIR = os.path.join(DATA_DIR, "thumbs")
 os.makedirs(THUMB_DIR, exist_ok=True)
 MUSIC_INDEX_NAME = "音樂庫索引.json"
+BG_INDEX_NAME = "底圖庫索引.json"
+BG_SUBDIR = "空景"
+IMAGE_EXT = (".jpg", ".jpeg", ".png", ".webp")
 VIDEO_EXT = (".mp4", ".mov", ".m4v")
 AUDIO_EXT = (".mp3", ".m4a", ".wav", ".aac")
 
@@ -120,6 +123,7 @@ DEFAULT_SETTINGS = {
     "last_size": "",
     "todo_url": "",
     "theme": "light",
+    "bg_root": "",
     "cloud_url": "https://asia-east1-vvdouble-shopline.cloudfunctions.net/reels",
     "tool_password": "",
 }
@@ -420,6 +424,7 @@ class Api:
                 r["colors"] = spec.get("colors") or []
                 r["sku"] = spec.get("sku") or ""
                 r["features"] = spec.get("features") or []
+                r["background"] = spec.get("background") or ""
                 r["category"] = spec.get("category") or ""
                 r["created"] = dt.datetime.now().isoformat(timespec="seconds")
                 r["exported"] = False
@@ -459,6 +464,8 @@ class Api:
         uses = None
         if rec.get("music"):
             uses = self._music_use(rec["music"], rec["name"], +1 if exported else -1)
+        if rec.get("background"):
+            self._bg_use(rec["background"], rec["name"], +1 if exported else -1)
         return {"ok": True, "file": found, "music_uses": uses}
 
     def _find_export(self, name):
@@ -777,6 +784,124 @@ class Api:
             self._emit("pub_done", {"id": hid, "ok": False, "error": str(e), "record": rec})
         finally:
             self._busy = False
+
+
+    # ---------- 底圖庫（官網部門\<拍攝日期>\空景 自動收集） ----------
+    def _bg_root(self):
+        r = (self.settings.get("bg_root") or "").strip()
+        if r and os.path.isdir(r):
+            return r
+        mf = self.settings.get("music_folder") or ""
+        parent = os.path.dirname(mf.rstrip("\\/")) if mf else ""
+        return parent if parent and os.path.isdir(parent) else ""
+
+    def _bg_index_path(self):
+        root = self._bg_root()
+        return os.path.join(root, BG_INDEX_NAME) if root else os.path.join(DATA_DIR, BG_INDEX_NAME)
+
+    def _bg_index(self):
+        return _load_json(self._bg_index_path(), {}) or {}
+
+    def _bg_key(self, path):
+        root = self._bg_root()
+        try:
+            return os.path.relpath(path, root).replace("\\", "/") if root else os.path.basename(path)
+        except ValueError:
+            return os.path.basename(path)
+
+    def _bg_use(self, path, product, delta):
+        idx = self._bg_index()
+        meta = idx.setdefault(self._bg_key(path), {})
+        uses = meta.setdefault("uses", [])
+        if delta > 0:
+            uses.append({"date": dt.date.today().isoformat(), "product": product})
+        else:
+            for i in range(len(uses) - 1, -1, -1):
+                if uses[i].get("product") == product:
+                    uses.pop(i)
+                    break
+        try:
+            _save_json(self._bg_index_path(), idx)
+        except Exception:
+            pass
+        return len(uses)
+
+    def _bg_thumb(self, fp):
+        try:
+            from PIL import Image, ImageOps
+            key = hashlib.md5(f"bg|{fp}|{os.path.getmtime(fp)}".encode("utf-8")).hexdigest()[:16]
+            out = os.path.join(THUMB_DIR, key + ".jpg")
+            if not os.path.exists(out):
+                im = Image.open(fp)
+                im = ImageOps.exif_transpose(im).convert("RGB")
+                im.thumbnail((240, 240))
+                im.save(out, "JPEG", quality=80)
+            with open(out, "rb") as f:
+                return "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("ascii")
+        except Exception:
+            return ""
+
+    def bg_list(self, with_thumbs=True):
+        """掃 官網部門 底下每個拍攝日期資料夾的「空景」，回傳依資料夾分組的底圖"""
+        root = self._bg_root()
+        if not root:
+            return {"root": "", "groups": [], "total": 0}
+        idx = self._bg_index()
+        groups = []
+        total = 0
+        cands = []
+        direct = os.path.join(root, BG_SUBDIR)
+        if os.path.isdir(direct):
+            cands.append(("空景", direct))
+        try:
+            for d in sorted(os.listdir(root), reverse=True):
+                sub = os.path.join(root, d, BG_SUBDIR)
+                if os.path.isdir(sub):
+                    cands.append((d, sub))
+        except Exception:
+            pass
+        for label, folder in cands:
+            items = []
+            try:
+                files = sorted(os.listdir(folder))
+            except Exception:
+                continue
+            for f in files:
+                if not f.lower().endswith(IMAGE_EXT) or f.startswith("."):
+                    continue
+                fp = os.path.join(folder, f)
+                meta = idx.get(self._bg_key(fp), {})
+                uses = meta.get("uses", [])
+                items.append({"path": fp, "name": os.path.splitext(f)[0], "group": label,
+                              "uses": len(uses), "last_use": uses[-1] if uses else None,
+                              "style": meta.get("style", ""),
+                              "thumb": self._bg_thumb(fp) if with_thumbs else ""})
+            if items:
+                total += len(items)
+                groups.append({"label": label, "folder": folder, "items": items})
+        return {"root": root, "groups": groups, "total": total}
+
+    def bg_set_root(self, path):
+        self.settings["bg_root"] = path
+        _save_json(SETTINGS_FILE, self.settings)
+        return self.bg_list()
+
+    def bg_set_style(self, path, style):
+        idx = self._bg_index()
+        idx.setdefault(self._bg_key(path), {})["style"] = style
+        _save_json(self._bg_index_path(), idx)
+        return True
+
+    def bg_pick(self, mode="least_used", group=None):
+        data = self.bg_list(with_thumbs=False)
+        items = [i for g in data["groups"] if (not group or g["label"] == group) for i in g["items"]]
+        if not items:
+            return None
+        import random
+        if mode == "random":
+            return random.choice(items)["path"]
+        items.sort(key=lambda i: (i["uses"], (i["last_use"] or {}).get("date", "")))
+        return items[0]["path"]
 
     def _music_index_path(self):
         folder = self.settings.get("music_folder")

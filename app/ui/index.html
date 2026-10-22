@@ -84,6 +84,12 @@ input.ipt::placeholder{color:var(--faint)}
 .modal.show{display:flex}
 .modal .box{width:720px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
 .view{display:none;flex:1;min-height:0}.view.on{display:flex}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:12px}
+.bgit{position:relative;border-radius:10px;overflow:hidden;background:#111;aspect-ratio:3/4;cursor:pointer;border:2px solid transparent}
+.bgit img{width:100%;height:100%;object-fit:cover;display:block}
+.bgit.on{border-color:var(--blue)}
+.bgit .cap{position:absolute;left:0;right:0;bottom:0;padding:16px 8px 6px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:11px;display:flex;justify-content:space-between;align-items:center}
+.bgit .use{position:absolute;top:6px;right:6px;height:20px;padding:0 7px;border-radius:10px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;display:flex;align-items:center}
 .mrow{display:flex;align-items:center;gap:10px;height:34px;padding:0 12px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;user-select:none}
 .mrow.sub{padding-left:34px;font-weight:400;height:30px;font-size:12.5px}
 .mrow:hover{background:var(--sub)}.mrow.on{background:var(--blue-bg)}
@@ -104,6 +110,7 @@ input.ipt::placeholder{color:var(--faint)}
       <button data-view="work" class="on">製作</button>
       <button data-view="done">完成</button>
       <button data-view="music">音樂庫</button>
+      <button data-view="bg">底圖庫</button>
       <button data-view="models">模特資料</button>
       <button data-view="settings">設定</button>
     </div>
@@ -170,6 +177,16 @@ input.ipt::placeholder{color:var(--faint)}
         <div class="row"><span>開始位置</span><input class="ipt" id="musicStart" style="width:120px" placeholder="自動挑段" oninput="app.setMusicStart(this.value)"></div>
       </div>
 
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="row"><span class="h">底圖</span><button class="btn l sm" onclick="app.go('bg')">底圖庫</button></div>
+        <div id="bgPick" style="display:flex;gap:10px;align-items:center"></div>
+        <div class="two">
+          <button class="btn l sm" style="flex:1" onclick="app.pickBg('least_used')">最久沒用</button>
+          <button class="btn l sm" style="flex:1" onclick="app.pickBg('random')">隨機</button>
+          <button class="btn l sm" style="flex:1" onclick="app.setBg('')">不用</button>
+        </div>
+      </div>
+
       <div style="display:flex;flex-direction:column;gap:8px">
         <div class="h">輸出</div>
         <div class="row"><span>總長上限</span><div class="ipt" style="width:120px;justify-content:space-between"><input id="optMax" style="border:0;width:60px;background:none" type="number" min="15" max="60" onchange="app.setOpt('max_total',+this.value)"><span style="color:var(--faint)">秒</span></div></div>
@@ -223,6 +240,21 @@ input.ipt::placeholder{color:var(--faint)}
         <div id="mRows"></div>
       </div>
       <div style="font-size:12px;color:var(--mute)" id="mAnalyzing"></div>
+    </div>
+  </div>
+
+  <!-- ===== 底圖庫 ===== -->
+  <div class="view" id="view-bg" style="flex-direction:column">
+    <div style="padding:22px;display:flex;flex-direction:column;gap:14px;flex:1;min-height:0">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="card" style="padding:10px 16px;min-width:110px"><div style="font-size:12px;color:var(--mute)">底圖</div><div style="font-size:20px;font-weight:700" id="bgCount">0</div></div>
+        <div class="card" style="padding:10px 16px;min-width:110px"><div style="font-size:12px;color:var(--mute)">沒用過</div><div style="font-size:20px;font-weight:700" id="bgUnused">0</div></div>
+        <div class="sp"></div>
+        <span id="bgRoot" style="font-size:12px;color:var(--mute);max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <button class="btn w" onclick="app.bgFolder()">選官網部門資料夾</button>
+        <button class="btn l" onclick="app.reloadBg()">重新掃描</button>
+      </div>
+      <div id="bgGroups" style="overflow:auto;flex:1;display:flex;flex-direction:column;gap:16px"></div>
     </div>
   </div>
 
@@ -288,6 +320,7 @@ const app = {
     this.applyTheme(this.state.settings.theme||document.documentElement.dataset.theme||'light');
     if(this.state.settings.tool_password) this.cloudCheck();
     setTimeout(()=>this.checkUpdate(false), 4000);
+    setTimeout(()=>this.reloadBg(), 1500);
     this.renderSettings(); this.renderMusicSel(); this.renderMusic(); this.renderModels(); this.renderHistory();
     this.updateCapcut(this.state.capcut_running);
     if (this.state.vision_ok===false) $('#visionHint').style.display='inline-flex';
@@ -322,10 +355,32 @@ const app = {
     else if (ev==='pub_done') { const rec=this.state.history.find(x=>x.id===p.id); if(rec&&p.record) Object.assign(rec,p.record); if(p.ok){ this.toast('已上傳 YouTube'+(p.results&&p.results.length?`，放到 ${p.results.filter(x=>x.ok).length} 個商品頁`:'')); } else this.toast(p.error,true); if(rec) this.showDetail(rec); }
     else if (ev==='music_analyzing') { $('#mAnalyzing').textContent = p.i<p.n ? `分析 ${p.i+1}/${p.n}　${p.name}` : ''; if (p.i>=p.n) this.reloadMusic(); }
   },
-  go(v) { this.view=v; document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='view-'+v)); document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on', b.dataset.view===v)); if(v==='todo'&&!this.todo) this.loadTodo(); },
+  go(v) { this.view=v; document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='view-'+v)); document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on', b.dataset.view===v)); if(v==='todo'&&!this.todo) this.loadTodo(); if(v==='bg'&&!this.bg) this.reloadBg(); },
 
   toggleTheme(){ const cur=document.documentElement.dataset.theme==='dark'?'light':'dark'; this.applyTheme(cur); try{ localStorage.setItem('vv_theme',cur); }catch(e){} this.call('save_settings',{theme:cur}); },
   applyTheme(t){ document.documentElement.dataset.theme=t; const b=$('#themeBtn'); if(b) b.textContent=t==='dark'?'☀':'☾'; },
+
+  /* ---------- 底圖庫 ---------- */
+  bg:null,
+  async reloadBg(){ this.bg=await this.call('bg_list'); this.renderBg(); this.renderBgPick(); },
+  async bgFolder(){ const p=await this.call('choose_folder'); if(!p) return; this.bg=await this.call('bg_set_root',p); this.state.settings.bg_root=p; this.renderBg(); },
+  renderBg(){
+    const B=this.bg; if(!B) return;
+    const all=B.groups.flatMap(g=>g.items);
+    $('#bgCount').textContent=B.total; $('#bgUnused').textContent=all.filter(i=>!i.uses).length; $('#bgRoot').textContent=B.root||'尚未設定（預設用音樂庫的上一層）';
+    const cur=(this.P()&&this.P().background)||'';
+    $('#bgGroups').innerHTML=B.groups.map(g=>`<div class="card"><div style="padding:10px 14px;border-bottom:1px solid var(--line3);display:flex;align-items:center;gap:10px"><span style="font-weight:700">${esc(g.label)}</span><span class="chip w">${g.items.length} 張</span><div class="sp"></div><button class="btn l sm" onclick="app.call('open_path',${JSON.stringify(g.folder)})">開啟資料夾</button></div>
+      <div class="bgrid">${g.items.map(i=>`<div class="bgit ${i.path===cur?'on':''}" title="${esc(i.name)}" onclick="app.setBg(${JSON.stringify(i.path).replace(/"/g,'&quot;')});app.renderBg()"><img src="${i.thumb}" alt=""><span class="use">${i.uses?'用過 '+i.uses+' 次':'沒用過'}</span><div class="cap"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.name)}</span></div></div>`).join('')}</div></div>`).join('')
+      ||`<div class="empty" style="min-height:200px">在「官網部門」底下每個拍攝日期資料夾建一個「空景」資料夾，放進去的圖會自動出現在這裡</div>`;
+  },
+  setBg(path){ const P=this.P(); if(!P) return; P.background=path||''; this.renderBgPick(); this.toast(path?'已選底圖':'這支不用底圖'); },
+  async pickBg(mode){ const p=await this.call('bg_pick',mode); if(!p){ this.toast('底圖庫是空的',true); return; } this.setBg(p); },
+  renderBgPick(){
+    const el=$('#bgPick'); if(!el) return; const P=this.P(); const cur=P&&P.background;
+    if(!cur){ el.innerHTML=`<span style="font-size:12px;color:var(--faint)">不用底圖（版型需要時再選）</span>`; return; }
+    const it=(this.bg?this.bg.groups.flatMap(g=>g.items):[]).find(i=>i.path===cur);
+    el.innerHTML=`<div style="width:48px;height:64px;border-radius:6px;overflow:hidden;background:#111;flex:none">${it&&it.thumb?`<img src="${it.thumb}" style="width:100%;height:100%;object-fit:cover">`:''}</div><div style="flex:1;min-width:0"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(it?it.name:cur.split(/[\\/]/).pop())}</div><div style="font-size:12px;color:var(--mute)">${it?esc(it.group)+'・'+(it.uses?'用過 '+it.uses+' 次':'沒用過'):''}</div></div>`;
+  },
 
   /* ---------- 更新／錯誤回報 ---------- */
   async checkUpdate(manual){
@@ -475,7 +530,7 @@ const app = {
   applyToRest(i) { const src=this.P().clips[i]; this.P().clips.forEach((c,j)=>{ if(j>i && !c.closeup){c.model=src.model;c.size=src.size;c.fit=src.fit;} }); this.renderGrid(); this.toast('已套用到後面的片段'); },
   move(from,to) { const a=this.P().clips; const [x]=a.splice(from,1); a.splice(to,0,x); this.renderGrid(); },
 
-  renderAll() { this.renderList(); $('#prodName').value=this.P().name; this.renderGrid(); this.renderMusicSel(); },
+  renderAll() { this.renderList(); $('#prodName').value=this.P().name; this.renderGrid(); this.renderMusicSel(); this.renderBgPick(); },
   renderList() {
     $('#prodCount').textContent=this.products.length;
     $('#plist').innerHTML=this.products.map((p,i)=>{
@@ -592,7 +647,7 @@ const app = {
   async pickSetting(k){ const p=await this.call('choose_folder'); if(!p) return; this.state.settings[k]=p; await this.call('save_settings',{[k]:p}); this.renderSettings(); if(k==='music_folder'){ this.state.music=await this.call('music_set_folder',p); this.renderMusic(); this.renderMusicSel(); } },
 
   /* ---------- generate ---------- */
-  spec(P){ return { name:P.name||'未命名', clips:P.clips.map((c,i)=>({path:c.path, model:c.closeup?'':c.model, size_text:c.closeup?'':`著${c.size}${c.fit||''}`, closeup:!!c.closeup, start:c.start===''?null:+c.start, order:i})), music:P.music?{path:P.music.path, start:P.musicStart===''?null:+P.musicStart}:null, colors:P.colors||[], sku:P.sku||'', features:P.features||[], category:P.category||'', options:{} }; },
+  spec(P){ return { name:P.name||'未命名', clips:P.clips.map((c,i)=>({path:c.path, model:c.closeup?'':c.model, size_text:c.closeup?'':`著${c.size}${c.fit||''}`, closeup:!!c.closeup, start:c.start===''?null:+c.start, order:i})), music:P.music?{path:P.music.path, start:P.musicStart===''?null:+P.musicStart}:null, colors:P.colors||[], sku:P.sku||'', features:P.features||[], category:P.category||'', background:P.background||'', options:{} }; },
   async generate(all){
     const list=all?this.products:[this.P()];
     const bad=list.filter(p=>!p.clips.length); if(bad.length){ this.toast('有商品還沒放影片',true); return; }
