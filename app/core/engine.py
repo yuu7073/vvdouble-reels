@@ -303,35 +303,73 @@ def build_draft(spec, models, log=None, progress=None):
                 focus_x = max(0.0, min(1.0, 0.5 + off))
         return {"path": full, "start": start / SEC, "focus_x": focus_x, "focus_y": 0.3 if want_person else 0.5}
 
-    def build_layout_segment(idx, dur):
-        """合成版型段：回傳 (mp4 路徑, 用到的模特名字)"""
+    layout_tracks = {}      # 版型用到的額外軌道（建一次就好）
+
+    def layout_track(kind, name, rel):
+        if name not in layout_tracks:
+            script.add_track(kind, name, relative_index=rel)
+            layout_tracks[name] = True
+        return name
+
+    def build_layout_segment(idx, dur, t0):
+        """版型段：每個區塊一層（裁切＋縮放到框位）、框線一層、文字一層，全部在 CapCut 裡可以再調；回傳用到的模特名字"""
         grp_clips = [grp for _, grp in picked_groups if grp]
-        srcs = {}
         m1 = grp_clips[0][0] if grp_clips else None
         m2 = grp_clips[1][0] if len(grp_clips) > 1 else (grp_clips[0][1] if grp_clips and len(grp_clips[0]) > 1 else m1)
-        roles = {r["role"] for r in layout_meta["regions"]}
-        if m1 and "M1" in roles:
-            srcs["M1"] = layout_source(m1[0], m1[1], dur)
-        if m2 and "M2" in roles:
-            srcs["M2"] = layout_source(m2[0], m2[1], dur)
-        if cl_pairs and ("D" in roles or "D2" in roles):
-            srcs["D"] = layout_source(cl_pairs[0][0], cl_pairs[0][1], dur, want_person=False)
-            if "D2" in roles:
-                d2 = cl_pairs[1] if len(cl_pairs) > 1 else cl_pairs[0]
-                srcs["D2"] = layout_source(d2[0], d2[1], dur, want_person=False)
-        elif ("D" in roles or "D2" in roles) and m1:
-            srcs["D"] = layout_source(m1[0], m1[1], dur)      # 沒近拍就先用模特影片頂著
+        d1 = cl_pairs[0] if cl_pairs else m1
+        d2 = (cl_pairs[1] if len(cl_pairs) > 1 else d1) if cl_pairs else m2
+        by_role = {"M1": (m1, True), "M2": (m2, True), "D": (d1, not cl_pairs), "D2": (d2, not cl_pairs)}
         photo = (spec.get("background") or "").strip()
-        if "P" in roles:
-            if photo and os.path.exists(photo):
-                srcs["P"] = {"path": photo, "photo": True}
-            else:
-                _log(log, "這個版型需要底圖，沒選底圖的話紫色區會維持原色")
         os.makedirs(RENDER_DIR, exist_ok=True)
         safe = "".join(ch for ch in name if ch not in '\\/:*?"<>|')[:40]
-        out = os.path.join(RENDER_DIR, f"{safe}_{layout_id}_{idx}.mp4")
-        layouts.render(layout_meta, srcs, dur / SEC, out)
-        return out, ((m1[1].get("model") if m1 else "") or "")
+        layer_no = 0
+        for reg in layout_meta["regions"]:
+            role, box = reg["role"], reg["box"]
+            if role == "P":
+                if not (photo and os.path.exists(photo)):
+                    _log(log, "這個版型需要底圖，沒選底圖的話那一塊會是空的")
+                    continue
+                png = os.path.join(RENDER_DIR, f"{safe}_{layout_id}_bg_{idx}.png")
+                layouts.background_photo(photo, box, png, reg.get("blur", 0), reg.get("dark", 0))
+                mat = cc.VideoMaterial(png)
+                crop, scale, tx, ty = layouts.place(box, box[2] - box[0], box[3] - box[1])
+                seg = cc.VideoSegment(mat, cc.Timerange(t0, dur),
+                                      clip_settings=ClipSettings(scale_x=scale, scale_y=scale, transform_x=tx, transform_y=ty))
+                tname = "影片" if layer_no == 0 else layout_track(cc.TrackType.video, f"版型層{layer_no + 1}", layer_no)
+            else:
+                pair, want_person = by_role.get(role, (None, True))
+                if not pair:
+                    continue
+                full, c = pair
+                if want_person:
+                    mn = c.get("model") or ""
+                    g.MODEL_BY_PATH.setdefault(full, mn.upper() if (mn and beauty_on) else "")
+                s = layout_source(full, c, dur, want_person=want_person)
+                sw, sh = layouts.probe(full)
+                crop, scale, tx, ty = layouts.place(box, sw, sh, s["focus_x"], s["focus_y"])
+                mat = cc.VideoMaterial(full, crop_settings=cc.CropSettings(**crop))
+                st = int(s["start"] * SEC)
+                d = min(dur, mat.duration - st)
+                seg = cc.VideoSegment(mat, cc.Timerange(t0, d), source_timerange=cc.Timerange(st, d), volume=0.0,
+                                      clip_settings=ClipSettings(scale_x=scale, scale_y=scale, transform_x=tx, transform_y=ty))
+                tname = "影片" if layer_no == 0 else layout_track(cc.TrackType.video, f"版型層{layer_no + 1}", layer_no)
+            script.add_segment(seg, tname)
+            layer_no += 1
+        # 框線／裝飾（設計稿去掉色塊和文字後的部分）
+        ov = cc.VideoMaterial(os.path.join(layout_meta["dir"], layout_meta["overlay"]))
+        script.add_segment(cc.VideoSegment(ov, cc.Timerange(t0, dur)),
+                           layout_track(cc.TrackType.video, "版型框", 20))
+        # 文字
+        for ti, t in enumerate(layout_meta.get("texts", [])):
+            tx, ty = layouts.text_place(t["box"])
+            font = getattr(cc.FontType, t["font"], None) if t.get("font") else None
+            style = TextStyle(size=float(t.get("size", 8)), bold=bool(t.get("bold")), color=tuple(t.get("color", (1, 1, 1))),
+                              align=int(t.get("align", 1)), letter_spacing=int(t.get("letter_spacing", 0)),
+                              line_spacing=int(t.get("line_spacing", 0)))
+            script.add_segment(cc.TextSegment(t["text"], cc.Timerange(t0, dur), font=font, style=style,
+                                              clip_settings=ClipSettings(transform_x=tx, transform_y=ty)),
+                               layout_track(cc.TrackType.text, "版型文字" + (str(ti + 1) if ti else ""), 5 + ti))
+        return ((m1[1].get("model") if m1 else "") or "")
 
     g.STABILIZE_IDS.clear()
     g.MODEL_BY_PATH.clear()
@@ -348,16 +386,12 @@ def build_draft(spec, models, log=None, progress=None):
                 pass
         if kind == "layout":
             dur = length_fixed(layouts.LAYOUT_SEC)
-            _log(log, f"合成版型「{L['name']}」{dur / SEC:.1f} 秒…")
-            out, m1_name = build_layout_segment(idx, dur)
-            g.MODEL_BY_PATH[out] = m1_name.upper() if (m1_name and beauty_on) else ""
-            mat = cc.VideoMaterial(out)
-            d = min(dur, mat.duration)
-            script.add_segment(cc.VideoSegment(mat, cc.Timerange(cursor, d), source_timerange=cc.Timerange(0, d),
-                                               volume=0.0), "影片")
-            out_segments.append({"path": out, "name": fname, "closeup": False, "layout": layout_id,
-                                 "start": 0, "dur": round(d / SEC, 2), "how": "版型", "stabilized": False})
-            cursor += d
+            _log(log, f"排版型「{L['name']}」{dur / SEC:.1f} 秒（{len(layout_meta['regions'])} 個區塊，各自一層）…")
+            m1_name = build_layout_segment(idx, dur, cursor)
+            out_segments.append({"path": os.path.join(layout_meta["dir"], layout_meta["overlay"]), "name": fname,
+                                 "closeup": False, "layout": layout_id, "start": 0, "dur": round(dur / SEC, 2),
+                                 "how": "版型", "stabilized": False})
+            cursor += dur
             continue
         mat = cc.VideoMaterial(full)
         manual = c.get("start")

@@ -725,10 +725,15 @@ def apply_presets(draft_name):
     if styles:
         m.setdefault("material_animations", [])
         segs = {s["material_id"]: s for t in d["tracks"] if t["type"] == "text" for s in t["segments"]}
+        # 版型自己的文字（LOOKBOOK、DETAIL…）保持版型給的樣式，不套實穿模板
+        layout_text = {s["material_id"] for t in d["tracks"]
+                       if t["type"] == "text" and str(t.get("name", "")).startswith("版型文字") for s in t["segments"]}
         model_pos = {k.upper(): v for k, v in styles.get("model_positions", {}).items()}
         pos_cycle = list(model_pos.values())
         model_count = 0
         for i, mat in enumerate(m.get("texts", [])):
+            if mat["id"] in layout_text:
+                continue
             text = json.loads(mat["content"])["text"]
             role = text_role(text)
             src = styles.get(role)

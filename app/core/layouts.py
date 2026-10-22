@@ -41,7 +41,11 @@ COLORS = {"yellow": YEL, "blue": BLU, "purple": PUR}
 LAYOUTS = {
     "lookbook": {"name": "LOOKBOOK", "file": "1_LOOKBOOK.jpg", "pattern": "#,M,M,D,M,D",
                  "regions": [{"color": "purple", "role": "P", "blur": 10, "dark": 0.10},
-                             {"color": "yellow", "role": "M1", "still": True, "noise": 0.05}]},
+                             {"color": "yellow", "role": "M1"}],
+                 # 設計稿上的文字改成 CapCut 文字層（可改字、字型、位置）；erase＝把設計稿上那塊文字從覆蓋圖抹掉
+                 "texts": [{"text": "LOOKBOOK", "box": [93, 1464, 1395, 1635], "font": "Didot_Medium",
+                            "size": 17.0, "color": (0.96, 0.93, 0.86), "letter_spacing": 5, "align": 1}],
+                 "erase": [{"box": [60, 1440, 1420, 1660]}]},
     "camera":   {"name": "相機介面", "file": "2_相機.jpg", "pattern": "#,M,M,D,M,D",
                  "regions": [{"color": "yellow", "role": "M1"}]},
     "stamp":    {"name": "郵票", "file": "3_郵票.jpg", "pattern": "M,#,D,M,M,D",
@@ -53,7 +57,12 @@ LAYOUTS = {
                               {"color": "blue", "index": 1, "role": "M2"},
                               {"color": "yellow", "role": "D"}]},
     "detail":   {"name": "DETAIL", "file": "6_DETAIL.jpg", "pattern": "M,M,#,M,M,D",
-                 "regions": [{"color": "blue", "role": "D"}, {"color": "yellow", "role": "D2"}]},
+                 "regions": [{"color": "blue", "role": "D"}, {"color": "yellow", "role": "D2"}],
+                 "texts": [{"text": "DETAIL", "box": [90, 1262, 346, 1313], "size": 7.0, "bold": True,
+                            "color": (0.05, 0.05, 0.05), "align": 0},
+                           {"text": "Sun-warmed skin, ocean blues.\nA little texture, a slower pace.\nSummer, carried with you.",
+                            "box": [726, 1246, 1104, 1335], "size": 3.0, "color": (0.1, 0.1, 0.1), "align": 0, "line_spacing": 4}],
+                 "erase": [{"box": [60, 1230, 1130, 1350], "fill": (250, 249, 247)}]},
     "grid":     {"name": "九宮格", "file": "7_九宮格.jpg", "pattern": "#,M,D,M,M,M",
                  "regions": [{"color": "yellow", "index": 0, "role": "M1"},
                              {"color": "yellow", "index": 1, "role": "M2"},
@@ -117,7 +126,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v3"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v5"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
@@ -160,30 +169,44 @@ def prepare(layout_id, cache_dir, image_path=None):
             mk.save(os.path.join(out, name))
             ma = np.asarray(mk) > 0
             ys, xs = np.where(ma)
-            regions.append({"mask": name, "role": spec["role"],
+            regions.append({"mask": name, "role": spec["role"], "_ord": L["regions"].index(spec),
                             "box": [int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1],
                             "blur": spec.get("blur", 0), "dark": spec.get("dark", 0),
                             "noise": spec.get("noise", 0), "still": bool(spec.get("still"))})
-    rgba = np.dstack([fg, np.where(alpha_all > 0.5, 0, 255)]).astype(np.uint8)
+    regions.sort(key=lambda r: r.get("_ord", 0))
+    alpha = np.where(alpha_all > 0.5, 0, 255).astype(float)
+    for er in L.get("erase", []):
+        x0, y0, x1, y1 = er["box"]
+        if er.get("fill"):
+            fg[y0:y1, x0:x1] = np.array(er["fill"], dtype=float)
+            alpha[y0:y1, x0:x1] = 255
+        else:
+            alpha[y0:y1, x0:x1] = 0
+    rgba = np.dstack([fg, alpha]).astype(np.uint8)
     ov = Image.fromarray(rgba, "RGBA").resize((CANVAS_W, CANVAS_H), Image.LANCZOS)
     arr = np.asarray(ov).copy()
     arr[..., 3] = np.where(arr[..., 3] >= 128, 255, 0)
     Image.fromarray(arr, "RGBA").save(os.path.join(out, "overlay.png"))
-    meta = {"stamp": stamp, "overlay": "overlay.png", "regions": regions, "dir": out}
+    sx, sy = CANVAS_W / W, CANVAS_H / H
+    texts = []
+    for t in L.get("texts", []):
+        x0, y0, x1, y1 = t["box"]
+        texts.append(dict(t, box=[int(x0 * sx), int(y0 * sy), int(x1 * sx), int(y1 * sy)]))
+    meta = {"stamp": stamp, "overlay": "overlay.png", "regions": regions, "texts": texts, "dir": out}
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False)
     return meta
 
 
-# ---------- 合成 ----------
+# ---------- 放進 CapCut（原生圖層，不先壓成影片） ----------
 
 def _ffmpeg():
     import imageio_ffmpeg
     return imageio_ffmpeg.get_ffmpeg_exe()
 
 
-def _probe(path):
-    """回傳 (寬, 高, 旋轉角度)"""
+def probe(path):
+    """回傳影片顯示用的 (寬, 高)，已把旋轉算進去"""
     import re
     r = subprocess.run([_ffmpeg(), "-hide_banner", "-i", path], capture_output=True, timeout=30,
                        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
@@ -200,102 +223,50 @@ def _probe(path):
     return w, h
 
 
-def _fit_filter(src_w, src_h, box, focus_x=0.5, focus_y=0.3):
-    """把來源 cover 進 box：回傳 scale+crop 濾鏡字串"""
+def place(box, sw, sh, focus_x=0.5, focus_y=0.3):
+    """
+    把 sw×sh 的素材「蓋滿」畫布上的 box（像素）：
+    回傳 (裁切比例 dict, scale, transform_x, transform_y)，直接對應 CapCut 的裁切／縮放／位置
+    transform 單位同 CapCut：±1 = 半個畫布寬／高，y 向上為正
+    """
     bw, bh = box[2] - box[0], box[3] - box[1]
-    r = max(bw / src_w, bh / src_h)
-    sw, sh = int(round(src_w * r)) + 2, int(round(src_h * r)) + 2
-    ox = int(max(0, min(sw - bw, (sw - bw) * focus_x)))
-    oy = int(max(0, min(sh - bh, (sh - bh) * focus_y)))
-    return f"scale={sw}:{sh}:flags=lanczos,crop={bw}:{bh}:{ox}:{oy}"
+    a = bw / bh
+    if sw / sh > a:
+        cw, ch = sh * a, sh
+    else:
+        cw, ch = sw, sw / a
+    x0 = (sw - cw) * max(0.0, min(1.0, focus_x))
+    y0 = (sh - ch) * max(0.0, min(1.0, focus_y))
+    crop = {"upper_left_x": x0 / sw, "upper_left_y": y0 / sh, "upper_right_x": (x0 + cw) / sw, "upper_right_y": y0 / sh,
+            "lower_left_x": x0 / sw, "lower_left_y": (y0 + ch) / sh, "lower_right_x": (x0 + cw) / sw, "lower_right_y": (y0 + ch) / sh}
+    f = min(CANVAS_W / cw, CANVAS_H / ch)          # 裁切後的素材在 CapCut 裡 scale=1 時是「塞進畫布」
+    scale = bw / (cw * f)
+    cx, cy = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
+    tx = (cx - CANVAS_W / 2) / (CANVAS_W / 2)
+    ty = -(cy - CANVAS_H / 2) / (CANVAS_H / 2)
+    return crop, scale, tx, ty
 
 
-def render(meta, sources, dur, out_path, fps=30, log=None):
-    """
-    sources = {role: {"path", "start": 秒, "focus_x": 0~1, "photo": bool}}
-    把每個區塊的來源塞進去背後的版型，輸出 dur 秒的 MP4
-    """
-    exe = _ffmpeg()
-    args = [exe, "-y", "-v", "error"]
-    filt = []
-    inputs = 0
-    layers = []
-    for i, reg in enumerate(meta["regions"]):
-        src = sources.get(reg["role"]) or sources.get(reg["role"][:1])
-        if not src:
-            continue
-        box = reg["box"]
-        path = src["path"]
-        is_img = bool(src.get("photo")) or path.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))
-        if is_img or reg.get("still"):
-            if is_img:
-                args += ["-loop", "1", "-t", f"{dur:.3f}", "-i", path]
-            else:
-                args += ["-ss", f"{src.get('start', 0):.3f}", "-t", f"{dur:.3f}", "-i", path]
-            vi = inputs
-            inputs += 1
-            if is_img:
-                from PIL import Image
-                with Image.open(path) as im:
-                    from PIL import ImageOps
-                    im = ImageOps.exif_transpose(im)
-                    sw, sh = im.size
-            else:
-                sw, sh = _probe(path)
-            chain = _fit_filter(sw, sh, box, src.get("focus_x", 0.5), src.get("focus_y", 0.3))
-            if reg.get("still") and not is_img:
-                chain += f",trim=end_frame=1,setpts=PTS-STARTPTS,tpad=stop_mode=clone:stop_duration={dur:.3f}"
-        else:
-            args += ["-ss", f"{src.get('start', 0):.3f}", "-t", f"{dur:.3f}", "-i", path]
-            vi = inputs
-            inputs += 1
-            sw, sh = _probe(path)
-            chain = _fit_filter(sw, sh, box, src.get("focus_x", 0.5), src.get("focus_y", 0.3))
-        if reg.get("blur"):
-            chain += f",gblur=sigma={reg['blur']}"
-        if reg.get("dark"):
-            m = 1 - float(reg["dark"])
-            chain += f",lutrgb=r=val*{m:.3f}:g=val*{m:.3f}:b=val*{m:.3f}"
-        if reg.get("noise"):
-            chain += f",noise=alls={int(reg['noise'] * 255)}:allf=t"
-        chain += f",fps={fps},format=rgba,pad={CANVAS_W}:{CANVAS_H}:{box[0]}:{box[1]}:color=black@0.0"
-        args += ["-loop", "1", "-t", f"{dur:.3f}", "-i", os.path.join(meta["dir"], reg["mask"])]
-        mi = inputs
-        inputs += 1
-        filt.append(f"[{vi}:v]{chain}[r{i}]")
-        filt.append(f"[{mi}:v]format=gray,fps={fps}[m{i}]")
-        filt.append(f"[r{i}][m{i}]alphamerge[a{i}]")
-        layers.append(f"a{i}")
-    args += ["-loop", "1", "-t", f"{dur:.3f}", "-i", os.path.join(meta["dir"], meta["overlay"])]
-    oi = inputs
-    filt.append(f"color=c=black:s={CANVAS_W}x{CANVAS_H}:r={fps}:d={dur:.3f}[base0]")
-    cur = "base0"
-    for n, lname in enumerate(layers):
-        filt.append(f"[{cur}][{lname}]overlay=0:0:shortest=1[b{n}]")
-        cur = f"b{n}"
-    filt.append(f"[{oi}:v]format=rgba,fps={fps}[ov]")
-    filt.append(f"[{cur}][ov]overlay=0:0:shortest=1,format=yuv420p[out]")
-    args += ["-filter_complex", ";".join(filt), "-map", "[out]", "-t", f"{dur:.3f}", "-r", str(fps),
-             "-c:v", "libx264", "-preset", "fast", "-crf", "16", "-an", "-movflags", "+faststart", out_path]
-    r = subprocess.run(args, capture_output=True, timeout=600,
-                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-    if r.returncode != 0 or not os.path.exists(out_path):
-        raise RuntimeError("ffmpeg 合成失敗：" + r.stderr.decode("utf-8", "ignore")[-600:])
+def text_place(box):
+    """文字層位置：回傳 (transform_x, transform_y)，以框的中心為準"""
+    cx, cy = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
+    return (cx - CANVAS_W / 2) / (CANVAS_W / 2), -(cy - CANVAS_H / 2) / (CANVAS_H / 2)
+
+
+def background_photo(photo, box, out_path, blur=10, dark=0.10):
+    """底圖照片：蓋滿 box、模糊、壓暗，存成 PNG 給 CapCut 當獨立圖層（之後要換照片直接在 CapCut 換）"""
+    from PIL import Image, ImageFilter, ImageOps
+    bw, bh = box[2] - box[0], box[3] - box[1]
+    with Image.open(photo) as im:
+        im = ImageOps.exif_transpose(im).convert("RGB")
+        r = max(bw / im.width, bh / im.height)
+        im = im.resize((int(im.width * r) + 1, int(im.height * r) + 1), Image.LANCZOS)
+        x0 = (im.width - bw) // 2
+        y0 = (im.height - bh) // 2
+        im = im.crop((x0, y0, x0 + bw, y0 + bh))
+        if blur:
+            im = im.filter(ImageFilter.GaussianBlur(blur * bw / 1080))
+        if dark:
+            im = Image.eval(im, lambda v: int(v * (1 - dark)))
+        im.save(out_path)
     return out_path
-
-
-if __name__ == "__main__":
-    # 測試：python layouts.py <版型id> <快取資料夾> <輸出.mp4> role=path[@start] ...
-    lid, cache, outp = sys.argv[1:4]
-    srcs = {}
-    for a in sys.argv[4:]:
-        role, pth = a.split("=", 1)
-        st = 0.0
-        if "@" in pth:
-            pth, st = pth.rsplit("@", 1)
-            st = float(st)
-        srcs[role] = {"path": pth, "start": st}
-    m = prepare(lid, cache)
-    print(json.dumps({k: v for k, v in m.items() if k != "stamp"}, ensure_ascii=False, indent=1))
-    render(m, srcs, LAYOUT_SEC, outp)
-    print("ok", outp)
