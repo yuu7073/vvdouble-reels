@@ -14,7 +14,7 @@ PrivilegesRequired=lowest
 OutputDir=..\dist
 OutputBaseFilename=VVReels-Setup-{#AppVersion}
 SetupIconFile=icon.ico
-UninstallDisplayIcon={app}\VV實穿草稿產生器.exe
+UninstallDisplayIcon={app}\VVReels.exe
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -25,11 +25,15 @@ ArchitecturesInstallIn64BitMode=x64compatible
 Name: "desktopicon"; Description: "建立桌面捷徑"; GroupDescription: "其他："
 
 [Files]
-Source: "..\dist\VV實穿草稿產生器\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist\VVReels\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[InstallDelete]
+Type: files; Name: "{app}\VV實穿草稿產生器.exe"
+Type: filesandordirs; Name: "{app}\_update"
 
 [Icons]
-Name: "{group}\VV 實穿草稿產生器"; Filename: "{app}\VV實穿草稿產生器.exe"
-Name: "{autodesktop}\VV 實穿草稿產生器"; Filename: "{app}\VV實穿草稿產生器.exe"; Tasks: desktopicon
+Name: "{group}\VV 實穿草稿產生器"; Filename: "{app}\VVReels.exe"
+Name: "{autodesktop}\VV 實穿草稿產生器"; Filename: "{app}\VVReels.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\VV實穿草稿產生器.exe"; Description: "立即開啟"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\VVReels.exe"; Description: "立即開啟"; Flags: nowait postinstall skipifsilent

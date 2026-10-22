@@ -42,12 +42,12 @@ jobs:
         if: steps.ver.outputs.exists != 'true'
         shell: pwsh
         run: |
-          Get-ChildItem dist/VV實穿草稿產生器 | Select-Object -First 5
-          if (!(Test-Path "dist/VV實穿草稿產生器/VV實穿草稿產生器.exe")) { throw "exe missing" }
+          Get-ChildItem dist/VVReels | Select-Object -First 5
+          if (!(Test-Path "dist/VVReels/VVReels.exe")) { throw "exe missing" }
       - name: Portable zip
         if: steps.ver.outputs.exists != 'true'
         shell: pwsh
-        run: Compress-Archive -Path "dist/VV實穿草稿產生器/*" -DestinationPath "dist/VVReels-portable-${{ steps.ver.outputs.version }}.zip" -Force
+        run: Compress-Archive -Path "dist/VVReels/*" -DestinationPath "dist/VVReels-win-${{ steps.ver.outputs.version }}.zip" -Force
       - name: Installer (Inno Setup)
         if: steps.ver.outputs.exists != 'true'
         shell: pwsh
@@ -63,4 +63,4 @@ jobs:
           body_path: CHANGELOG.md
           files: |
             dist/VVReels-Setup-${{ steps.ver.outputs.version }}.exe
-            dist/VVReels-portable-${{ steps.ver.outputs.version }}.zip
+            dist/VVReels-win-${{ steps.ver.outputs.version }}.zip

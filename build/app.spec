@@ -42,10 +42,10 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz, a.scripts, [],
     exclude_binaries=True,
-    name="VV實穿草稿產生器",
+    name="VVReels",
     icon=os.path.join(SPECPATH, "icon.ico"),
     console=False,
     disable_windowed_traceback=False,
     upx=False,
 )
-coll = COLLECT(exe, a.binaries, a.datas, strip=False, upx=False, name="VV實穿草稿產生器")
+coll = COLLECT(exe, a.binaries, a.datas, strip=False, upx=False, name="VVReels")

@@ -102,6 +102,15 @@ if FROZEN:
     except Exception:
         traceback.print_exc()
 g.BEAUTY_FILE = BEAUTY_PATH
+if FROZEN:
+    # 舊版主程式檔名是中文，更新後留著會混用，啟動時順手清掉
+    try:
+        for _old in ("VV實穿草稿產生器.exe", "update.bat"):
+            _p = os.path.join(APP_DIR, _old)
+            if os.path.exists(_p) and os.path.basename(sys.executable) != _old:
+                os.remove(_p)
+    except Exception:
+        pass
 SETTINGS_FILE = os.path.join(DATA_DIR, "settings.json")
 MODELS_FILE = os.path.join(DATA_DIR, "models.json")
 HISTORY_FILE = os.path.join(DATA_DIR, "history.json")
@@ -557,7 +566,7 @@ class Api:
             with urllib.request.urlopen(req, timeout=15) as resp:
                 j = json.loads(resp.read().decode("utf-8"))
             tag = (j.get("tag_name") or "").lstrip("v")
-            asset = next((a for a in j.get("assets", []) if "portable" in a.get("name", "") and a.get("name", "").endswith(".zip")), None)
+            asset = next((a for a in j.get("assets", []) if "-win-" in a.get("name", "") and a.get("name", "").endswith(".zip")), None)
             setup = next((a for a in j.get("assets", []) if a.get("name", "").endswith(".exe")), None)
 
             def ver(v):
@@ -603,12 +612,16 @@ class Api:
             src = os.path.join(upd, inner[0]) if len(inner) == 1 and not os.path.exists(os.path.join(upd, os.path.basename(sys.executable))) else upd
             exe = os.path.basename(sys.executable)
             bat = os.path.join(APP_DIR, "update.bat")
-            with open(bat, "w", encoding="utf-8") as f:
+            # 批次檔用系統編碼寫（cmd 不吃 UTF-8），並等舊程式真的結束、覆蓋失敗會重試
+            with open(bat, "w", encoding="mbcs", errors="replace") as f:
                 f.write("@echo off\r\n")
                 f.write(f'cd /d "{APP_DIR}"\r\n')
+                f.write("set n=0\r\n")
                 f.write(":wait\r\n")
-                f.write(f'tasklist /FI "IMAGENAME eq {exe}" | find /I "{exe}" >nul && (timeout /t 1 /nobreak >nul & goto wait)\r\n')
-                f.write(f'robocopy "{src}" "{APP_DIR}" /E /NFL /NDL /NJH /NJS /NP >nul\r\n')
+                f.write("set /a n+=1\r\n")
+                f.write(f'tasklist /FI "IMAGENAME eq {exe}" 2>nul | find /I "{exe}" >nul\r\n')
+                f.write("if not errorlevel 1 ( if %n% LSS 60 ( timeout /t 1 /nobreak >nul & goto wait ) else ( taskkill /F /IM \"" + exe + "\" >nul 2>&1 & timeout /t 2 /nobreak >nul ) )\r\n")
+                f.write(f'robocopy "{src}" "{APP_DIR}" /E /R:5 /W:2 /NFL /NDL /NJH /NJS /NP >nul\r\n')
                 f.write(f'rmdir /S /Q "{upd}"\r\n')
                 f.write(f'start "" "{os.path.join(APP_DIR, exe)}"\r\n')
                 f.write('del "%~f0"\r\n')
