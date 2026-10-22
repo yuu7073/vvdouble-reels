@@ -67,7 +67,7 @@ PRODUCT_ROOT = os.path.join(HERE, "商品")
 MODEL_FILE = os.path.join(HERE, "模特資料.csv")
 VIDEO_EXT = (".mp4", ".mov", ".m4v")
 AUDIO_EXT = (".mp3", ".m4a", ".wav", ".aac")
-SIZE_ORDER = ["FREE", "S", "SM", "M", "ML", "L", "XL", "XL2L", "2L", "2XL", "3L", "3XL",
+SIZE_ORDER = ["F", "FREE", "S", "SM", "M", "ML", "L", "XL", "XL2L", "2L", "2XL", "3L", "3XL",
               "3L4L", "4L", "4XL", "5L", "5XL", "5L6L", "6L", "6XL"]
 
 

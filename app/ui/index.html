@@ -296,7 +296,7 @@ input.ipt::placeholder{color:var(--faint)}
 const $ = (s, r=document) => r.querySelector(s);
 (function(){ try{ const t=localStorage.getItem('vv_theme'); if(t) document.documentElement.dataset.theme=t; }catch(e){} })();
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const SIZES = ['大碼','中碼','小碼','SM','ML','XL2L','3L4L','5L6L','L','XL','2L','3L','4L','5L','6L'];
+const SIZES = ['大碼','中碼','小碼','F','SM','ML','XL2L','3L4L','5L6L','L','XL','2L','3L','4L','5L','6L'];
 
 const app = {
   state: null, products: [], cur: 0, view: 'work', busy: false, results: [],
@@ -512,7 +512,8 @@ const app = {
     else {
       const cur=this.P(); const fresh=cur&&!cur.name&&!cur.clips.length;
       const P={name:it.name, sku:it.sku, colors:it.colors||[], features:it.features||[], category:it.category||'', clips:[], music:null, musicStart:'', modelSizes:{}};
-      (it.models||[]).forEach(m=>{ P.modelSizes[m.name.toUpperCase()]={size:m.size||'', fit:m.fit||''}; });
+      const one=(it.specs||[]).filter(Boolean).length===1?it.specs.filter(Boolean)[0]:'';
+      (it.models||[]).forEach(m=>{ P.modelSizes[m.name.toUpperCase()]={size:m.size||one||'', fit:m.fit||''}; });
       if(fresh) this.products[this.cur]=P; else { this.products.push(P); this.cur=this.products.length-1; }
     }
     this.renderAll(); this.go('work'); this.toast('已帶入商品，接著加入影片');

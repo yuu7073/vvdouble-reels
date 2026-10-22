@@ -711,9 +711,15 @@ class Api:
                         if key in seen:
                             continue
                         seen.add(key)
+                        models = [dict(m) for m in it.get("models", [])]
+                        specs = [x for x in it.get("specs", []) if x]
+                        if len(specs) == 1:  # 均碼（F）之類只有一個規格：模特沒寫著用尺碼就直接用它
+                            for m in models:
+                                if not m.get("size"):
+                                    m["size"] = specs[0]
                         out.append({"source": "sheet", "tab": t.get("tab"), "name": it.get("name"), "sku": it.get("sku", ""),
-                                    "colors": it.get("colors", []), "features": it.get("features", []),
-                                    "category": it.get("category", ""), "models": it.get("models", [])})
+                                    "colors": it.get("colors", []), "features": it.get("features", []), "specs": specs,
+                                    "category": it.get("category", ""), "models": models})
         except Exception:
             traceback.print_exc()
         err = ""
