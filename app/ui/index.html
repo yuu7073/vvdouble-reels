@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>VV 實穿草稿產生器</title>
+<style>
+:root{--bg:#f3f5f9;--card:#fff;--field:#fff;--sub:#f8f9fc;--line:#e3e7ef;--line2:#d6dbe6;--line3:#eef1f6;--dash:#c9d0dd;--selb:#c9d8ff;--ink:#1d2433;--onink:#fff;--mute:#5a6478;--faint:#8a93a6;--blue:#2b6cb0;--blue-bg:#eef3ff;--green:#1e7a46;--green-bg:#e8f5ee;--orange:#b05d00;--orange-bg:#fff4e5;--red:#c0392b;--red-bg:#fdecea}
+:root[data-theme="dark"]{--bg:#0e1014;--card:#171a20;--field:#1e222a;--sub:#1b1f26;--line:#262b35;--line2:#343a47;--line3:#222731;--dash:#3a4150;--selb:#2d4470;--ink:#e9ecf3;--onink:#0e1014;--mute:#a3abbb;--faint:#6d7587;--blue:#7fb2ff;--blue-bg:#1a2744;--green:#62d18f;--green-bg:#143122;--orange:#f2b05a;--orange-bg:#3a2a12;--red:#ff8577;--red-bg:#3d1f1b;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:"Noto Sans TC","Microsoft JhengHei UI","Microsoft JhengHei",system-ui,sans-serif;color:var(--ink);background:var(--bg);font-size:13px;overflow:hidden;user-select:none}
+button,input,select{font-family:inherit;font-size:13px;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+input,select{outline:none}
+a{color:var(--blue)}
+.app{height:100vh;display:flex;flex-direction:column}
+/* top bar */
+.top{height:56px;flex:none;padding:0 20px;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px}
+.logo{width:30px;height:30px;border-radius:8px;background:var(--ink);color:var(--onink);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.title{font-size:15px;font-weight:700}
+.nav{display:flex;gap:4px;margin-left:16px}
+.nav button{height:32px;padding:0 12px;border-radius:8px;color:var(--mute);font-weight:500}
+.nav button.on{background:var(--bg);color:var(--ink)}
+.sp{flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:13px;font-size:12px;font-weight:500;white-space:nowrap}
+.chip.g{background:var(--green-bg);color:var(--green)}.chip.o{background:var(--orange-bg);color:var(--orange)}.chip.b{background:var(--blue-bg);color:var(--blue)}.chip.r{background:var(--red-bg);color:var(--red)}
+.chip.w{background:var(--field);border:1px solid var(--line2);color:var(--mute)}.chip.k{background:var(--ink);color:var(--onink)}
+.dot{width:8px;height:8px;border-radius:4px;background:currentColor}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 16px;border-radius:10px;font-weight:500;white-space:nowrap}
+.btn.k{background:var(--ink);color:var(--onink)}.btn.k:disabled{background:#9aa3b5;cursor:default}
+.btn.w{background:var(--field);border:1px solid var(--line2)}.btn.l{background:var(--bg)}
+.btn.sm{height:30px;padding:0 10px;font-size:12px;border-radius:8px}
+.btn.xl{height:48px;font-size:15px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px}
+.sel,.ipt{display:flex;align-items:center;height:30px;padding:0 10px;border:1px solid var(--line2);border-radius:8px;background:var(--field);width:100%}
+select.sel{appearance:none;-webkit-appearance:none;background:var(--field) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%238a93a6' stroke-width='1.5'/></svg>") no-repeat right 10px center;padding-right:24px}
+input.ipt::placeholder{color:var(--faint)}
+.row{display:flex;align-items:center;justify-content:space-between;min-height:32px;gap:10px}
+.h{font-size:13px;font-weight:700;color:var(--mute)}
+.tog{width:34px;height:20px;border-radius:10px;background:var(--line2);position:relative;flex:none;cursor:pointer;transition:background .15s}
+.tog::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:8px;background:#fff;transition:left .15s}
+.tog.on{background:var(--blue)}.tog.on::after{left:16px}
+/* layout */
+.main{flex:1;min-height:0;display:flex}
+.left{width:250px;flex:none;background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column}
+.center{flex:1;min-width:0;padding:18px 22px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.right{width:300px;flex:none;background:var(--card);border-left:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:16px;overflow:auto}
+.plist{display:flex;flex-direction:column;gap:4px;padding:0 10px;overflow:auto}
+.pitem{padding:10px 12px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;gap:3px;border:1px solid transparent}
+.pitem:hover{background:var(--sub)}.pitem.on{background:var(--blue-bg);border-color:var(--selb)}
+.pitem .n{font-weight:600;line-height:1.4}.pitem .m{font-size:12px;color:var(--mute)}
+.drop{margin:12px;padding:16px 12px;border:2px dashed var(--dash);border-radius:12px;text-align:center;font-size:12px;color:var(--mute);line-height:1.6}
+.drop.hot,body.dragging .drop{border-color:var(--blue);background:var(--blue-bg);color:var(--blue)}
+/* clips grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;overflow:auto;padding-bottom:12px;align-content:start}
+.clip{padding:10px;display:flex;flex-direction:column;gap:8px;position:relative;cursor:grab}
+.clip.closeup{border-color:var(--selb)}
+.clip.dragover{outline:2px solid var(--blue);outline-offset:-2px}
+.clip.ghost{opacity:.4}
+.thumb{position:relative;width:100%;aspect-ratio:9/16;border-radius:8px;overflow:hidden;background:#111}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.num{position:absolute;top:8px;left:8px;width:26px;height:26px;border-radius:13px;background:var(--ink);color:var(--onink);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.clip.closeup .num{background:var(--blue)}
+.dur{position:absolute;bottom:8px;right:8px;height:20px;padding:0 7px;border-radius:6px;background:rgba(0,0,0,.65);color:var(--field);font-size:11px;display:flex;align-items:center}
+.del{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:12px;background:rgba(0,0,0,.5);color:var(--field);display:none;align-items:center;justify-content:center;font-size:14px}
+.clip:hover .del{display:flex}
+.two{display:flex;gap:6px}
+.empty{flex:1;display:flex;align-items:center;justify-content:center;border:2px dashed var(--dash);border-radius:14px;color:var(--mute);font-size:14px;text-align:center;line-height:1.8}
+/* progress / result */
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--blue);transition:width .2s}
+.li{display:flex;align-items:center;gap:12px;min-height:44px;padding:4px 14px;border-bottom:1px solid var(--line3)}
+.li img{width:26px;height:46px;object-fit:cover;border-radius:4px;flex:none;background:#222}
+.ok{width:18px;height:18px;border-radius:9px;background:#2fa85d;color:var(--field);font-size:11px;display:flex;align-items:center;justify-content:center;flex:none}
+.spin{width:18px;height:18px;border-radius:9px;border:2px solid var(--blue);border-top-color:transparent;flex:none;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.log{font-family:Consolas,monospace;font-size:11px;color:var(--mute);background:var(--sub);border-radius:8px;padding:8px 10px;max-height:120px;overflow:auto;white-space:pre-wrap}
+/* tables */
+.tr{display:grid;gap:12px;align-items:center;min-height:48px;padding:0 16px;border-bottom:1px solid var(--line3)}
+.tr.head{min-height:38px;font-size:12px;font-weight:700;color:var(--mute);background:var(--sub)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--onink);padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.show{opacity:1}
+.toast.err{background:var(--red)}
+.modal{position:fixed;inset:0;background:rgba(20,25,40,.35);display:none;align-items:center;justify-content:center;z-index:8}
+.modal.show{display:flex}
+.modal .box{width:720px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.view{display:none;flex:1;min-height:0}.view.on{display:flex}
+.mrow{display:flex;align-items:center;gap:10px;height:34px;padding:0 12px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;user-select:none}
+.mrow.sub{padding-left:34px;font-weight:400;height:30px;font-size:12.5px}
+.mrow:hover{background:var(--sub)}.mrow.on{background:var(--blue-bg)}
+.cb{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--dash);background:var(--field);flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--field)}
+.cb.on{background:var(--blue);border-color:var(--blue)}
+.st{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:12px;font-size:12px;font-weight:500;white-space:nowrap}
+.st i{width:7px;height:7px;border-radius:4px;display:inline-block}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="logo">VV</div>
+    <div class="title">實穿草稿產生器</div>
+    <div class="nav">
+      <button data-view="todo">待製作</button>
+      <button data-view="work" class="on">製作</button>
+      <button data-view="done">完成</button>
+      <button data-view="music">音樂庫</button>
+      <button data-view="models">模特資料</button>
+      <button data-view="settings">設定</button>
+    </div>
+    <div class="sp"></div>
+    <button class="btn l sm" id="themeBtn" onclick="app.toggleTheme()" title="深色模式" style="width:34px;padding:0;font-size:15px">☾</button>
+    <span id="capcutChip" class="chip g"><span class="dot"></span>CapCut 已關閉</span>
+  </div>
+
+  <!-- ===== 待製作 ===== -->
+  <div class="view main" id="view-todo">
+    <div class="left" style="width:240px">
+      <div style="padding:14px 10px 6px" class="row"><div class="h" style="padding-left:6px">檔期</div><button class="btn l sm" onclick="app.loadTodo(true)">重新整理</button></div>
+      <div id="todoMonths" style="flex:1;overflow:auto;padding:0 6px 10px;display:flex;flex-direction:column;gap:2px"></div>
+      <div style="font-size:12px;color:var(--faint);padding:10px 16px" id="todoMeta"></div>
+    </div>
+    <div style="flex:1;min-width:0;padding:18px 22px;display:flex;flex-direction:column;gap:12px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:8px" id="todoChips"></div>
+      <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden">
+        <div class="tr head" style="grid-template-columns:110px 1fr 150px 180px 100px 96px"><span>檔期</span><span>名稱</span><span>顏色</span><span>拍攝特點</span><span>狀態</span><span></span></div>
+        <div id="todoRows" style="overflow:auto;flex:1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 製作 ===== -->
+  <div class="view main on" id="view-work">
+    <div class="left">
+      <div style="padding:16px 16px 10px" class="row">
+        <div class="h">本次製作（<span id="prodCount">0</span>）</div>
+        <button class="btn k sm" onclick="app.addProduct()">＋ 新增</button>
+      </div>
+      <div class="plist" id="plist"></div>
+      <div class="sp"></div>
+      <div class="drop" id="dropHint">把商品資料夾或影片<br>拖進視窗任何地方</div>
+    </div>
+
+    <div class="center" id="centerPane">
+      <div style="display:flex;align-items:center;gap:10px">
+        <input class="ipt" id="prodName" style="height:38px;font-size:15px;font-weight:700" placeholder="商品名稱" oninput="app.renameProduct(this.value)">
+        <button class="btn w" onclick="app.pickVideos()">＋ 加入影片</button>
+        <button class="btn w" onclick="app.pickFolder()">＋ 加入資料夾</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;color:var(--mute)" id="filterBar">
+        <span class="chip k" id="cntAll">全部 0</span>
+        <span class="chip w" id="cntModel"></span>
+        <span class="chip w" id="cntClose">近拍 0</span>
+        <div class="sp"></div>
+        <span id="analyzing" style="font-size:12px"></span><span id="visionHint" class="chip o" style="display:none">人物偵測未啟用，近拍請手動勾</span>
+        <span style="font-size:12px">拖曳卡片可調順序</span>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="empty" id="emptyHint" style="display:none">把影片拖進來<br><span style="font-size:12px">程式會自動判斷近拍，其餘選模特和尺碼</span></div>
+    </div>
+
+    <div class="right">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="row"><span class="h">音樂</span><button class="btn l sm" onclick="app.go('music')">音樂庫</button></div>
+        <select class="sel" id="musicSel" style="height:36px;font-weight:500" onchange="app.setMusic(this.value)"></select>
+        <div id="musicMeta" style="font-size:12px;color:var(--mute);padding:0 2px"></div>
+        <div class="two">
+          <button class="btn l sm" style="flex:1" onclick="app.pickMusic('least_used')">最久沒用的一首</button>
+          <button class="btn l sm" style="flex:1" onclick="app.pickMusic('random')">隨機</button>
+        </div>
+        <div class="row"><span>開始位置</span><input class="ipt" id="musicStart" style="width:120px" placeholder="自動挑段" oninput="app.setMusicStart(this.value)"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="h">輸出</div>
+        <div class="row"><span>總長上限</span><div class="ipt" style="width:120px;justify-content:space-between"><input id="optMax" style="border:0;width:60px;background:none" type="number" min="15" max="60" onchange="app.setOpt('max_total',+this.value)"><span style="color:var(--faint)">秒</span></div></div>
+        <div class="row"><span>中間近拍</span><div class="ipt" style="width:136px;justify-content:space-between"><input id="optMid1" style="border:0;width:34px;background:none;text-align:center" type="number" step="0.5" min="1" max="4" onchange="app.setMid()">–<input id="optMid2" style="border:0;width:34px;background:none;text-align:center" type="number" step="0.5" min="1" max="4" onchange="app.setMid()"><span style="color:var(--faint)">秒</span></div></div>
+        <div class="row"><span>人物置中</span><div class="tog" id="optCenter" onclick="app.toggleOpt('person_center',this)"></div></div>
+        <div class="row"><span>自動穩定</span><div class="tog" id="optStab" onclick="app.toggleOpt('stabilize',this)"></div></div>
+        <div class="row"><span>自動潤飾</span><div class="tog" id="optBeauty" onclick="app.toggleOpt('beauty',this)"></div></div>
+      </div>
+
+      <div class="sp"></div>
+      <div class="card" style="padding:12px;background:var(--sub);display:flex;flex-direction:column;gap:6px">
+        <div class="row" style="min-height:22px"><span style="color:var(--mute)">預計</span><b id="estTotal">—</b></div>
+        <div class="row" style="min-height:22px"><span style="color:var(--mute)">會用到</span><span id="estUse">—</span></div>
+      </div>
+      <button class="btn k xl" id="btnGen" onclick="app.generate(false)">產生這支草稿</button>
+      <button class="btn w" id="btnGenAll" onclick="app.generate(true)">產生全部</button>
+    </div>
+  </div>
+
+  <!-- ===== 完成 ===== -->
+  <div class="view main" id="view-done">
+    <div style="width:420px;flex:none;padding:22px;display:flex;flex-direction:column;gap:14px;overflow:auto">
+      <div class="card" style="padding:18px;display:flex;flex-direction:column;gap:12px" id="progressCard">
+        <div class="row"><b id="progTitle">尚未開始</b><span id="progSub" style="color:var(--mute)"></span></div>
+        <div class="bar"><i id="progBar" style="width:0%"></i></div>
+        <div class="log" id="progLog" style="display:none"></div>
+      </div>
+      <div class="card" id="doneList" style="display:flex;flex-direction:column;overflow:hidden"></div>
+      <div class="sp"></div>
+      <button class="btn w" onclick="app.openCapCut()">打開 CapCut</button>
+    </div>
+    <div class="card" style="flex:1;min-width:0;margin:22px 22px 22px 0;display:flex;flex-direction:column;overflow:hidden" id="detail">
+      <div style="padding:40px;text-align:center;color:var(--mute)">產生完成後，這裡會顯示草稿內容</div>
+    </div>
+  </div>
+
+  <!-- ===== 音樂庫 ===== -->
+  <div class="view" id="view-music" style="flex-direction:column">
+    <div style="padding:22px;display:flex;flex-direction:column;gap:14px;flex:1;min-height:0">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="card" style="padding:10px 16px;min-width:110px"><div style="font-size:12px;color:var(--mute)">歌曲</div><div style="font-size:20px;font-weight:700" id="mCount">0</div></div>
+        <div class="card" style="padding:10px 16px;min-width:110px"><div style="font-size:12px;color:var(--mute)">沒用過</div><div style="font-size:20px;font-weight:700" id="mUnused">0</div></div>
+        <div class="card" style="padding:10px 16px;min-width:150px" id="mAgedCard"><div style="font-size:12px;color:var(--mute)">上次補歌</div><div style="font-size:16px;font-weight:700" id="mAged">—</div></div>
+        <div class="sp"></div>
+        <span id="mFolder" style="font-size:12px;color:var(--mute);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <button class="btn w" onclick="app.musicFolder()">選音樂庫資料夾</button>
+        <button class="btn k" onclick="app.musicAnalyze()">分析新歌</button>
+      </div>
+      <div class="card" style="overflow:auto;flex:1">
+        <div class="tr head" style="grid-template-columns:1fr 70px 120px 90px 200px;position:sticky;top:0"><span>歌名</span><span>BPM</span><span>風格</span><span>用過</span><span>上次使用</span></div>
+        <div id="mRows"></div>
+      </div>
+      <div style="font-size:12px;color:var(--mute)" id="mAnalyzing"></div>
+    </div>
+  </div>
+
+  <!-- ===== 模特 ===== -->
+  <div class="view" id="view-models" style="flex-direction:column">
+    <div style="padding:22px;display:flex;flex-direction:column;gap:14px;max-width:820px">
+      <div class="row"><div class="h" style="font-size:15px;color:var(--ink)">模特資料</div><button class="btn l sm" onclick="app.refreshBeauty()">從「實穿模板」更新潤飾</button></div>
+      <div class="card">
+        <div class="tr head" style="grid-template-columns:140px 100px 100px 1fr 40px"><span>名字</span><span>身高</span><span>體重</span><span>潤飾</span><span></span></div>
+        <div id="modelRows"></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn w" onclick="app.addModelRow()">＋ 新模特</button><button class="btn k" onclick="app.saveModels()">儲存</button></div>
+    </div>
+  </div>
+
+  <!-- ===== 設定 ===== -->
+  <div class="view" id="view-settings" style="flex-direction:column">
+    <div style="padding:22px;display:flex;flex-direction:column;gap:14px;max-width:820px">
+      <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div class="row"><span>CapCut 草稿資料夾</span><div style="display:flex;gap:8px;width:520px"><input class="ipt" id="setDraft" readonly><button class="btn w sm" onclick="app.pickSetting('draft_folder')">變更</button></div></div>
+        <div class="row"><span>成品資料夾（CapCut 匯出位置）</span><div style="display:flex;gap:8px;width:520px"><input class="ipt" id="setExport" readonly placeholder="尚未設定"><button class="btn w sm" onclick="app.pickSetting('export_folder')">變更</button></div></div>
+        <div class="row"><span>音樂庫資料夾</span><div style="display:flex;gap:8px;width:520px"><input class="ipt" id="setMusic" readonly placeholder="尚未設定"><button class="btn w sm" onclick="app.pickSetting('music_folder')">變更</button></div></div>
+        <div class="row"><span>待製作清單網址</span><div style="display:flex;gap:8px;width:520px"><input class="ipt" id="setTodo" placeholder="Apps Script 網頁應用程式網址" onchange="app.saveTodoUrl(this.value)"></div></div>
+      </div>
+      <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div class="row"><span>工具密碼（同官網批次中心）</span><div style="display:flex;gap:8px;width:520px"><input class="ipt" id="setPw" type="password" placeholder="輸入後才能上傳 YouTube／放到商品頁" onchange="app.savePw(this.value)"><button class="btn w sm" onclick="app.cloudCheck()">測試</button></div></div>
+        <div class="row"><span>YouTube 頻道</span><div style="display:flex;gap:8px;width:520px;align-items:center"><span id="ytState" style="flex:1;color:var(--mute)">—</span><button class="btn w sm" onclick="app.ytSetup()">設定／授權</button></div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px"><div style="font-size:12px;color:var(--mute)" id="verInfo"></div><div class="sp"></div><button class="btn w sm" onclick="app.checkUpdate(true)">檢查更新</button><button class="btn w sm" onclick="app.errorReport()">複製錯誤紀錄</button></div>
+      <div id="updBox" class="card" style="display:none;padding:12px 16px;gap:10px;align-items:center;border-color:var(--blue)"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal"><div class="card box" id="modalBox"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s, r=document) => r.querySelector(s);
+(function(){ try{ const t=localStorage.getItem('vv_theme'); if(t) document.documentElement.dataset.theme=t; }catch(e){} })();
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SIZES = ['大碼','中碼','小碼','SM','ML','XL2L','3L4L','5L6L','L','XL','2L','3L','4L','5L','6L'];
+
+const app = {
+  state: null, products: [], cur: 0, view: 'work', busy: false, results: [],
+  api() { return window.pywebview && window.pywebview.api; },
+  async call(name, ...args) {
+    if (name==='choose_folder' || name==='choose_videos') {
+      const a = this.api(); if (!a) { this.toast('視窗尚未就緒，請再試一次', true); return null; }
+      try { return await a[name](...args); } catch (e) { this.toast(String(e), true); return null; }
+    }
+    try {
+      const r = await fetch('/call', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, args})});
+      const j = await r.json();
+      if (j.error) { this.toast(j.error, true); return null; }
+      return j.result;
+    } catch (e) { console.warn(name, e); return null; }
+  },
+  toast(msg, err) { const t=$('#toast'); t.textContent=msg; t.className='toast show'+(err?' err':''); clearTimeout(this._tt); this._tt=setTimeout(()=>t.className='toast', 2600); },
+
+  async init() {
+    this.state = await this.call('get_state') || {settings:{},models:[],music:{tracks:[]},history:[],beauty:[]};
+    this.applyTheme(this.state.settings.theme||document.documentElement.dataset.theme||'light');
+    if(this.state.settings.tool_password) this.cloudCheck();
+    setTimeout(()=>this.checkUpdate(false), 4000);
+    this.renderSettings(); this.renderMusicSel(); this.renderMusic(); this.renderModels(); this.renderHistory();
+    this.updateCapcut(this.state.capcut_running);
+    if (this.state.vision_ok===false) $('#visionHint').style.display='inline-flex';
+    if (!this.products.length) this.addProduct();
+    setInterval(async () => { const r = await this.call('capcut_running'); if (r!==null) this.updateCapcut(r); }, 4000);
+    setInterval(() => this.poll(), 500);
+    $('#verInfo').textContent = `版本 ${this.state.version||''}・人物偵測 ${this.state.vision_ok?'可用':'未啟用：'+(this.state.vision_error||'')}`;
+    const ready = () => this.call('ui_ready');
+    if (window.pywebview) setTimeout(ready, 300); else window.addEventListener('pywebviewready', () => setTimeout(ready, 300));
+    setTimeout(ready, 3000);
+  },
+  updateCapcut(running) {
+    const c=$('#capcutChip'); c.className='chip '+(running?'r':'g'); c.innerHTML=`<span class="dot"></span>CapCut ${running?'開啟中':'已關閉'}`;
+    $('#btnGen').disabled = running || this.busy; $('#btnGenAll').disabled = running || this.busy;
+  },
+  async poll() {
+    if (this._polling) return; this._polling=true;
+    try { const r = await this.call('poll_events'); if (r && r.events) for (const e of r.events) { try { this.emit(e.event, e.payload); } catch(err) { console.error(err); } } }
+    finally { this._polling=false; }
+  },
+  emit(ev, p) {
+    if (ev==='analyzing') { $('#analyzing').textContent = p.i<p.n ? `分析中 ${p.i+1}/${p.n}　${p.name}` : ''; }
+    else if (ev==='drop_start') { $('#analyzing').textContent = `讀取 ${p.n} 個檔案…`; document.body.classList.remove('dragging'); }
+    else if (ev==='dropped') { this.ingest(p); }
+    else if (ev==='job_start') { this.progress(p.job, 0, 1, '準備中'); $('#progLog').style.display='block'; $('#progLog').textContent=''; this.go('done'); }
+    else if (ev==='log') { const l=$('#progLog'); l.textContent += p.msg+'\n'; l.scrollTop=l.scrollHeight; }
+    else if (ev==='progress') { this.progress(p.job, p.i, p.n, p.name); }
+    else if (ev==='job_done') { this.results.push(p); if (p.ok) this.state.history.push(p); this.renderHistory(); this.showDetail(p); }
+    else if (ev==='all_done') { this.busy=false; this.updateCapcut(false); $('#progTitle').textContent='全部完成'; $('#progSub').textContent=''; $('#progBar').style.width='100%'; this.toast('草稿已產生，可以打開 CapCut'); }
+    else if (ev==='update_progress') { const m=$('#updMsg'); if(m) m.textContent=p.msg; }
+    else if (ev==='pub_progress') { const b=$('#pubBox'); if(b&&b.dataset.id===p.id){ $('#pubMsg').textContent=p.msg; if(p.pct!=null) $('#pubBar').style.width=Math.round(p.pct*100)+'%'; } }
+    else if (ev==='pub_done') { const rec=this.state.history.find(x=>x.id===p.id); if(rec&&p.record) Object.assign(rec,p.record); if(p.ok){ this.toast('已上傳 YouTube'+(p.results&&p.results.length?`，放到 ${p.results.filter(x=>x.ok).length} 個商品頁`:'')); } else this.toast(p.error,true); if(rec) this.showDetail(rec); }
+    else if (ev==='music_analyzing') { $('#mAnalyzing').textContent = p.i<p.n ? `分析 ${p.i+1}/${p.n}　${p.name}` : ''; if (p.i>=p.n) this.reloadMusic(); }
+  },
+  go(v) { this.view=v; document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='view-'+v)); document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on', b.dataset.view===v)); if(v==='todo'&&!this.todo) this.loadTodo(); },
+
+  toggleTheme(){ const cur=document.documentElement.dataset.theme==='dark'?'light':'dark'; this.applyTheme(cur); try{ localStorage.setItem('vv_theme',cur); }catch(e){} this.call('save_settings',{theme:cur}); },
+  applyTheme(t){ document.documentElement.dataset.theme=t; const b=$('#themeBtn'); if(b) b.textContent=t==='dark'?'☀':'☾'; },
+
+  /* ---------- 更新／錯誤回報 ---------- */
+  async checkUpdate(manual){
+    const r=await this.call('check_update'); this.upd=r;
+    if(!r||!r.ok){ if(manual) this.toast(r?('無法檢查更新：'+r.error):'無法檢查更新',true); return; }
+    const box=$('#updBox');
+    if(!r.available){ box.style.display='none'; if(manual) this.toast(`已是最新版本 ${r.current}`); return; }
+    box.style.display='flex';
+    box.innerHTML=`<span class="chip b">新版本 ${esc(r.latest)}</span><span style="flex:1;font-size:12px;color:var(--mute);white-space:pre-wrap">${esc((r.notes||'').split('\n').slice(0,3).join('　'))}</span><span id="updMsg" style="font-size:12px;color:var(--mute)"></span>`+
+      (r.can_auto?`<button class="btn k sm" onclick="app.doUpdate()">立即更新</button>`:`<button class="btn k sm" onclick="app.call('open_url','${r.setup||r.zip||('https://github.com/'+'yuu7073/vvdouble-reels/releases/latest')}')">下載新版</button>`);
+    if(!manual){ this.toast(`有新版本 ${r.latest}，到「設定」更新`); }
+  },
+  async doUpdate(){ const r=await this.call('do_update', this.upd.zip); if(!r||!r.ok){ this.toast(r?r.error:'更新失敗',true); } },
+  async errorReport(){ const r=await this.call('error_report'); if(!r) return; this.toast(r.ok?'已複製最近的紀錄，貼給 Vivian 即可':'複製失敗，紀錄檔在 '+r.file, !r.ok); },
+
+  /* ---------- YouTube ＋ 商品頁 ---------- */
+  publishBox(r){
+    if(!r.exported) return '';
+    if(r.youtube_id) return `<div id="pubBox" data-id="${r.id}" style="padding:12px 18px;border-top:1px solid var(--line3);background:var(--sub);display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px"><span class="chip g">已上傳 YouTube</span><a href="#" onclick="app.call('open_url','${r.youtube_url}');return false" style="font-size:13px">${esc(r.youtube_title||r.youtube_url)}</a><div class="sp"></div><span class="chip w">已放到 ${(r.embedded||[]).length} 個商品頁</span></div>
+        <div id="pubProducts" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--mute)">讀取商品…</div>
+        <div style="display:flex;gap:8px;align-items:center"><div class="bar" style="flex:1"><i id="pubBar" style="width:0"></i></div><span id="pubMsg" style="font-size:12px;color:var(--mute);min-width:120px"></span><button class="btn w sm" onclick="app.doPublish('${r.id}')">再放到勾選的商品頁</button></div></div>`;
+    return `<div id="pubBox" data-id="${r.id}" style="padding:12px 18px;border-top:1px solid var(--line3);background:var(--sub);display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--mute);flex:none">YouTube 標題</span><input class="ipt" id="pubTitle" style="flex:1;height:32px" placeholder="產生中…"><button class="btn l sm" onclick="app.loadTitles('${r.id}')">換一句</button></div>
+        <div id="pubProducts" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--mute)">讀取商品…</div>
+        <div style="display:flex;gap:8px;align-items:center"><div class="bar" style="flex:1"><i id="pubBar" style="width:0"></i></div><span id="pubMsg" style="font-size:12px;color:var(--mute);min-width:120px"></span><button class="btn k" id="pubBtn" onclick="app.doPublish('${r.id}')">上傳 YouTube 並放到商品頁</button></div></div>`;
+  },
+  async loadPublish(r){ this.loadTitles(r.id); this.loadProducts(r); },
+  _titles:{},
+  async loadTitles(id){
+    const box=this._titles[id]||{list:[],i:-1};
+    if(box.i+1<box.list.length){ box.i++; $('#pubTitle').value=box.list[box.i]; this._titles[id]=box; return; }
+    const r=await this.call('yt_titles', id); if(!r||!r.ok){ $('#pubTitle').placeholder=r?r.error:'無法產生'; return; }
+    box.list=box.list.concat(r.titles||[]); box.i=Math.min(box.i+1, box.list.length-1); this._titles[id]=box; if(box.list.length) $('#pubTitle').value=box.list[box.i];
+  },
+  async loadProducts(r){
+    const el=$('#pubProducts'); const q=await this.call('find_products', r.name);
+    if(!q||!q.ok){ el.innerHTML=`<span style="color:var(--red)">${esc(q?q.error:'無法連線')}</span>`; return; }
+    const items=q.items.filter(x=>x.exact); const others=q.items.filter(x=>!x.exact);
+    const row=(x,on)=>`<label class="chip w" style="cursor:pointer;gap:6px"><input type="checkbox" value="${x.id}" ${on?'checked':''} style="margin:0;width:14px;height:14px;accent-color:var(--blue)">${esc(x.color||x.title)}${x.embedded?' <span style="color:var(--green)">●已有影片</span>':''}${x.status!=='active'?' <span style="color:var(--faint)">(未上架)</span>':''}</label>`;
+    el.innerHTML=`<span style="flex:none">放到商品頁：</span>`+(items.length?items.map(x=>row(x,!x.embedded||x.embedded!==r.youtube_id)).join(''):`<span style="color:var(--orange)">Shopline 找不到同名商品</span>`)+(others.length?`<span style="color:var(--faint)">　其他相近：</span>`+others.slice(0,6).map(x=>row(x,false)).join(''):'');
+  },
+  async doPublish(id){
+    const ids=[...document.querySelectorAll('#pubProducts input:checked')].map(x=>x.value);
+    const title=($('#pubTitle')||{}).value||'';
+    const rec=this.state.history.find(x=>x.id===id);
+    if(!rec.youtube_id && !title.trim()){ this.toast('請先填 YouTube 標題',true); return; }
+    if(rec.youtube_id && !ids.length){ this.toast('請勾選要放的商品',true); return; }
+    const btn=$('#pubBtn'); if(btn) btn.disabled=true;
+    const r=await this.call('publish', id, title, ids);
+    if(!r||!r.ok){ this.toast(r?r.error:'失敗',true); if(btn) btn.disabled=false; return; }
+    $('#pubMsg').textContent='開始…';
+  },
+
+  /* ---------- 待製作清單 ---------- */
+  todo:null, todoSel:new Set(), todoFilter:'all', todoQ:'',
+  async loadTodo(force){
+    $('#todoMeta').textContent='讀取中…';
+    const r=await this.call('todo_list',!!force);
+    if(!r||!r.ok){ this.todo=null; $('#todoMeta').textContent=''; $('#todoMonths').innerHTML=''; $('#todoChips').innerHTML='';
+      $('#todoRows').innerHTML=`<div style="padding:30px;text-align:center;color:var(--mute);line-height:1.8">${esc(r?r.error:'無法讀取')}<br><button class="btn w sm" onclick="app.go('settings')">到設定</button></div>`; return; }
+    this.todo=r;
+    if(!this.todoSel.size){ // 預設勾最新的兩個檔期
+      r.tabs.slice(0,2).forEach(t=>this.todoSel.add(t.code));
+    }
+    $('#todoMeta').textContent=`來源：上架排程試算表・${r.cached_at} 更新${r.error?'（離線資料）':''}`;
+    this.renderTodo();
+  },
+  todoStatus(it){
+    const st=this.todo.status||{}; const s=st[it.sku]||st[it.name]||{};
+    if(s.exported_at) return {k:'exported',t:'已匯出',cls:'g'};
+    if(s.draft_at||this.todo.history_skus.includes(it.sku)||this.todo.history_names.includes(it.name)) return {k:'draft',t:'已產草稿',cls:'b'};
+    return {k:'todo',t:'未製作',cls:'o'};
+  },
+  toggleMonth(m){ const codes=this.todo.tabs.filter(t=>t.ym===m).map(t=>t.code); const all=codes.every(c=>this.todoSel.has(c)); codes.forEach(c=>all?this.todoSel.delete(c):this.todoSel.add(c)); this.renderTodo(); },
+  toggleTab(c){ this.todoSel.has(c)?this.todoSel.delete(c):this.todoSel.add(c); this.renderTodo(); },
+  renderTodo(){
+    const T=this.todo; if(!T) return;
+    const months=[...new Set(T.tabs.map(t=>t.ym))];
+    $('#todoMonths').innerHTML=months.map(m=>{ const tabs=T.tabs.filter(t=>t.ym===m); const on=tabs.every(t=>this.todoSel.has(t.code)); const some=tabs.some(t=>this.todoSel.has(t.code)); const [y,mo]=m.split('-');
+      return `<div class="mrow ${some?'on':''}" onclick="app.toggleMonth('${m}')"><div class="cb ${on?'on':''}">${on?'✓':''}</div><span>${y?y+' 年 ':''}${mo} 月</span><span style="color:var(--faint);font-weight:400;margin-left:auto">${tabs.length} 檔</span></div>`+
+        tabs.map(t=>`<div class="mrow sub ${this.todoSel.has(t.code)?'on':''}" onclick="app.toggleTab('${t.code}')"><div class="cb ${this.todoSel.has(t.code)?'on':''}">${this.todoSel.has(t.code)?'✓':''}</div><span>${esc(t.tab)}</span></div>`).join(''); }).join('');
+    let items=[]; T.tabs.filter(t=>this.todoSel.has(t.code)).forEach(t=>t.items.forEach(it=>items.push({...it,tab:t.tab,code:t.code,_st:null})));
+    items.forEach(it=>it._st=this.todoStatus(it));
+    const n={all:items.length,todo:items.filter(i=>i._st.k==='todo').length,draft:items.filter(i=>i._st.k==='draft').length,exported:items.filter(i=>i._st.k==='exported').length};
+    $('#todoChips').innerHTML=[['all','全部'],['todo','未製作'],['draft','已產草稿'],['exported','已匯出']].map(([k,t])=>`<span class="chip ${this.todoFilter===k?'k':'w'}" style="cursor:pointer" onclick="app.todoFilter='${k}';app.renderTodo()">${t} ${n[k]}</span>`).join('')+
+      `<div class="sp"></div><input class="ipt" style="width:220px;height:32px" placeholder="搜尋名稱／貨號" value="${esc(this.todoQ)}" oninput="app.todoQ=this.value;app.renderTodo()">`;
+    const q=this.todoQ.trim().toLowerCase();
+    const rows=items.filter(it=>(this.todoFilter==='all'||it._st.k===this.todoFilter)&&(!q||(it.name+' '+it.sku).toLowerCase().includes(q)));
+    $('#todoRows').innerHTML=rows.map((it,i)=>`<div class="tr" style="grid-template-columns:110px 1fr 150px 180px 100px 96px;min-height:56px">
+      <span class="chip w" style="overflow:hidden;text-overflow:ellipsis;display:block;line-height:24px">${esc(it.tab)}</span>
+      <div><div style="font-weight:500;line-height:1.35">${esc(it.name)}</div><div style="font-size:12px;color:var(--faint)">${esc(it.sku)}${it.order?'・順序 '+esc(it.order):''}</div></div>
+      <span style="color:var(--mute);font-size:12.5px">${esc(it.colors.join('・'))}</span>
+      <span style="color:var(--mute);font-size:12px;line-height:1.5">${it.features.map(esc).join('<br>')}</span>
+      <span class="st ${it._st.cls}" style="background:var(--${it._st.cls==='g'?'green':it._st.cls==='b'?'blue':'orange'}-bg);color:var(--${it._st.cls==='g'?'green':it._st.cls==='b'?'blue':'orange'})"><i style="background:currentColor"></i>${it._st.t}</span>
+      <button class="btn ${it._st.k==='todo'?'k':'w'} sm" onclick='app.startFromTodo(${JSON.stringify(it).replace(/'/g,"&#39;")})'>${it._st.k==='todo'?'開始製作':'再做一支'}</button></div>`).join('')||`<div style="padding:30px;text-align:center;color:var(--mute)">沒有符合的款式</div>`;
+  },
+  startFromTodo(it){
+    const ex=this.products.find(p=>p.name===it.name);
+    if(ex){ this.cur=this.products.indexOf(ex); }
+    else {
+      const cur=this.P(); const fresh=cur&&!cur.name&&!cur.clips.length;
+      const P={name:it.name, sku:it.sku, colors:it.colors||[], features:it.features||[], category:it.category||'', clips:[], music:null, musicStart:'', modelSizes:{}};
+      (it.models||[]).forEach(m=>{ P.modelSizes[m.name.toUpperCase()]={size:m.size||'', fit:m.fit||''}; });
+      if(fresh) this.products[this.cur]=P; else { this.products.push(P); this.cur=this.products.length-1; }
+    }
+    this.renderAll(); this.go('work'); this.toast('已帶入商品，接著加入影片');
+  },
+
+  /* ---------- products & clips ---------- */
+  addProduct(name='') { this.products.push({name, clips:[], music:null, musicStart:'', colors:[]}); this.cur=this.products.length-1; this.renderAll(); },
+  selectProduct(i) { this.cur=i; this.renderAll(); },
+  removeProduct(i) { this.products.splice(i,1); if(!this.products.length) this.addProduct(); this.cur=Math.min(this.cur, this.products.length-1); this.renderAll(); },
+  renameProduct(v) { this.P().name=v; this.renderList(); },
+  P() { return this.products[this.cur]; },
+  async pickVideos() { const r = await this.call('choose_videos'); if (r) this.ingest(r); },
+  async pickFolder() { const p = await this.call('choose_folder'); if (!p) return; $('#analyzing').textContent='讀取中…'; const r = await this.call('add_paths', [p]); if (r) { if(!this.P().name){ this.P().name=p.split(/[\\/]/).pop(); } this.ingest(r); } },
+  ingest(res) {
+    $('#analyzing').textContent='';
+    const P=this.P(); const s=this.state.settings;
+    const known=new Set(P.clips.map(c=>c.path));
+    for (const c of (res.clips||[])) {
+      if (known.has(c.path)) continue;
+      const last=P.clips.filter(x=>!x.closeup).slice(-1)[0];
+      // 先從檔名讀：模特_著大碼舒適 (1).MP4 / 近拍 (1).mov / 名字@12
+      const stem=c.name.replace(/\.[^.]+$/,'').replace(/\s*@\d+(\.\d+)?\s*$/,'').replace(/\s*[\(（]\d+[\)）]\s*$/,'').replace(/^\d+[_\-\s]+/,'');
+      const parts=stem.split(/[_\-]/).map(x=>x.trim()).filter(Boolean);
+      const byName=this.state.models.find(m=>parts[0]&&parts[0].toUpperCase()===m.name.toUpperCase());
+      const isClose=c.closeup||/近拍/.test(c.name);
+      let size='', fit='';
+      const wear=parts.find(x=>x.startsWith('著'));
+      if (wear) { const m=wear.slice(1).match(/^(大碼|中碼|小碼|SM|ML|XL2L|3L4L|5L6L|XL|2L|3L|4L|5L|6L)(.*)$/i); if(m){ size=m[1]; fit=m[2]; } else { size=wear.slice(1); } }
+      else if (parts[2] && SIZES.includes(parts[2])) size=parts[2];
+      const startM=c.name.match(/@(\d+(?:\.\d+)?)/);
+      const modelName=isClose?'':(byName?byName.name:(last?last.model:(s.last_model||(this.state.models[0]?.name||''))));
+      const sheet=(P.modelSizes||{})[modelName.toUpperCase()]||null;   // 上架排程表裡這位模特的著用尺碼
+      P.clips.push({...c, closeup:isClose, model: modelName,
+        size: isClose?'':(size||(sheet&&sheet.size)||(last?last.size:(s.last_size||'大碼'))),
+        fit: fit||(sheet&&sheet.fit)||(last?last.fit:'舒適'), start: startM?startM[1]:''});
+    }
+    if (res.music && res.music.length && !P.music) { P.music={path:res.music[0].path, name:res.music[0].name, external:true}; }
+    if (!P.name && res.clips && res.clips.length) { const d=res.clips[0].path.replace(/[\\/][^\\/]*$/,'').split(/[\\/]/).pop(); if (d && !/^(downloads|desktop|桌面|videos|影片)$/i.test(d)) P.name=d; }
+    this.renderAll();
+  },
+  removeClip(i) { this.P().clips.splice(i,1); this.renderGrid(); },
+  setClip(i, k, v) { const c=this.P().clips[i]; c[k]=v; if(k==='closeup'){ if(v){c.model='';c.size='';} else {c.model=c.model||this.state.models[0]?.name||''; c.size=c.size||'大碼';} this.renderGrid(); } else { if(k==='model'){ this.state.settings.last_model=v; const sh=(this.P().modelSizes||{})[String(v).toUpperCase()]; if(sh&&sh.size){ c.size=sh.size; if(sh.fit) c.fit=sh.fit; this.renderGrid(); return; } } if(k==='size') this.state.settings.last_size=v; this.renderCounts(); } },
+  applyToRest(i) { const src=this.P().clips[i]; this.P().clips.forEach((c,j)=>{ if(j>i && !c.closeup){c.model=src.model;c.size=src.size;c.fit=src.fit;} }); this.renderGrid(); this.toast('已套用到後面的片段'); },
+  move(from,to) { const a=this.P().clips; const [x]=a.splice(from,1); a.splice(to,0,x); this.renderGrid(); },
+
+  renderAll() { this.renderList(); $('#prodName').value=this.P().name; this.renderGrid(); this.renderMusicSel(); },
+  renderList() {
+    $('#prodCount').textContent=this.products.length;
+    $('#plist').innerHTML=this.products.map((p,i)=>{
+      const n=p.clips.filter(c=>!c.closeup).length, k=p.clips.filter(c=>c.closeup).length;
+      const m=p.music?'音樂 ✓':'<span style="color:var(--red)">缺音樂</span>';
+      return `<div class="pitem ${i===this.cur?'on':''}" onclick="app.selectProduct(${i})"><div class="n">${esc(p.name)||'<span style="color:var(--faint)">未命名</span>'}</div><div class="m">${p.clips.length?`${n} 段實穿・${k} 段近拍・${m}`:'尚未放入影片'}${this.products.length>1?` <a href="#" onclick="event.stopPropagation();app.removeProduct(${i});return false" style="float:right;color:var(--faint);text-decoration:none">✕</a>`:''}</div></div>`;
+    }).join('');
+  },
+  renderCounts() {
+    const cl=this.P().clips; const byM={};
+    cl.filter(c=>!c.closeup).forEach(c=>{byM[c.model||'未選']=(byM[c.model||'未選']||0)+1});
+    $('#cntAll').textContent=`全部 ${cl.length}`;
+    $('#cntModel').innerHTML=Object.entries(byM).map(([k,v])=>`${esc(k)} ${v}`).join('　')||'—';
+    $('#cntClose').textContent=`近拍 ${cl.filter(c=>c.closeup).length}`;
+    this.renderEstimate();
+  },
+  renderEstimate() {
+    const cl=this.P().clips, s=this.state.settings; const max=+s.max_total||28;
+    const models=cl.filter(c=>!c.closeup).length, close=cl.filter(c=>c.closeup).length;
+    if(!cl.length){$('#estTotal').textContent='—';$('#estUse').textContent='—';return;}
+    const nClose=Math.min(close, Math.max(1, Math.round(max*0.3/2))); const nModel=Math.min(models, Math.floor((max-nClose*2)/2));
+    $('#estTotal').textContent=`約 ${Math.min(max, nModel*2+nClose*2)} 秒`;
+    $('#estUse').textContent=`${nModel} 段實穿・${nClose} 段近拍`;
+  },
+  renderGrid() {
+    const P=this.P(); const g=$('#grid'); const ms=this.state.models;
+    $('#emptyHint').style.display=P.clips.length?'none':'flex'; g.style.display=P.clips.length?'grid':'none';
+    g.innerHTML=P.clips.map((c,i)=>`
+      <div class="card clip ${c.closeup?'closeup':''}" draggable="true" data-i="${i}">
+        <div class="thumb">${c.thumb?`<img src="${c.thumb}" alt="">`:''}<div class="num">${i+1}</div><div class="dur">${c.duration}s</div><button class="del" onclick="app.removeClip(${i})" title="移除">✕</button></div>
+        ${c.closeup?`<div class="ipt" style="color:var(--faint)">CLOSE UP DETAIL</div>`:`
+        <div class="two">
+          <select class="sel" onchange="app.setClip(${i},'model',this.value)">${ms.map(m=>`<option ${m.name===c.model?'selected':''}>${esc(m.name)}</option>`).join('')}${ms.some(m=>m.name===c.model)?'':`<option selected>${esc(c.model||'選模特')}</option>`}</select>
+          <select class="sel" onchange="app.setClip(${i},'size',this.value)">${SIZES.map(s=>`<option ${s===c.size?'selected':''}>${s}</option>`).join('')}</select>
+        </div>
+        <div class="two"><input class="ipt" value="${esc(c.fit)}" placeholder="舒適" oninput="app.setClip(${i},'fit',this.value)" title="MODEL 卡第三行：著＋尺碼＋這個字"><button class="btn l sm" onclick="app.applyToRest(${i})" title="套用到後面">↓</button></div>`}
+        <div class="row" style="min-height:24px"><span style="color:var(--mute)">近拍</span><div class="tog ${c.closeup?'on':''}" onclick="app.setClip(${i},'closeup',${!c.closeup})"></div></div>
+        <div class="row" style="min-height:24px"><span style="color:var(--mute)">從第幾秒</span><input class="ipt" style="width:70px;height:24px" placeholder="自動" value="${esc(c.start)}" oninput="app.setClip(${i},'start',this.value)"></div>
+      </div>`).join('');
+    g.querySelectorAll('.clip').forEach(el=>{
+      el.addEventListener('dragstart',e=>{ if(e.target.closest('input,select')) {e.preventDefault();return;} e.dataTransfer.setData('text/plain',el.dataset.i); el.classList.add('ghost'); e.dataTransfer.effectAllowed='move'; });
+      el.addEventListener('dragend',()=>el.classList.remove('ghost'));
+      el.addEventListener('dragover',e=>{ if(e.dataTransfer.types.includes('text/plain')){e.preventDefault(); el.classList.add('dragover');} });
+      el.addEventListener('dragleave',()=>el.classList.remove('dragover'));
+      el.addEventListener('drop',e=>{ const from=+e.dataTransfer.getData('text/plain'); if(!isNaN(from)){ e.preventDefault(); e.stopPropagation(); this.move(from,+el.dataset.i);} });
+    });
+    this.renderCounts();
+  },
+
+  /* ---------- music ---------- */
+  renderMusicSel() {
+    const P=this.P?this.P():null; const tracks=(this.state.music&&this.state.music.tracks)||[];
+    const sel=$('#musicSel'); const cur=P&&P.music?P.music.path:'';
+    let opts=`<option value="">— 不放音樂 —</option>`+tracks.map(t=>`<option value="${esc(t.path)}" ${t.path===cur?'selected':''}>${esc(t.name)}</option>`).join('');
+    if (cur && !tracks.some(t=>t.path===cur)) opts+=`<option value="${esc(cur)}" selected>${esc(P.music.name)}（資料夾內）</option>`;
+    sel.innerHTML=opts; $('#musicStart').value=P?P.musicStart:'';
+    const t=tracks.find(x=>x.path===cur);
+    $('#musicMeta').innerHTML=t?`${t.bpm?t.bpm+' BPM':'尚未分析'}・用過 ${t.uses} 次${t.last_use?'・上次 '+t.last_use.date.slice(5):''}`:(cur?'來自商品資料夾':'');
+    if(!tracks.length) $('#musicMeta').innerHTML=`<a href="#" onclick="app.go('music');return false">還沒設定音樂庫</a>`;
+  },
+  setMusic(path) { const P=this.P(); const t=(this.state.music.tracks||[]).find(x=>x.path===path); P.music=path?{path, name:t?t.name:path}:null; this.renderMusicSel(); this.renderList(); },
+  setMusicStart(v) { this.P().musicStart=v; },
+  async pickMusic(mode) { const t=await this.call('music_pick', mode, this.P().music?this.P().music.path:null); if(!t){this.toast('音樂庫是空的',true);return;} this.setMusic(t.path); },
+  async reloadMusic() { this.state.music=await this.call('music_list')||this.state.music; this.renderMusic(); this.renderMusicSel(); },
+  async musicFolder() { const p=await this.call('choose_folder'); if(!p) return; this.state.music=await this.call('music_set_folder',p); this.state.settings.music_folder=p; this.renderMusic(); this.renderSettings(); this.musicAnalyze(); },
+  async musicAnalyze() { $('#mAnalyzing').textContent='分析中…'; this.state.music=await this.call('music_analyze')||this.state.music; this.renderMusic(); this.renderMusicSel(); },
+  async setStyle(key, v) { await this.call('music_set_style', key, v); },
+  renderMusic() {
+    const m=this.state.music||{tracks:[]}; const tr=m.tracks;
+    $('#mCount').textContent=tr.length; $('#mUnused').textContent=tr.filter(t=>!t.uses).length; $('#mFolder').textContent=m.folder||'';
+    let aged='—', old=false; if(m.last_added){ const d=Math.round((Date.now()-new Date(m.last_added))/86400000); aged=`${d} 天前`; old=d>30; }
+    $('#mAged').textContent=aged; $('#mAgedCard').style.background=old?'var(--orange-bg)':''; $('#mAged').style.color=old?'var(--orange)':'';
+    const sorted=[...tr].sort((a,b)=>a.uses-b.uses||((a.last_use||{}).date||'').localeCompare((b.last_use||{}).date||''));
+    $('#mRows').innerHTML=sorted.map(t=>`<div class="tr" style="grid-template-columns:1fr 70px 120px 90px 200px">
+      <div><div style="font-weight:500">${esc(t.name)}</div>${t.duration?`<div class="bar" style="width:220px;height:5px;margin-top:4px"><i style="width:${Math.min(100,(t.start||0)/t.duration*100)}%"></i></div>`:''}</div>
+      <span>${t.bpm||'<span style="color:var(--faint)">—</span>'}</span>
+      <select class="sel" style="height:26px" onchange="app.setStyle('${esc(t.key)}',this.value)"><option value="">風格</option>${['Lofi','Chill','輕快','活潑','優雅'].map(s=>`<option ${t.style===s?'selected':''}>${s}</option>`).join('')}</select>
+      ${t.uses?`<b>${t.uses} 次</b>`:`<span class="chip g">沒用過</span>`}
+      <span style="color:var(--mute)">${t.last_use?`${t.last_use.date.slice(5)}・${esc(t.last_use.product)}`:'—'}</span></div>`).join('') || `<div style="padding:30px;text-align:center;color:var(--mute)">選一個資料夾當音樂庫，把 mp3 放進去</div>`;
+  },
+
+  /* ---------- options ---------- */
+  setOpt(k,v){ this.state.settings[k]=v; this.call('save_settings',{[k]:v}); this.renderEstimate(); },
+  setMid(){ this.setOpt('mid_closeup',[+$('#optMid1').value,+$('#optMid2').value]); },
+  toggleOpt(k,el){ const v=!el.classList.contains('on'); el.classList.toggle('on',v); this.setOpt(k,v); },
+  renderSettings(){ const s=this.state.settings; $('#optMax').value=s.max_total; $('#optMid1').value=(s.mid_closeup||[1.5,2])[0]; $('#optMid2').value=(s.mid_closeup||[1.5,2])[1];
+    $('#optCenter').classList.toggle('on',!!s.person_center); $('#optStab').classList.toggle('on',!!s.stabilize); $('#optBeauty').classList.toggle('on',!!s.beauty);
+    $('#setDraft').value=s.draft_folder||''; $('#setExport').value=s.export_folder||''; $('#setMusic').value=s.music_folder||''; $('#setTodo').value=s.todo_url||''; $('#setPw').value=s.tool_password||''; },
+  async savePw(v){ v=(v||'').trim(); this.state.settings.tool_password=v; await this.call('save_settings',{tool_password:v}); this.cloudCheck(); },
+  async cloudCheck(){ const el=$('#ytState'); el.textContent='檢查中…'; const r=await this.call('cloud_ping'); this.cloud=r;
+    if(!r||!r.ok){ el.textContent=r?r.error:'無法連線'; return; }
+    if(r.todo_url && !this.state.settings.todo_url){ this.state.settings.todo_url=r.todo_url; this.call('save_settings',{todo_url:r.todo_url}); $('#setTodo').value=r.todo_url; }
+    el.textContent=r.youtube?`已連結：${r.youtube.channel||'頻道'}${r.ai_ready?'・AI 標題可用':'・AI 標題未設定（用內建句型）'}`:(r.client_ready?'尚未授權，按「設定／授權」':'尚未設定，按「設定／授權」'); },
+  ytSetup(){
+    const c=this.cloud||{};
+    $('#modalBox').innerHTML=`<div style="padding:18px;border-bottom:1px solid var(--line3);font-weight:700">YouTube 設定</div>
+      <div style="padding:18px;display:flex;flex-direction:column;gap:12px">
+        <div class="row"><span>OAuth 用戶端 ID</span><input class="ipt" id="ytCid" style="width:440px" placeholder="xxxx.apps.googleusercontent.com" ${c.client_ready?'value="（已設定，留空不變更）"':''}></div>
+        <div class="row"><span>OAuth 用戶端密鑰</span><input class="ipt" id="ytSec" type="password" style="width:440px" placeholder="GOCSPX-…"></div>
+        <div class="row"><span>Anthropic API Key（AI 標題，可留空）</span><input class="ipt" id="ytAi" type="password" style="width:440px" placeholder="sk-ant-…"></div>
+        <div style="font-size:12px;color:var(--mute)">按「儲存並授權」後會開瀏覽器，用 vvdoubleservice@gmail.com 登入並允許。</div>
+      </div>
+      <div style="padding:14px 18px;border-top:1px solid var(--line3);display:flex;gap:10px;justify-content:flex-end"><button class="btn w" onclick="$('#modal').classList.remove('show')">取消</button><button class="btn k" onclick="app.ytSetupSave()">儲存並授權</button></div>`;
+    $('#modal').classList.add('show');
+  },
+  async ytSetupSave(){
+    let cid=$('#ytCid').value.trim(); if(cid.startsWith('（')) cid=''; const sec=$('#ytSec').value.trim(); const ai=$('#ytAi').value.trim();
+    const r=await this.call('cloud_setup', cid, sec, ai||null);
+    if(!r||!r.ok){ this.toast(r?r.error:'失敗',true); return; }
+    $('#modal').classList.remove('show'); await this.call('open_url', r.authUrl); this.toast('已開啟瀏覽器，授權完成後回來按「測試」');
+  },
+  async saveTodoUrl(v){ v=(v||'').trim(); this.state.settings.todo_url=v; await this.call('save_settings',{todo_url:v}); this.todo=null; this.toast('已儲存');
+    if(this.state.settings.tool_password){ const r=await this.call('cloud_setup','','',null,v); if(r&&r.ok) this.toast('已儲存，並同步給所有同事'); } },
+  async pickSetting(k){ const p=await this.call('choose_folder'); if(!p) return; this.state.settings[k]=p; await this.call('save_settings',{[k]:p}); this.renderSettings(); if(k==='music_folder'){ this.state.music=await this.call('music_set_folder',p); this.renderMusic(); this.renderMusicSel(); } },
+
+  /* ---------- generate ---------- */
+  spec(P){ return { name:P.name||'未命名', clips:P.clips.map((c,i)=>({path:c.path, model:c.closeup?'':c.model, size_text:c.closeup?'':`著${c.size}${c.fit||''}`, closeup:!!c.closeup, start:c.start===''?null:+c.start, order:i})), music:P.music?{path:P.music.path, start:P.musicStart===''?null:+P.musicStart}:null, colors:P.colors||[], sku:P.sku||'', features:P.features||[], category:P.category||'', options:{} }; },
+  async generate(all){
+    const list=all?this.products:[this.P()];
+    const bad=list.filter(p=>!p.clips.length); if(bad.length){ this.toast('有商品還沒放影片',true); return; }
+    const noname=list.filter(p=>!p.name.trim()); if(noname.length){ this.toast('請輸入商品名稱',true); return; }
+    const nomodel=list.flatMap(p=>p.clips).filter(c=>!c.closeup&&!c.model); if(nomodel.length){ this.toast('有片段還沒選模特',true); return; }
+    const r=await this.call('generate', list.map(p=>this.spec(p)));
+    if(!r||!r.ok){ this.toast(r?r.error:'無法開始',true); return; }
+    this.busy=true; this.results=[]; this._jobsN=list.length; this.updateCapcut(false); $('#doneList').innerHTML=''; this.go('done');
+    $('#progTitle').textContent=`產生中 0 / ${list.length}`; $('#progBar').style.width='0%';
+  },
+  progress(job,i,n,name){ $('#progTitle').textContent=`產生中 ${job+1} / ${this._jobsN||job+1}`; $('#progSub').textContent=name||''; $('#progBar').style.width=Math.round(i/Math.max(1,n)*100)+'%'; },
+  renderHistory(){
+    const h=[...(this.state.history||[])].reverse().slice(0,30);
+    $('#doneList').innerHTML=h.map(r=>`<div class="li" style="cursor:pointer" onclick='app.showDetail(${JSON.stringify(r).replace(/'/g,"&#39;")})'>
+      ${r.ok?'<div class="ok">✓</div>':'<div class="chip r">✕</div>'}<div style="flex:1;font-weight:500;line-height:1.3">${esc(r.name)}</div>
+      <label onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" ${r.exported?'checked':''} onchange="app.markExported('${r.id}',this.checked,this)" style="width:16px;height:16px;margin:0;accent-color:var(--green)">已匯出</label></div>`).join('')||`<div style="padding:24px;text-align:center;color:var(--mute)">還沒有產生過草稿</div>`;
+  },
+  async markExported(id,checked,el){ const r=await this.call('mark_exported',id,checked); if(!r||!r.ok){ el.checked=!checked; this.toast(r?r.error+(r.export_folder?'':'（請到設定指定成品資料夾）'):'失敗',true); return; } const rec=this.state.history.find(x=>x.id===id); if(rec) rec.exported=checked; this.toast(checked?`已記錄匯出${r.music_uses!=null?'・這首歌用過 '+r.music_uses+' 次':''}`:'已取消'); this.reloadMusic(); },
+  showDetail(r){
+    const d=$('#detail');
+    if(!r.ok){ d.innerHTML=`<div style="padding:24px"><div class="chip r" style="margin-bottom:10px">失敗</div><div style="font-weight:700;margin-bottom:8px">${esc(r.name)}</div><div class="log">${esc(r.error)}\n${esc(r.trace||'')}</div></div>`; return; }
+    const rows=(r.segments||[]).map((s,i)=>`<div class="li"><span style="width:18px;color:var(--faint)">${i+1}</span><span style="flex:1">${esc(s.name)}</span><span style="color:var(--mute)">${s.start}s 起・${s.dur}s</span>${s.closeup?'<span class="chip b">CLOSE UP</span>':''}${s.stabilized?'<span class="chip o">穩定</span>':''}${s.scale&&s.scale>1?`<span class="chip w">置中 ×${s.scale}</span>`:''}</div>`).join('');
+    d.innerHTML=`<div style="padding:16px 18px;border-bottom:1px solid var(--line3);display:flex;align-items:center;gap:10px"><div class="ok">✓</div><div style="font-weight:700">${esc(r.name)}</div><div class="sp"></div><span class="chip b">${r.total_sec} 秒</span>${r.bpm?`<span class="chip b">${r.bpm} BPM</span>`:''}${(r.notes||[]).map(n=>`<span class="chip w">${esc(n)}</span>`).join('')}</div>
+      <div style="padding:10px 18px 0;font-size:12px;color:var(--mute)">草稿裡的順序</div><div style="overflow:auto;flex:1">${rows}</div>
+      ${this.publishBox(r)}
+      <div style="padding:12px 18px;border-top:1px solid var(--line3);display:flex;gap:10px;align-items:center"><span style="font-size:12px;color:var(--mute);flex:1">${r.skipped?`略過 ${r.skipped} 段以控制長度`:''}</span><button class="btn w" onclick="app.go('work')">回去調整</button><button class="btn k" onclick="app.openCapCut()">打開 CapCut</button></div>`;
+    if(r.exported && !r.youtube_id) this.loadPublish(r);
+    else if(r.youtube_id) this.loadProducts(r);
+  },
+  async openCapCut(){ const ok=await this.call('open_capcut'); if(!ok) this.toast('找不到 CapCut，請手動開啟',true); },
+
+  /* ---------- models ---------- */
+  renderModels(){ const b=new Set((this.state.beauty||[]).map(x=>x.toUpperCase())); $('#modelRows').innerHTML=this.state.models.map((m,i)=>`<div class="tr" style="grid-template-columns:140px 100px 100px 1fr 40px"><input class="ipt" value="${esc(m.name)}" data-k="name" data-i="${i}"><input class="ipt" value="${esc(m.height)}" placeholder="cm" data-k="height" data-i="${i}"><input class="ipt" value="${esc(m.weight)}" placeholder="kg" data-k="weight" data-i="${i}">${b.has((m.name||'').toUpperCase())?'<span class="chip g">已有潤飾設定</span>':'<span class="chip o">尚未設定（在「實穿模板」套一段）</span>'}<button class="btn l sm" onclick="app.delModel(${i})">✕</button></div>`).join(''); },
+  addModelRow(){ this.state.models.push({name:'',height:'',weight:''}); this.renderModels(); },
+  delModel(i){ this.collectModels(); this.state.models.splice(i,1); this.renderModels(); },
+  collectModels(){ document.querySelectorAll('#modelRows input').forEach(el=>{ this.state.models[+el.dataset.i][el.dataset.k]=el.value.trim(); }); },
+  async saveModels(){ this.collectModels(); this.state.models=await this.call('save_models',this.state.models)||this.state.models; this.renderModels(); this.renderGrid(); this.toast('已儲存'); },
+  async refreshBeauty(){ this.state.beauty=await this.call('refresh_beauty')||[]; this.renderModels(); this.toast('已更新潤飾設定'); },
+};
+window.app = app;
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>app.go(b.dataset.view));
+['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{ if([...e.dataTransfer.types].includes('Files')){ e.preventDefault(); document.body.classList.add('dragging'); } }));
+document.addEventListener('dragleave',e=>{ if(!e.relatedTarget) document.body.classList.remove('dragging'); });
+document.addEventListener('drop',async e=>{ if([...e.dataTransfer.types].includes('Files')){ e.preventDefault(); document.body.classList.remove('dragging');
+  const files=[...e.dataTransfer.files]; const paths=files.map(f=>f.pywebviewFullPath||f.path).filter(Boolean);
+  console.log('drop', files.length, paths.length);
+  if(paths.length){ $('#analyzing').textContent=`讀取 ${paths.length} 個檔案…`; const r=await app.call('add_paths', paths); if(r) app.ingest(r); }
+  else if(files.length){ app.toast('這個環境拖曳拿不到檔案路徑，請用「＋ 加入影片」或「＋ 加入資料夾」', true); } } });
+document.addEventListener('DOMContentLoaded', ()=>app.init());
+</script>
+</body>
+</html>

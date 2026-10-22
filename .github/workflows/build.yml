@@ -1,0 +1,62 @@
+name: Build Windows release
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read version
+        id: ver
+        shell: pwsh
+        run: |
+          $v = (Select-String -Path app/version.py -Pattern 'VERSION = "([^"]+)"').Matches[0].Groups[1].Value
+          echo "version=$v" >> $env:GITHUB_OUTPUT
+          $exists = (gh release view "v$v" 2>$null); if ($LASTEXITCODE -eq 0) { echo "exists=true" >> $env:GITHUB_OUTPUT } else { echo "exists=false" >> $env:GITHUB_OUTPUT }
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Skip if release exists
+        if: steps.ver.outputs.exists == 'true'
+        run: echo "v${{ steps.ver.outputs.version }} already released, skipping"
+      - uses: actions/setup-python@v5
+        if: steps.ver.outputs.exists != 'true'
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        if: steps.ver.outputs.exists != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pywebview imageio-ffmpeg onnxruntime pillow numpy pycapcut
+      - name: Build exe
+        if: steps.ver.outputs.exists != 'true'
+        run: pyinstaller --noconfirm --clean build/app.spec
+      - name: Smoke test import
+        if: steps.ver.outputs.exists != 'true'
+        shell: pwsh
+        run: |
+          Get-ChildItem dist/VV實穿草稿產生器 | Select-Object -First 5
+          if (!(Test-Path "dist/VV實穿草稿產生器/VV實穿草稿產生器.exe")) { throw "exe missing" }
+      - name: Portable zip
+        if: steps.ver.outputs.exists != 'true'
+        shell: pwsh
+        run: Compress-Archive -Path "dist/VV實穿草稿產生器/*" -DestinationPath "dist/VV實穿草稿產生器-portable.zip" -Force
+      - name: Installer (Inno Setup)
+        if: steps.ver.outputs.exists != 'true'
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          & $iscc /DAppVersion=${{ steps.ver.outputs.version }} build\installer.iss
+      - name: Release
+        if: steps.ver.outputs.exists != 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.version }}
+          name: v${{ steps.ver.outputs.version }}
+          body_path: CHANGELOG.md
+          files: |
+            dist/VV實穿草稿產生器-安裝檔.exe
+            dist/VV實穿草稿產生器-portable.zip

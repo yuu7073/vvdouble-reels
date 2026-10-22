@@ -1,0 +1,975 @@
+# -*- coding: utf-8 -*-
+# VV 實穿草稿產生器 — 桌面版（pywebview 視窗 + HTML 介面）
+
+import base64
+import csv
+import datetime as dt
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+import threading
+import traceback
+
+FROZEN = getattr(sys, "frozen", False)
+HERE = getattr(sys, "_MEIPASS", None) if FROZEN else os.path.dirname(os.path.abspath(__file__))
+APP_DIR = os.path.dirname(os.path.abspath(sys.executable)) if FROZEN else HERE   # 可更新的安裝資料夾
+CORE = os.path.join(HERE, "core")
+sys.path.insert(0, CORE)
+sys.path.insert(0, HERE)
+from version import VERSION, REPO  # noqa: E402
+
+import numpy as np  # noqa: E402
+
+import generator as g  # noqa: E402
+import engine  # noqa: E402
+VISION_ERROR = ""
+try:
+    import vision
+    try:
+        import onnxruntime  # noqa: F401
+    except Exception as _e:
+        VISION_ERROR = f"onnxruntime 載入失敗：{_e}"
+except Exception as _e:
+    vision = None
+    VISION_ERROR = f"vision 載入失敗：{_e}"
+
+APP_NAME = "VVReels"
+DATA_DIR = os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"), APP_NAME)
+os.makedirs(DATA_DIR, exist_ok=True)
+LOG_FILE = os.path.join(DATA_DIR, "log.txt")
+
+
+class _Tee:
+    """把所有輸出同時寫進 log.txt（打包成 exe 後沒有黑色視窗，靠這個回報錯誤）"""
+
+    def __init__(self, stream):
+        self.stream = stream
+        self.lock = threading.Lock()
+
+    def write(self, data):
+        try:
+            if self.stream:
+                self.stream.write(data)
+                self.stream.flush()
+        except Exception:
+            pass
+        try:
+            with self.lock:
+                with open(LOG_FILE, "a", encoding="utf-8", errors="replace") as f:
+                    f.write(data)
+        except Exception:
+            pass
+
+    def flush(self):
+        try:
+            if self.stream:
+                self.stream.flush()
+        except Exception:
+            pass
+
+
+def _setup_log():
+    try:
+        if os.path.exists(LOG_FILE) and os.path.getsize(LOG_FILE) > 2_000_000:
+            os.replace(LOG_FILE, LOG_FILE + ".old")
+    except Exception:
+        pass
+    sys.stdout = _Tee(sys.__stdout__)
+    sys.stderr = _Tee(sys.__stderr__)
+    print(f"\n===== 啟動 {dt.datetime.now().isoformat(timespec='seconds')} 版本 {VERSION} =====")
+
+
+_setup_log()
+# 潤飾.json 需要可寫入：打包版放在使用者資料夾，第一次從安裝包複製
+BEAUTY_PATH = os.path.join(CORE, "潤飾.json")
+if FROZEN:
+    import shutil
+    BEAUTY_PATH = os.path.join(DATA_DIR, "潤飾.json")
+    try:
+        src = os.path.join(CORE, "潤飾.json")
+        if os.path.exists(src) and (not os.path.exists(BEAUTY_PATH) or os.path.getmtime(src) > os.path.getmtime(BEAUTY_PATH) + 60):
+            shutil.copy2(src, BEAUTY_PATH)
+    except Exception:
+        traceback.print_exc()
+SETTINGS_FILE = os.path.join(DATA_DIR, "settings.json")
+MODELS_FILE = os.path.join(DATA_DIR, "models.json")
+HISTORY_FILE = os.path.join(DATA_DIR, "history.json")
+THUMB_DIR = os.path.join(DATA_DIR, "thumbs")
+os.makedirs(THUMB_DIR, exist_ok=True)
+MUSIC_INDEX_NAME = "音樂庫索引.json"
+VIDEO_EXT = (".mp4", ".mov", ".m4v")
+AUDIO_EXT = (".mp3", ".m4a", ".wav", ".aac")
+
+# 公司共用音樂庫（Dropbox 團隊資料夾，每台電腦的使用者名稱不同，所以用家目錄組出來）
+SHARED_MUSIC = os.path.join(os.path.expanduser("~"), "VV DOUBLE TEAM Dropbox", "「VV DOUBLE TEAM 」團隊資料夾",
+                            "官網部門", "剪輯音樂庫")
+
+DEFAULT_SETTINGS = {
+    "draft_folder": g.DRAFT_FOLDER,
+    "export_folder": "",
+    "music_folder": SHARED_MUSIC,
+    "max_total": 28,
+    "mid_closeup": [1.5, 2.0],
+    "person_center": True,
+    "stabilize": True,
+    "beauty": True,
+    "last_model": "",
+    "last_size": "",
+    "todo_url": "",
+    "theme": "light",
+    "cloud_url": "https://asia-east1-vvdouble-shopline.cloudfunctions.net/reels",
+    "tool_password": "",
+}
+SITE_URL = "https://www.vvdouble.com"
+TODO_CACHE = os.path.join(DATA_DIR, "todo_cache.json")
+STATUS_NAME = "實穿影片製作狀態.json"
+
+
+def _load_json(path, default):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return default
+
+
+def _save_json(path, data):
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=1)
+    os.replace(tmp, path)
+
+
+def _ffmpeg():
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        return "ffmpeg"
+
+
+def _run(cmd, timeout=120):
+    return subprocess.run(cmd, capture_output=True, timeout=timeout,
+                          creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+
+
+def _probe_duration(path):
+    r = _run([_ffmpeg(), "-hide_banner", "-i", path])
+    m = re.search(r"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)", r.stderr.decode("utf-8", "ignore"))
+    if not m:
+        return 0.0
+    return int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))
+
+
+def _file_key(path):
+    st = os.stat(path)
+    return hashlib.md5(f"{path}|{st.st_size}|{int(st.st_mtime)}".encode("utf-8")).hexdigest()
+
+
+def _thumb(path, t, key):
+    out = os.path.join(THUMB_DIR, key + ".jpg")
+    if not os.path.exists(out):
+        _run([_ffmpeg(), "-hide_banner", "-y", "-ss", f"{t:.2f}", "-i", path, "-frames:v", "1",
+              "-vf", "scale=-2:360", "-q:v", "5", out])
+    if os.path.exists(out):
+        with open(out, "rb") as f:
+            return "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("ascii")
+    return ""
+
+
+def _has_person(path, duration):
+    """快速看 3 格有沒有人；偵測不到 → 當近拍"""
+    if vision is None or not vision.available():
+        return None
+    found = 0
+    for frac in (0.25, 0.5, 0.75):
+        t = max(0.0, duration * frac)
+        r = _run([_ffmpeg(), "-hide_banner", "-ss", f"{t:.2f}", "-i", path, "-frames:v", "1",
+                  "-vf", "scale=320:-2", "-f", "rawvideo", "-pix_fmt", "bgr24", "-"])
+        raw = r.stdout
+        if not raw or len(raw) % (320 * 3):
+            continue
+        h = len(raw) // (320 * 3)
+        img = np.frombuffer(raw, dtype=np.uint8).reshape(h, 320, 3)
+        try:
+            people = vision.detect_people(np.stack([img]))
+        except Exception:
+            people = None
+        if people and people[0] is not None:
+            found += 1
+    return found >= 1
+
+
+class Api:
+    """注意：公開屬性只能放簡單資料（dict/list/str），pywebview 啟動時會遞迴掃描所有公開屬性。"""
+    def __init__(self):
+        self._window = None
+        self.settings = {**DEFAULT_SETTINGS, **_load_json(SETTINGS_FILE, {})}
+        self.models = _load_json(MODELS_FILE, None)
+        if self.models is None:
+            self.models = self._migrate_models_csv()
+        self.history = _load_json(HISTORY_FILE, [])
+        self._busy = False
+        self._events = []
+        self._lock = threading.Lock()
+
+    # ---------- 基本 ----------
+    def _js(self, code):
+        if self._window:
+            try:
+                self._window.evaluate_js(code)
+            except Exception:
+                pass
+
+    def _emit(self, event, payload):
+        with self._lock:
+            self._events.append({"event": event, "payload": payload})
+            if len(self._events) > 500:
+                self._events = self._events[-500:]
+        try:
+            print(f"[{event}] {json.dumps(payload, ensure_ascii=False)[:160]}")
+        except Exception:
+            pass
+
+    def poll_events(self):
+        """介面每半秒來拿一次事件（不依賴後端推送）"""
+        with self._lock:
+            ev, self._events = self._events, []
+        return {"events": ev, "busy": self._busy}
+
+    def _migrate_models_csv(self):
+        models = []
+        for cand in (os.path.join(CORE, "模特資料.csv"), os.path.join(HERE, "模特資料.csv")):
+            if os.path.exists(cand):
+                for enc in ("utf-8-sig", "cp950"):
+                    try:
+                        with open(cand, encoding=enc, newline="") as f:
+                            for r in csv.DictReader(f):
+                                r = {(k or "").strip(): (v or "").strip() for k, v in r.items()}
+                                if r.get("名字"):
+                                    models.append({"name": r["名字"], "height": re.sub(r"\D", "", r.get("身高", "")),
+                                                   "weight": re.sub(r"\D", "", r.get("體重", ""))})
+                        break
+                    except UnicodeDecodeError:
+                        continue
+                break
+        _save_json(MODELS_FILE, models)
+        return models
+
+    def _models_map(self):
+        return {m["name"].upper(): {"名字": m["name"], "身高": m.get("height", ""), "體重": m.get("weight", "")}
+                for m in self.models if m.get("name")}
+
+    def _beauty_names(self, force=False):
+        if not force and getattr(self, "_beauty_cache", None) is not None:
+            return self._beauty_cache
+        try:
+            g.DRAFT_FOLDER = self.settings["draft_folder"]
+            self._beauty_cache = sorted(g.load_beauty().keys())
+        except Exception:
+            self._beauty_cache = []
+        return self._beauty_cache
+
+    def get_state(self):
+        g.DRAFT_FOLDER = self.settings["draft_folder"]
+        return {
+            "settings": self.settings,
+            "models": self.models,
+            "beauty": self._beauty_names(),
+            "history": self.history[-50:],
+            "music": self.music_list(),
+            "capcut_running": g.capcut_running(),
+            "draft_folder_ok": os.path.isdir(self.settings["draft_folder"]),
+            "vision_ok": bool(vision and vision.available()),
+            "vision_error": VISION_ERROR or ("" if (vision and vision.available()) else getattr(vision, "LOAD_ERROR", "模型或套件缺少")),
+            "version": VERSION,
+            "frozen": FROZEN,
+            "log_file": LOG_FILE,
+        }
+
+    def capcut_running(self):
+        return g.capcut_running()
+
+    def ui_ready(self):
+        """介面初始化完成後才把視窗顯示出來（載入中拖曳視窗會卡死）"""
+        self._show_window()
+        return True
+
+    def _show_window(self):
+        if getattr(self, "_shown", False) or not self._window:
+            return
+        self._shown = True
+        try:
+            self._window.show()
+        except Exception:
+            pass
+
+    def save_settings(self, patch):
+        self.settings.update(patch or {})
+        _save_json(SETTINGS_FILE, self.settings)
+        return self.settings
+
+    def choose_folder(self, title=""):
+        import webview
+        r = self._window.create_file_dialog(webview.FileDialog.FOLDER)
+        return r[0] if r else None
+
+    def open_path(self, path):
+        try:
+            os.startfile(path)
+            return True
+        except Exception:
+            return False
+
+    def open_capcut(self):
+        for cand in (os.path.join(os.environ.get("LOCALAPPDATA", ""), "CapCut", "Apps", "CapCut.exe"),):
+            if os.path.exists(cand):
+                subprocess.Popen([cand])
+                return True
+        return False
+
+    # ---------- 片段 ----------
+    def choose_videos(self):
+        import webview
+        r = self._window.create_file_dialog(webview.FileDialog.OPEN, allow_multiple=True,
+                                           file_types=("影片 (*.mp4;*.mov;*.m4v)", "所有檔案 (*.*)"))
+        return self.add_paths(list(r or []))
+
+    def add_paths(self, paths):
+        """分析影片：長度、縮圖、有沒有人；資料夾會展開"""
+        files = []
+        for p in paths or []:
+            if os.path.isdir(p):
+                for f in sorted(os.listdir(p)):
+                    fp = os.path.join(p, f)
+                    if f.lower().endswith(VIDEO_EXT):
+                        files.append(fp)
+                    elif f.lower().endswith(AUDIO_EXT):
+                        files.append(fp)
+            elif p.lower().endswith(VIDEO_EXT + AUDIO_EXT):
+                files.append(p)
+        out = {"clips": [], "music": []}
+        total = len(files)
+        for i, fp in enumerate(files):
+            self._emit("analyzing", {"i": i, "n": total, "name": os.path.basename(fp)})
+            if fp.lower().endswith(AUDIO_EXT):
+                out["music"].append({"path": fp, "name": os.path.basename(fp)})
+                continue
+            try:
+                dur = _probe_duration(fp)
+                key = _file_key(fp)
+                thumb = _thumb(fp, min(1.0, dur / 2), key)
+                person = _has_person(fp, dur)
+                out["clips"].append({
+                    "id": key, "path": fp, "name": os.path.basename(fp), "duration": round(dur, 1),
+                    "thumb": thumb, "closeup": (person is False), "person": person,
+                })
+            except Exception as e:
+                out["clips"].append({"id": _file_key(fp), "path": fp, "name": os.path.basename(fp),
+                                     "duration": 0, "thumb": "", "closeup": False, "error": str(e)})
+        self._emit("analyzing", {"i": total, "n": total, "name": ""})
+        return out
+
+    # ---------- 產生 ----------
+    def generate(self, jobs):
+        """jobs = [spec, ...]；在背景執行，進度用事件回報"""
+        if self._busy:
+            return {"ok": False, "error": "還在產生中"}
+        if g.capcut_running():
+            return {"ok": False, "error": "CapCut 還開著，請先完全關閉"}
+        self._busy = True
+        threading.Thread(target=self._generate_worker, args=(jobs,), daemon=True).start()
+        return {"ok": True}
+
+    def _generate_worker(self, jobs):
+        # 卡住時每 30 秒把所有執行緒在哪一行印到黑色視窗，方便除錯
+        try:
+            import faulthandler
+            faulthandler.dump_traceback_later(30, repeat=True)
+        except Exception:
+            pass
+        g.DRAFT_FOLDER = self.settings["draft_folder"]
+        g.BEAUTY_FILE = BEAUTY_PATH
+        g.STYLE_FILE = os.path.join(CORE, "樣式.json")
+        models = self._models_map()
+        results = []
+        try:
+            for ji, spec in enumerate(jobs):
+                name = spec.get("name") or f"草稿{ji + 1}"
+                spec.setdefault("options", {})
+                for k in ("max_total", "mid_closeup", "person_center", "stabilize", "beauty"):
+                    spec["options"].setdefault(k, self.settings.get(k))
+                self._emit("job_start", {"job": ji, "name": name})
+
+                def log(msg, ji=ji):
+                    self._emit("log", {"job": ji, "msg": str(msg)})
+
+                def prog(i, n, f, ji=ji):
+                    self._emit("progress", {"job": ji, "i": i, "n": n, "name": f})
+
+                try:
+                    r = engine.build_draft(spec, models, log=log, progress=prog)
+                except Exception as e:
+                    r = {"ok": False, "error": f"{type(e).__name__}: {e}", "trace": traceback.format_exc()}
+                r["job"] = ji
+                r["name"] = name
+                r["music"] = (spec.get("music") or {}).get("path")
+                r["colors"] = spec.get("colors") or []
+                r["sku"] = spec.get("sku") or ""
+                r["features"] = spec.get("features") or []
+                r["category"] = spec.get("category") or ""
+                r["created"] = dt.datetime.now().isoformat(timespec="seconds")
+                r["exported"] = False
+                r["id"] = hashlib.md5(f"{name}|{r['created']}".encode("utf-8")).hexdigest()[:10]
+                results.append(r)
+                if r.get("ok"):
+                    self.history.append({k: v for k, v in r.items() if k not in ("trace",)})
+                    _save_json(HISTORY_FILE, self.history)
+                    self._status_set(r.get("sku") or name, {"name": name, "draft_at": r["created"],
+                                                             "draft_by": os.environ.get("COMPUTERNAME", "")})
+                    if r.get("music"):
+                        self._music_touch(r["music"], bpm=r.get("bpm"), start=r.get("music_start"))
+                self._emit("job_done", r)
+        finally:
+            try:
+                import faulthandler
+                faulthandler.cancel_dump_traceback_later()
+            except Exception:
+                pass
+            self._busy = False
+            self._emit("all_done", {"results": results})
+
+    # ---------- 已匯出 ----------
+    def mark_exported(self, hist_id, exported):
+        rec = next((h for h in self.history if h.get("id") == hist_id), None)
+        if not rec:
+            return {"ok": False, "error": "找不到紀錄"}
+        found = self._find_export(rec["name"])
+        if exported and not found:
+            return {"ok": False, "error": "成品資料夾裡沒有這支影片", "export_folder": self.settings.get("export_folder")}
+        rec["exported"] = bool(exported)
+        rec["export_file"] = found if exported else None
+        rec["exported_at"] = dt.datetime.now().isoformat(timespec="seconds") if exported else None
+        _save_json(HISTORY_FILE, self.history)
+        self._status_set(rec.get("sku") or rec["name"], {"name": rec["name"], "exported_at": rec["exported_at"],
+                                                          "export_file": rec["export_file"]})
+        uses = None
+        if rec.get("music"):
+            uses = self._music_use(rec["music"], rec["name"], +1 if exported else -1)
+        return {"ok": True, "file": found, "music_uses": uses}
+
+    def _find_export(self, name):
+        folder = self.settings.get("export_folder")
+        if not folder or not os.path.isdir(folder):
+            return None
+        safe = re.sub(r"[\\/:*?\"<>|]", "", name)
+        cands = []
+        for f in os.listdir(folder):
+            if f.lower().endswith((".mp4", ".mov")) and (safe in f or f.startswith(safe[:12])):
+                fp = os.path.join(folder, f)
+                cands.append((os.path.getmtime(fp), fp))
+        return max(cands)[1] if cands else None
+
+    # ---------- 音樂庫 ----------
+    # ---------- 待製作清單（Google 試算表 → Apps Script 網址） ----------
+    def _status_path(self):
+        """全公司共用的製作狀態檔：放在音樂庫的上一層（官網部門），沒有就放本機"""
+        mf = self.settings.get("music_folder") or ""
+        parent = os.path.dirname(mf.rstrip("\\/")) if mf else ""
+        if parent and os.path.isdir(parent):
+            return os.path.join(parent, STATUS_NAME)
+        return os.path.join(DATA_DIR, STATUS_NAME)
+
+    def _status_index(self):
+        return _load_json(self._status_path(), {}) or {}
+
+    def _status_set(self, key, patch):
+        if not key:
+            return
+        try:
+            idx = self._status_index()
+            rec = idx.get(key, {})
+            rec.update(patch)
+            idx[key] = rec
+            _save_json(self._status_path(), idx)
+        except Exception:
+            traceback.print_exc()
+
+    def todo_list(self, force=False):
+        url = (self.settings.get("todo_url") or "").strip()
+        if not url:
+            return {"ok": False, "error": "尚未設定待製作清單網址（設定頁）", "tabs": [], "status": {}}
+        cache = _load_json(TODO_CACHE, None)
+        data, err = None, ""
+        fresh = cache and cache.get("url") == url and (dt.datetime.now().timestamp() - cache.get("ts", 0) < 300)
+        if fresh and not force:
+            data = cache.get("data")
+        else:
+            try:
+                import urllib.request
+                req = urllib.request.Request(url, headers={"User-Agent": "VVReels/1.0"})
+                with urllib.request.urlopen(req, timeout=25) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                _save_json(TODO_CACHE, {"url": url, "ts": dt.datetime.now().timestamp(), "data": data})
+            except Exception as e:
+                err = f"讀取失敗：{type(e).__name__}: {e}"
+                data = cache.get("data") if cache else None
+        if not data:
+            return {"ok": False, "error": err or "沒有資料", "tabs": [], "status": {}}
+        # 把分頁依檔期代碼由新到舊排
+        tabs = sorted(data.get("tabs", []), key=lambda t: (t.get("year") or 0, t.get("code", "")), reverse=True)
+        for t in tabs:
+            t["ym"] = f"{t.get('year') or ''}-{t.get('month')}"
+        cached_at = (cache or {}).get("ts") if (fresh and not force) or err else dt.datetime.now().timestamp()
+        return {"ok": True, "tabs": tabs, "status": self._status_index(), "error": err,
+                "cached_at": dt.datetime.fromtimestamp(cached_at or dt.datetime.now().timestamp()).strftime("%H:%M"),
+                "history_names": [h.get("name") for h in self.history if h.get("ok")],
+                "history_skus": [h.get("sku") for h in self.history if h.get("ok") and h.get("sku")]}
+
+
+    # ---------- 更新與錯誤回報 ----------
+    def check_update(self):
+        """到 GitHub Releases 看有沒有新版本"""
+        import urllib.request
+        try:
+            req = urllib.request.Request(f"https://api.github.com/repos/{REPO}/releases/latest",
+                                         headers={"User-Agent": "VVReels", "Accept": "application/vnd.github+json"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                j = json.loads(resp.read().decode("utf-8"))
+            tag = (j.get("tag_name") or "").lstrip("v")
+            asset = next((a for a in j.get("assets", []) if a.get("name", "").endswith("portable.zip")), None)
+            setup = next((a for a in j.get("assets", []) if a.get("name", "").endswith(".exe")), None)
+
+            def ver(v):
+                return tuple(int(x) for x in re.findall(r"\d+", v)[:3]) or (0,)
+            newer = bool(tag) and ver(tag) > ver(VERSION)
+            return {"ok": True, "current": VERSION, "latest": tag, "available": newer,
+                    "zip": asset and asset.get("browser_download_url"), "setup": setup and setup.get("browser_download_url"),
+                    "notes": (j.get("body") or "")[:600], "can_auto": bool(FROZEN and asset)}
+        except Exception as e:
+            return {"ok": False, "error": str(e), "current": VERSION}
+
+    def do_update(self, zip_url):
+        """下載新版 → 解壓到 _update → 交給 update.bat 在程式關閉後覆蓋並重開"""
+        import urllib.request
+        import zipfile
+        import tempfile
+        if not FROZEN:
+            return {"ok": False, "error": "開發模式不支援自動更新"}
+        try:
+            self._emit("update_progress", {"msg": "下載中…", "pct": 0})
+            tmp = os.path.join(tempfile.gettempdir(), "vvreels_update.zip")
+            req = urllib.request.Request(zip_url, headers={"User-Agent": "VVReels"})
+            with urllib.request.urlopen(req, timeout=60) as resp, open(tmp, "wb") as f:
+                total = int(resp.headers.get("Content-Length") or 0)
+                done = 0
+                while True:
+                    chunk = resp.read(1024 * 256)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+                    done += len(chunk)
+                    if total:
+                        self._emit("update_progress", {"msg": f"下載中 {done * 100 // total}%", "pct": done / total})
+            upd = os.path.join(APP_DIR, "_update")
+            import shutil
+            shutil.rmtree(upd, ignore_errors=True)
+            os.makedirs(upd, exist_ok=True)
+            self._emit("update_progress", {"msg": "解壓縮…", "pct": 1})
+            with zipfile.ZipFile(tmp) as z:
+                z.extractall(upd)
+            # 壓縮檔裡可能多一層資料夾
+            inner = [d for d in os.listdir(upd) if os.path.isdir(os.path.join(upd, d))]
+            src = os.path.join(upd, inner[0]) if len(inner) == 1 and not os.path.exists(os.path.join(upd, os.path.basename(sys.executable))) else upd
+            exe = os.path.basename(sys.executable)
+            bat = os.path.join(APP_DIR, "update.bat")
+            with open(bat, "w", encoding="utf-8") as f:
+                f.write("@echo off\r\n")
+                f.write(f'cd /d "{APP_DIR}"\r\n')
+                f.write(":wait\r\n")
+                f.write(f'tasklist /FI "IMAGENAME eq {exe}" | find /I "{exe}" >nul && (timeout /t 1 /nobreak >nul & goto wait)\r\n')
+                f.write(f'robocopy "{src}" "{APP_DIR}" /E /NFL /NDL /NJH /NJS /NP >nul\r\n')
+                f.write(f'rmdir /S /Q "{upd}"\r\n')
+                f.write(f'start "" "{os.path.join(APP_DIR, exe)}"\r\n')
+                f.write('del "%~f0"\r\n')
+            subprocess.Popen(["cmd", "/c", bat], creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0), close_fds=True)
+            self._emit("update_progress", {"msg": "重新啟動中…", "pct": 1})
+            threading.Timer(1.0, lambda: os._exit(0)).start()
+            return {"ok": True}
+        except Exception as e:
+            traceback.print_exc()
+            return {"ok": False, "error": str(e)}
+
+    def error_report(self):
+        """把最近的紀錄複製到剪貼簿，並回傳檔案位置"""
+        try:
+            with open(LOG_FILE, encoding="utf-8", errors="replace") as f:
+                lines = f.read().splitlines()[-300:]
+        except Exception:
+            lines = ["(沒有紀錄檔)"]
+        text = "\n".join([f"VV 實穿草稿產生器 {VERSION}  {os.environ.get('COMPUTERNAME', '')}  {dt.datetime.now().isoformat(timespec='seconds')}", ""] + lines)
+        ok = False
+        try:
+            p = subprocess.Popen(["clip"], stdin=subprocess.PIPE, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+            p.communicate(("\ufeff" + text).encode("utf-16le"))
+            ok = p.returncode == 0
+        except Exception:
+            pass
+        return {"ok": ok, "file": LOG_FILE, "lines": len(lines)}
+
+    # ---------- 雲端（Cloud Function：YouTube 授權／AI 標題／商品頁嵌入） ----------
+    def _cloud(self, action, payload=None, timeout=60):
+        import urllib.request
+        import urllib.error
+        url = (self.settings.get("cloud_url") or "").strip()
+        pw = (self.settings.get("tool_password") or "").strip()
+        if not url:
+            raise RuntimeError("尚未設定雲端網址")
+        if not pw:
+            raise RuntimeError("尚未輸入工具密碼（設定頁）")
+        body = json.dumps(dict(payload or {}, action=action), ensure_ascii=False).encode("utf-8")
+        req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json", "X-Tool-Password": pw})
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            try:
+                j = json.loads(e.read().decode("utf-8"))
+                raise RuntimeError(j.get("error") or f"HTTP {e.code}")
+            except ValueError:
+                raise RuntimeError(f"HTTP {e.code}")
+
+    def cloud_ping(self):
+        try:
+            return dict(self._cloud("ping", timeout=20), ok=True)
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
+    def cloud_setup(self, client_id="", client_secret="", anthropic_key=None, todo_url=None):
+        try:
+            payload = {"clientId": client_id or "", "clientSecret": client_secret or ""}
+            if anthropic_key is not None:
+                payload["anthropicKey"] = anthropic_key
+            if todo_url is not None:
+                payload["todoUrl"] = todo_url
+            r = self._cloud("ytSetup", payload)
+            return {"ok": True, "authUrl": r.get("authUrl")}
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
+    def open_url(self, url):
+        import webbrowser
+        webbrowser.open(url)
+        return True
+
+    def yt_titles(self, hist_id, extra=""):
+        rec = next((h for h in self.history if h.get("id") == hist_id), None)
+        if not rec:
+            return {"ok": False, "error": "找不到紀錄"}
+        models = sorted({(s.get("model") or "") for s in rec.get("segments", []) if s.get("model")})
+        try:
+            r = self._cloud("aiTitle", {"category": rec.get("category", ""), "features": rec.get("features", []),
+                                        "colors": rec.get("colors", []), "models": "、".join(models), "extra": extra, "n": 3})
+            return {"ok": True, "titles": r.get("titles", [])}
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
+    def find_products(self, name):
+        try:
+            r = self._cloud("findProducts", {"name": name})
+            return {"ok": True, "items": r.get("items", [])}
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
+    def publish(self, hist_id, title, product_ids):
+        rec = next((h for h in self.history if h.get("id") == hist_id), None)
+        if not rec:
+            return {"ok": False, "error": "找不到紀錄"}
+        path = rec.get("export_file") or self._find_export(rec["name"])
+        if not path or not os.path.exists(path):
+            return {"ok": False, "error": "成品資料夾裡沒有這支影片，請先勾「已匯出」"}
+        if self._busy:
+            return {"ok": False, "error": "正在處理中"}
+        self._busy = True
+        threading.Thread(target=self._publish_worker, args=(rec, path, title, list(product_ids or [])), daemon=True).start()
+        return {"ok": True}
+
+    def _publish_worker(self, rec, path, title, product_ids):
+        import urllib.request
+        import urllib.error
+        hid = rec["id"]
+        emit = lambda step, msg, pct=None: self._emit("pub_progress", {"id": hid, "step": step, "msg": msg, "pct": pct})
+        try:
+            if not rec.get("youtube_id"):
+                emit("auth", "取得 YouTube 授權…")
+                tk = self._cloud("ytAccessToken")["access_token"]
+                size = os.path.getsize(path)
+                meta = {
+                    "snippet": {
+                        "title": (title or rec["name"])[:100],
+                        "description": f"{rec['name']}\n\n{SITE_URL}",
+                        "categoryId": "22",
+                        "defaultLanguage": "zh-Hant",
+                    },
+                    "status": {"privacyStatus": "public", "selfDeclaredMadeForKids": False},
+                }
+                emit("upload", "開始上傳 YouTube…", 0)
+                req = urllib.request.Request(
+                    "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status&notifySubscribers=false",
+                    data=json.dumps(meta, ensure_ascii=False).encode("utf-8"), method="POST",
+                    headers={"Authorization": "Bearer " + tk, "Content-Type": "application/json; charset=UTF-8",
+                             "X-Upload-Content-Type": "video/*", "X-Upload-Content-Length": str(size)})
+                with urllib.request.urlopen(req, timeout=60) as resp:
+                    session = resp.headers.get("Location")
+                if not session:
+                    raise RuntimeError("YouTube 沒有回傳上傳位址")
+                chunk = 8 * 1024 * 1024
+                sent = 0
+                video = None
+                with open(path, "rb") as f:
+                    while sent < size:
+                        data = f.read(chunk)
+                        end = sent + len(data) - 1
+                        r2 = urllib.request.Request(session, data=data, method="PUT",
+                                                    headers={"Authorization": "Bearer " + tk, "Content-Type": "video/*",
+                                                             "Content-Length": str(len(data)),
+                                                             "Content-Range": f"bytes {sent}-{end}/{size}"})
+                        try:
+                            with urllib.request.urlopen(r2, timeout=300) as resp:
+                                body = resp.read().decode("utf-8", "ignore")
+                                if resp.status in (200, 201):
+                                    video = json.loads(body)
+                        except urllib.error.HTTPError as e:
+                            if e.code == 308:
+                                pass
+                            else:
+                                raise RuntimeError(f"上傳失敗 HTTP {e.code}: {e.read().decode('utf-8', 'ignore')[:200]}")
+                        sent = end + 1
+                        emit("upload", f"上傳中 {sent * 100 // size}%", sent / size)
+                if not video or not video.get("id"):
+                    raise RuntimeError("上傳完成但沒有拿到影片 ID")
+                rec["youtube_id"] = video["id"]
+                rec["youtube_title"] = meta["snippet"]["title"]
+                rec["youtube_url"] = "https://youtu.be/" + video["id"]
+                _save_json(HISTORY_FILE, self.history)
+                try:
+                    self._cloud("ytLog", {"videoId": video["id"], "title": meta["snippet"]["title"], "product": rec["name"],
+                                          "sku": rec.get("sku", ""), "by": os.environ.get("COMPUTERNAME", "")})
+                except Exception:
+                    pass
+                emit("upload", "YouTube 上傳完成", 1)
+            vid = rec["youtube_id"]
+            results = []
+            if product_ids:
+                emit("embed", f"放到 {len(product_ids)} 個商品頁…")
+                r = self._cloud("embedVideo", {"productIds": product_ids, "videoId": vid,
+                                               "title": rec.get("youtube_title") or title, "by": os.environ.get("COMPUTERNAME", "")}, timeout=110)
+                results = r.get("results", [])
+                rec["embedded"] = sorted(set((rec.get("embedded") or []) + [x["id"] for x in results if x.get("ok")]))
+                _save_json(HISTORY_FILE, self.history)
+            self._status_set(rec.get("sku") or rec["name"], {"youtube": rec["youtube_url"], "embedded": rec.get("embedded", [])})
+            self._emit("pub_done", {"id": hid, "ok": True, "youtube_url": rec["youtube_url"], "results": results, "record": rec})
+        except Exception as e:
+            traceback.print_exc()
+            self._emit("pub_done", {"id": hid, "ok": False, "error": str(e), "record": rec})
+        finally:
+            self._busy = False
+
+    def _music_index_path(self):
+        folder = self.settings.get("music_folder")
+        return os.path.join(folder, MUSIC_INDEX_NAME) if folder else None
+
+    def _music_index(self):
+        p = self._music_index_path()
+        return _load_json(p, {}) if p else {}
+
+    def _music_save(self, idx):
+        p = self._music_index_path()
+        if p:
+            try:
+                _save_json(p, idx)
+            except Exception:
+                pass
+
+    def music_list(self):
+        folder = self.settings.get("music_folder")
+        if not folder or not os.path.isdir(folder):
+            return {"folder": folder, "tracks": [], "last_added": None}
+        idx = self._music_index()
+        tracks = []
+        newest = 0
+        for f in sorted(os.listdir(folder)):
+            if not f.lower().endswith(AUDIO_EXT):
+                continue
+            fp = os.path.join(folder, f)
+            key = f
+            meta = idx.get(key, {})
+            mtime = os.path.getmtime(fp)
+            newest = max(newest, mtime)
+            uses = meta.get("uses", [])
+            tracks.append({
+                "key": key, "name": os.path.splitext(f)[0], "path": fp,
+                "bpm": meta.get("bpm"), "start": meta.get("start"), "duration": meta.get("duration"),
+                "style": meta.get("style", ""),
+                "uses": len(uses), "last_use": uses[-1] if uses else None,
+                "added": dt.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d"),
+            })
+        return {"folder": folder, "tracks": tracks,
+                "last_added": dt.datetime.fromtimestamp(newest).strftime("%Y-%m-%d") if newest else None}
+
+    def music_set_folder(self, path):
+        if path and os.path.isdir(path):
+            self.settings["music_folder"] = path
+            _save_json(SETTINGS_FILE, self.settings)
+        return self.music_list()
+
+    def music_analyze(self, key=None):
+        """算 BPM、自動挑段、長度；key=None 代表全部沒算過的"""
+        folder = self.settings.get("music_folder")
+        if not folder:
+            return self.music_list()
+        idx = self._music_index()
+        names = [key] if key else [f for f in os.listdir(folder) if f.lower().endswith(AUDIO_EXT) and not idx.get(f, {}).get("bpm")]
+        for i, f in enumerate(names):
+            fp = os.path.join(folder, f)
+            self._emit("music_analyzing", {"i": i, "n": len(names), "name": f})
+            try:
+                beats, bpm = g.detect_beats(fp)
+                meta = idx.setdefault(f, {})
+                meta["duration"] = round(_probe_duration(fp), 1)
+                if beats:
+                    si, _ = g.music_start_index(beats, fp, self.settings.get("max_total", 28))
+                    meta["bpm"] = round(bpm)
+                    meta["start"] = round(beats[si], 1)
+                else:
+                    meta["bpm"] = None
+            except Exception:
+                idx.setdefault(f, {})["bpm"] = None
+            self._music_save(idx)
+        self._emit("music_analyzing", {"i": len(names), "n": len(names), "name": ""})
+        return self.music_list()
+
+    def music_set_style(self, key, style):
+        idx = self._music_index()
+        idx.setdefault(key, {})["style"] = style
+        self._music_save(idx)
+        return True
+
+    def _music_touch(self, path, bpm=None, start=None):
+        folder = self.settings.get("music_folder")
+        if not folder or not path.startswith(folder):
+            return
+        idx = self._music_index()
+        meta = idx.setdefault(os.path.basename(path), {})
+        if bpm and not meta.get("bpm"):
+            meta["bpm"] = bpm
+        if start is not None and meta.get("start") is None:
+            meta["start"] = start
+        self._music_save(idx)
+
+    def _music_use(self, path, product, delta):
+        folder = self.settings.get("music_folder")
+        if not folder or not path.startswith(folder):
+            return None
+        idx = self._music_index()
+        meta = idx.setdefault(os.path.basename(path), {})
+        uses = meta.setdefault("uses", [])
+        if delta > 0:
+            uses.append({"date": dt.date.today().isoformat(), "product": product})
+        else:
+            for i in range(len(uses) - 1, -1, -1):
+                if uses[i].get("product") == product:
+                    uses.pop(i)
+                    break
+        self._music_save(idx)
+        return len(uses)
+
+    def music_pick(self, mode="least_used", exclude=None):
+        lst = self.music_list()["tracks"]
+        lst = [t for t in lst if t["path"] != exclude] or lst
+        if not lst:
+            return None
+        if mode == "random":
+            import random
+            return random.choice(lst)
+        return sorted(lst, key=lambda t: (t["uses"], (t["last_use"] or {}).get("date", "")))[0]
+
+    # ---------- 模特 ----------
+    def save_models(self, models):
+        self.models = [m for m in (models or []) if (m.get("name") or "").strip()]
+        _save_json(MODELS_FILE, self.models)
+        return self.models
+
+    def refresh_beauty(self):
+        g.DRAFT_FOLDER = self.settings["draft_folder"]
+        g.BEAUTY_FILE = BEAUTY_PATH
+        return self._beauty_names(force=True)
+
+
+def _serve(api):
+    """本機 HTTP 伺服器：介面所有呼叫走這裡（不經 pywebview 橋接，拖曳視窗時不會卡住）"""
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    ui_dir = os.path.join(HERE, "ui")
+
+    class H(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def _send(self, code, body, ctype="application/json; charset=utf-8"):
+            self.send_response(code)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_GET(self):
+            path = self.path.split("?")[0]
+            name = "index.html" if path in ("/", "") else os.path.basename(path)
+            fp = os.path.join(ui_dir, name)
+            if not os.path.isfile(fp):
+                return self._send(404, b"not found", "text/plain")
+            ctype = "text/html; charset=utf-8" if name.endswith(".html") else "application/octet-stream"
+            with open(fp, "rb") as f:
+                self._send(200, f.read(), ctype)
+
+        def do_POST(self):
+            n = int(self.headers.get("Content-Length") or 0)
+            try:
+                req = json.loads(self.rfile.read(n) or b"{}")
+                name = req.get("name", "")
+                fn = getattr(api, name, None) if name and not name.startswith("_") else None
+                if fn is None:
+                    raise ValueError(f"unknown api: {name}")
+                result = fn(*(req.get("args") or []))
+                body = json.dumps({"result": result}, ensure_ascii=False).encode("utf-8")
+            except Exception as e:
+                traceback.print_exc()
+                body = json.dumps({"error": str(e)}, ensure_ascii=False).encode("utf-8")
+            self._send(200, body)
+
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
+    srv.daemon_threads = True
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    return srv.server_address[1]
+
+
+def main():
+    import webview
+    api = Api()
+    port = _serve(api)
+    print(f"[啟動] 介面位址 http://127.0.0.1:{port}/")
+    bg = "#0e1014" if api.settings.get("theme") == "dark" else "#f3f5f9"
+    win = webview.create_window("VV 實穿草稿產生器", f"http://127.0.0.1:{port}/", js_api=api, hidden=True,
+                                width=1360, height=860, min_size=(1100, 700), background_color=bg)
+    api._window = win  # 底線開頭：pywebview 不會去掃描這個物件
+    # 保險：介面 8 秒內沒回報就直接顯示
+    threading.Timer(8.0, api._show_window).start()
+    webview.start()
+
+
+if __name__ == "__main__":
+    main()
