@@ -482,6 +482,7 @@ class Api:
                 r["features"] = spec.get("features") or []
                 r["background"] = spec.get("background") or ""
                 r["layout"] = spec.get("layout") or ""
+                r["layout_name"] = (layouts.LAYOUTS.get(r["layout"], {}).get("name") if (layouts and r["layout"]) else "") or ""
                 r["category"] = spec.get("category") or ""
                 r["created"] = dt.datetime.now().isoformat(timespec="seconds")
                 r["exported"] = False
