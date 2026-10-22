@@ -329,10 +329,16 @@ def build_draft(spec, models, log=None, progress=None):
                 if not (photo and os.path.exists(photo)):
                     _log(log, "這個版型需要底圖，沒選底圖的話那一塊會是空的")
                     continue
-                png = os.path.join(RENDER_DIR, f"{safe}_{layout_id}_bg_{idx}.png")
-                layouts.background_photo(photo, box, png, reg.get("blur", 0), reg.get("dark", 0))
-                mat = cc.VideoMaterial(png)
-                crop, scale, tx, ty = layouts.place(box, box[2] - box[0], box[3] - box[1])
+                if reg.get("raw"):
+                    # 原圖直接鋪滿畫布再放大一點（照 CapCut 裡調好的數值）
+                    mat = cc.VideoMaterial(photo)
+                    scale = layouts.cover_scale(mat.width, mat.height) * float(reg.get("zoom", 1.0))
+                    tx, ty = reg.get("offset", [0, 0])
+                else:
+                    png = os.path.join(RENDER_DIR, f"{safe}_{layout_id}_bg_{idx}.png")
+                    layouts.background_photo(photo, box, png, reg.get("blur", 0), reg.get("dark", 0))
+                    mat = cc.VideoMaterial(png)
+                    crop, scale, tx, ty = layouts.place(box, box[2] - box[0], box[3] - box[1])
                 seg = cc.VideoSegment(mat, cc.Timerange(t0, dur),
                                       clip_settings=ClipSettings(scale_x=scale, scale_y=scale, transform_x=tx, transform_y=ty))
                 tname = "影片" if layer_no == 0 else layout_track(cc.TrackType.video, f"版型層{layer_no + 1}", layer_no)
@@ -356,23 +362,28 @@ def build_draft(spec, models, log=None, progress=None):
             script.add_segment(seg, tname)
             layer_no += 1
         # 框線／裝飾（設計稿去掉色塊和文字後的部分）
-        ov = cc.VideoMaterial(os.path.join(layout_meta["dir"], layout_meta["overlay"]))
-        script.add_segment(cc.VideoSegment(ov, cc.Timerange(t0, dur)),
-                           layout_track(cc.TrackType.video, "版型框", 20))
+        if layout_meta.get("overlay"):
+            ov = cc.VideoMaterial(os.path.join(layout_meta["dir"], layout_meta["overlay"]))
+            script.add_segment(cc.VideoSegment(ov, cc.Timerange(t0, dur)),
+                               layout_track(cc.TrackType.video, "版型框", 20))
         # 文字
         for ti, t in enumerate(layout_meta.get("texts", [])):
-            tx, ty = layouts.text_place(t["box"])
+            tx, ty = t["pos"] if t.get("pos") else layouts.text_place(t["box"])
             font = getattr(cc.FontType, t["font"], None) if t.get("font") else None
+            if t.get("font_path"):
+                g.LAYOUT_FONT_PATHS[t["text"]] = t["font_path"]
             style = TextStyle(size=float(t.get("size", 8)), bold=bool(t.get("bold")), color=tuple(t.get("color", (1, 1, 1))),
                               align=int(t.get("align", 1)), letter_spacing=int(t.get("letter_spacing", 0)),
                               line_spacing=int(t.get("line_spacing", 0)))
             script.add_segment(cc.TextSegment(t["text"], cc.Timerange(t0, dur), font=font, style=style,
-                                              clip_settings=ClipSettings(transform_x=tx, transform_y=ty)),
+                                              clip_settings=ClipSettings(transform_x=tx, transform_y=ty,
+                                                                         scale_x=float(t.get("scale", 1.0)), scale_y=float(t.get("scale", 1.0)))),
                                layout_track(cc.TrackType.text, "版型文字" + (str(ti + 1) if ti else ""), 5 + ti))
         return ((m1[1].get("model") if m1 else "") or "")
 
     g.STABILIZE_IDS.clear()
     g.MODEL_BY_PATH.clear()
+    g.LAYOUT_FONT_PATHS.clear()
     cursor = 0
     card_runs, close_runs, out_segments = [], [], []
     total_steps = max(1, len(sequence))

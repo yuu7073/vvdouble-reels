@@ -418,6 +418,7 @@ def select_clips(clips, closeups, clip_len, close_len):
 
 STABILIZE_IDS = set()
 MODEL_BY_PATH = {}        # 介面模式：影片路徑 → 模特名字（取代從檔名解析）
+LAYOUT_FONT_PATHS = {}    # 版型文字 → 本機字型檔（例如 C:/WINDOWS/Fonts/modern.fon）
 
 
 def maybe_stabilize(mat, full, start, dur, how):
@@ -733,6 +734,16 @@ def apply_presets(draft_name):
         model_count = 0
         for i, mat in enumerate(m.get("texts", [])):
             if mat["id"] in layout_text:
+                content = json.loads(mat["content"])
+                fp = LAYOUT_FONT_PATHS.get(content.get("text", ""))
+                if fp:
+                    mat["font_path"] = fp
+                    mat["font_name"] = ""
+                    mat["font_title"] = "none"
+                    mat["font_id"] = mat["font_resource_id"] = ""
+                    for st in content.get("styles", []):
+                        st["font"] = {"path": fp, "id": ""}
+                    mat["content"] = json.dumps(content, ensure_ascii=False)
                 continue
             text = json.loads(mat["content"])["text"]
             role = text_role(text)

@@ -39,12 +39,12 @@ COLORS = {"yellow": YEL, "blue": BLU, "purple": PUR}
 # 區塊：color＋index（同色由上到下、左到右第幾塊）→ 角色
 #   M1＝第一位模特（大碼）  M2＝第二位模特（中碼）  D＝近拍  P＝底圖照片
 LAYOUTS = {
-    "lookbook": {"name": "LOOKBOOK", "file": "1_LOOKBOOK.jpg", "pattern": "#,M,M,D,M,D",
-                 "regions": [{"color": "purple", "role": "P", "blur": 10, "dark": 0.10},
-                             {"color": "yellow", "role": "M1"}],
-                 # 設計稿上的文字改成 CapCut 文字層（可改字、字型、位置）；erase＝把設計稿上那塊文字從覆蓋圖抹掉
-                 "texts": [{"text": "LOOKBOOK", "box": [93, 1464, 1395, 1635], "font": "Didot_Medium",
-                            "size": 17.0, "color": (0.96, 0.93, 0.86), "letter_spacing": 5, "align": 1}],
+    # LOOKBOOK：照 Vivian 在 CapCut 調好的版本 — 底圖原圖放大 1.28 鋪滿、模特影片幾乎滿版、不放框線、文字用 Modern 字型
+    "lookbook": {"name": "LOOKBOOK", "file": "1_LOOKBOOK.jpg", "pattern": "#,M,M,D,M,D", "overlay": False,
+                 "regions": [{"color": "purple", "role": "P", "raw": True, "zoom": 1.283, "offset": [0.0402, 0.0136]},
+                             {"color": "yellow", "role": "M1", "box": [50, 60, 1098, 1860]}],
+                 "texts": [{"text": "LOOKBOOK", "pos": [0.0, -0.5437], "font_path": "C:/WINDOWS/Fonts/modern.fon",
+                            "size": 17.0, "scale": 1.73, "color": (0.96, 0.93, 0.86), "letter_spacing": -2, "align": 1}],
                  "erase": [{"box": [60, 1440, 1420, 1660]}]},
     "camera":   {"name": "相機介面", "file": "2_相機.jpg", "pattern": "#,M,M,D,M,D",
                  "regions": [{"color": "yellow", "role": "M1"}]},
@@ -126,7 +126,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v5"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v6"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
@@ -170,7 +170,8 @@ def prepare(layout_id, cache_dir, image_path=None):
             ma = np.asarray(mk) > 0
             ys, xs = np.where(ma)
             regions.append({"mask": name, "role": spec["role"], "_ord": L["regions"].index(spec),
-                            "box": [int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1],
+                            "box": spec.get("box") or [int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1],
+                            "raw": bool(spec.get("raw")), "zoom": spec.get("zoom", 1.0), "offset": spec.get("offset", [0, 0]),
                             "blur": spec.get("blur", 0), "dark": spec.get("dark", 0),
                             "noise": spec.get("noise", 0), "still": bool(spec.get("still"))})
     regions.sort(key=lambda r: r.get("_ord", 0))
@@ -190,9 +191,12 @@ def prepare(layout_id, cache_dir, image_path=None):
     sx, sy = CANVAS_W / W, CANVAS_H / H
     texts = []
     for t in L.get("texts", []):
-        x0, y0, x1, y1 = t["box"]
-        texts.append(dict(t, box=[int(x0 * sx), int(y0 * sy), int(x1 * sx), int(y1 * sy)]))
-    meta = {"stamp": stamp, "overlay": "overlay.png", "regions": regions, "texts": texts, "dir": out}
+        if t.get("pos"):
+            texts.append(dict(t))
+        else:
+            x0, y0, x1, y1 = t["box"]
+            texts.append(dict(t, box=[int(x0 * sx), int(y0 * sy), int(x1 * sx), int(y1 * sy)]))
+    meta = {"stamp": stamp, "overlay": "overlay.png" if L.get("overlay", True) else "", "regions": regions, "texts": texts, "dir": out}
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False)
     return meta
@@ -270,3 +274,9 @@ def background_photo(photo, box, out_path, blur=10, dark=0.10):
             im = Image.eval(im, lambda v: int(v * (1 - dark)))
         im.save(out_path)
     return out_path
+
+
+def cover_scale(sw, sh):
+    """素材不裁切、直接放大到鋪滿整個畫布所需的 scale（scale=1 是塞進畫布）"""
+    f = min(CANVAS_W / sw, CANVAS_H / sh)
+    return max(CANVAS_W / (sw * f), CANVAS_H / (sh * f))
