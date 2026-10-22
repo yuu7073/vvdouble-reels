@@ -795,7 +795,9 @@ def apply_presets(draft_name):
         for seg in t["segments"]:
             v = videos.get(seg["material_id"], {})
             fname = v.get("material_name") or os.path.basename(v.get("path", ""))
-            mapped = MODEL_BY_PATH.get(v.get("path", "")) or MODEL_BY_PATH.get(fname)
+            mapped = MODEL_BY_PATH.get(v.get("path", ""))
+            if mapped is None:
+                mapped = MODEL_BY_PATH.get(fname)
             if mapped == "":          # 介面標記為近拍／不套
                 continue
             if mapped:

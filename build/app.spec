@@ -14,6 +14,8 @@ datas = [
     (os.path.join(root, "core", "generator.py"), "core"),
     (os.path.join(root, "core", "engine.py"), "core"),
     (os.path.join(root, "core", "vision.py"), "core"),
+    (os.path.join(root, "core", "layouts.py"), "core"),
+    (os.path.join(root, "core", "版型"), os.path.join("core", "版型")),
     (os.path.join(root, "version.py"), "."),
 ]
 binaries, hiddenimports = [], []
@@ -23,7 +25,7 @@ for pkg in ("onnxruntime", "pycapcut", "imageio_ffmpeg", "pymediainfo", "webview
         datas += d; binaries += b; hiddenimports += h
     except Exception as e:
         print("collect_all skip", pkg, e)
-hiddenimports += ["webview.platforms.winforms", "webview.platforms.edgechromium", "clr", "PIL.Image", "numpy", "generator", "engine", "vision", "version"]
+hiddenimports += ["webview.platforms.winforms", "webview.platforms.edgechromium", "clr", "PIL.Image", "numpy", "generator", "engine", "vision", "layouts", "version"]
 
 a = Analysis(
     [os.path.join(root, "main.py")],

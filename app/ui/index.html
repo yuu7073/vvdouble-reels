@@ -178,6 +178,12 @@ input.ipt::placeholder{color:var(--faint)}
       </div>
 
       <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="row"><span class="h">版型</span></div>
+        <select class="sel" id="layoutSel" style="height:36px;font-weight:500" onchange="app.setLayout(this.value)"></select>
+        <div id="layoutMeta" style="font-size:12px;color:var(--mute);padding:0 2px"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
         <div class="row"><span class="h">底圖</span><button class="btn l sm" onclick="app.go('bg')">底圖庫</button></div>
         <div id="bgPick" style="display:flex;gap:10px;align-items:center"></div>
         <div class="two">
@@ -559,7 +565,7 @@ const app = {
   applyToRest(i) { const src=this.P().clips[i]; this.P().clips.forEach((c,j)=>{ if(j>i && !c.closeup){c.model=src.model;c.size=src.size;c.fit=src.fit;} }); this.renderGrid(); this.toast('已套用到後面的片段'); },
   move(from,to) { const a=this.P().clips; const [x]=a.splice(from,1); a.splice(to,0,x); this.renderGrid(); },
 
-  renderAll() { this.renderList(); $('#prodName').value=this.P().name; this.renderGrid(); this.renderMusicSel(); this.renderBgPick(); },
+  renderAll() { this.renderList(); $('#prodName').value=this.P().name; this.renderGrid(); this.renderMusicSel(); this.renderLayoutSel(); this.renderBgPick(); },
   renderList() {
     $('#prodCount').textContent=this.products.length;
     $('#plist').innerHTML=this.products.map((p,i)=>{
@@ -580,6 +586,8 @@ const app = {
     const cl=this.P().clips, s=this.state.settings; const max=+s.max_total||28;
     const models=cl.filter(c=>!c.closeup).length, close=cl.filter(c=>c.closeup).length;
     if(!cl.length){$('#estTotal').textContent='—';$('#estUse').textContent='—';return;}
+    const lay=(this.state.layouts||[]).find(x=>x.id===(this.P().layout||''));
+    if(lay){ const t=lay.pattern.split(','); const nM=t.filter(x=>x==='M').length, nD=t.filter(x=>x==='D').length; $('#estTotal').textContent=`約 ${nM*3+nD*2+4} 秒`; $('#estUse').textContent=`1 段版型・${nM} 段滿版・${nD} 段近拍`; return; }
     const nClose=Math.min(close, Math.max(1, Math.round(max*0.3/2))); const nModel=Math.min(models, Math.floor((max-nClose*2)/2));
     $('#estTotal').textContent=`約 ${Math.min(max, nModel*2+nClose*2)} 秒`;
     $('#estUse').textContent=`${nModel} 段實穿・${nClose} 段近拍`;
@@ -608,6 +616,16 @@ const app = {
     });
     this.renderCounts();
   },
+
+  /* ---------- layout ---------- */
+  renderLayoutSel() {
+    const P=this.P?this.P():null; const list=this.state.layouts||[]; const cur=P&&P.layout||'';
+    const sel=$('#layoutSel'); if(!sel) return;
+    sel.innerHTML=`<option value="">標準版</option>`+list.map(l=>`<option value="${l.id}" ${l.id===cur?'selected':''}>${esc(l.name)}</option>`).join('');
+    const l=list.find(x=>x.id===cur);
+    $('#layoutMeta').textContent=l?l.pattern.split(',').map(t=>t==='#'?'版型':(t==='M'?'滿版':'近拍')).join(' → ')+(l.needs_photo?'　需要底圖':''):'';
+  },
+  setLayout(v){ const P=this.P(); if(!P) return; P.layout=v||''; this.renderLayoutSel(); this.renderEstimate(); },
 
   /* ---------- music ---------- */
   renderMusicSel() {
@@ -676,7 +694,7 @@ const app = {
   async pickSetting(k){ const p=await this.call('choose_folder'); if(!p) return; this.state.settings[k]=p; await this.call('save_settings',{[k]:p}); this.renderSettings(); if(k==='music_folder'){ this.state.music=await this.call('music_set_folder',p); this.renderMusic(); this.renderMusicSel(); } },
 
   /* ---------- generate ---------- */
-  spec(P){ return { name:P.name||'未命名', clips:P.clips.map((c,i)=>({path:c.path, model:c.closeup?'':c.model, size_text:c.closeup?'':`著${c.size}${c.fit||''}`, closeup:!!c.closeup, start:c.start===''?null:+c.start, order:i})), music:P.music?{path:P.music.path, start:P.musicStart===''?null:+P.musicStart}:null, colors:P.colors||[], sku:P.sku||'', features:P.features||[], category:P.category||'', background:P.background||'', options:{} }; },
+  spec(P){ return { name:P.name||'未命名', clips:P.clips.map((c,i)=>({path:c.path, model:c.closeup?'':c.model, size_text:c.closeup?'':`著${c.size}${c.fit||''}`, closeup:!!c.closeup, start:c.start===''?null:+c.start, order:i})), music:P.music?{path:P.music.path, start:P.musicStart===''?null:+P.musicStart}:null, colors:P.colors||[], sku:P.sku||'', features:P.features||[], category:P.category||'', background:P.background||'', layout:P.layout||'', options:{} }; },
   async generate(all){
     const list=all?this.products:[this.P()];
     const bad=list.filter(p=>!p.clips.length); if(bad.length){ this.toast('有商品還沒放影片',true); return; }

@@ -25,6 +25,10 @@ import numpy as np  # noqa: E402
 
 import generator as g  # noqa: E402
 import engine  # noqa: E402
+try:
+    import layouts  # noqa: E402
+except Exception:
+    layouts = None
 VISION_ERROR = ""
 try:
     import vision
@@ -40,6 +44,8 @@ APP_NAME = "VVReels"
 DATA_DIR = os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"), APP_NAME)
 os.makedirs(DATA_DIR, exist_ok=True)
 LOG_FILE = os.path.join(DATA_DIR, "log.txt")
+engine.RENDER_DIR = os.path.join(DATA_DIR, "renders")
+engine.LAYOUT_CACHE = os.path.join(DATA_DIR, "layout_cache")
 
 
 class _Tee:
@@ -292,6 +298,7 @@ class Api:
             "vision_ok": bool(vision and vision.available()),
             "vision_error": VISION_ERROR or ("" if (vision and vision.available()) else getattr(vision, "LOAD_ERROR", "模型或套件缺少")),
             "version": VERSION,
+            "layouts": layouts.list_layouts() if layouts else [],
             "frozen": FROZEN,
             "log_file": LOG_FILE,
         }
@@ -427,6 +434,7 @@ class Api:
                 r["sku"] = spec.get("sku") or ""
                 r["features"] = spec.get("features") or []
                 r["background"] = spec.get("background") or ""
+                r["layout"] = spec.get("layout") or ""
                 r["category"] = spec.get("category") or ""
                 r["created"] = dt.datetime.now().isoformat(timespec="seconds")
                 r["exported"] = False
