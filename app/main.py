@@ -737,7 +737,8 @@ class Api:
                     if not g_["models"] and it.get("models"):
                         g_["models"] = [dict(m) for m in it["models"]]
                     if not g_["sku"] and it.get("sku"):
-                        g_["sku"] = re.sub(r"[-_ ]?\d{3}[A-Z0-9]*$", "", it["sku"]) if len(it["sku"]) > 8 else it["sku"]
+                        # 26AU0406-050-F（顏色-尺碼）→ 26AU0406
+                        g_["sku"] = re.sub(r"^([A-Z0-9]{6,10})(?:[-_ ].*)?$", r"\1", it["sku"].strip().upper())
                 for g_ in groups.values():
                     if len(g_["specs"]) == 1:
                         for m in g_["models"]:

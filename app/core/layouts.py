@@ -12,8 +12,21 @@ import sys
 
 import numpy as np
 
+def _layout_dir():
+    """版型圖位置：原始碼模式在本檔同層的 版型/；打包後在 _internal/core/版型"""
+    cands = [os.path.dirname(os.path.abspath(__file__))]
+    base = getattr(sys, "_MEIPASS", None)
+    if base:
+        cands = [os.path.join(base, "core"), base] + cands
+    for c in cands:
+        d = os.path.join(c, "版型")
+        if os.path.isdir(d):
+            return d
+    return os.path.join(cands[0], "版型")
+
+
 HERE = os.path.dirname(os.path.abspath(__file__))
-LAYOUT_DIR = os.path.join(HERE, "版型")
+LAYOUT_DIR = _layout_dir()
 CANVAS_W, CANVAS_H = 1080, 1920
 LAYOUT_SEC = 4.0          # 版型段目標長度（秒）
 
