@@ -694,8 +694,15 @@ class Api:
         ql = q.lower().replace(" ", "")
         out = []
         seen = set()
+        hints = []
         try:
             cache = _load_json(TODO_CACHE, None) or {}
+            if not cache.get("data"):
+                if (self.settings.get("todo_url") or "").strip():
+                    self.todo_list()
+                    cache = _load_json(TODO_CACHE, None) or {}
+                else:
+                    hints.append("排程表：設定頁還沒填待製作清單網址")
             for t in (cache.get("data") or {}).get("tabs", []):
                 for it in t.get("items", []):
                     hay = (it.get("name", "") + it.get("sku", "")).lower().replace(" ", "")
@@ -742,6 +749,10 @@ class Api:
                     out.append(g_)
             except Exception as e:
                 err = str(e)
+        else:
+            hints.append("Shopline：設定頁還沒填工具密碼")
+        if hints and not err:
+            err = "；".join(hints)
         return {"ok": True, "items": out[:20], "error": err}
 
     def find_products(self, name):
