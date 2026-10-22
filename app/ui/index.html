@@ -441,11 +441,19 @@ const app = {
     if(r.youtube_id) return `<div id="pubBox" data-id="${r.id}" style="padding:12px 18px;border-top:1px solid var(--line3);background:var(--sub);display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;align-items:center;gap:10px"><span class="chip g">已上傳 YouTube</span><a href="#" onclick="app.call('open_url','${r.youtube_url}');return false" style="font-size:13px">${esc(r.youtube_title||r.youtube_url)}</a><div class="sp"></div><span class="chip w">已放到 ${(r.embedded||[]).length} 個商品頁</span></div>
         <div id="pubProducts" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--mute)">讀取商品…</div>
-        <div style="display:flex;gap:8px;align-items:center"><div class="bar" style="flex:1"><i id="pubBar" style="width:0"></i></div><span id="pubMsg" style="font-size:12px;color:var(--mute);min-width:120px"></span><button class="btn w sm" onclick="app.doPublish('${r.id}')">再放到勾選的商品頁</button></div></div>`;
+        <div style="display:flex;gap:8px;align-items:center"><div class="bar" style="flex:1"><i id="pubBar" style="width:0"></i></div><span id="pubMsg" style="font-size:12px;color:var(--mute);min-width:120px"></span><button class="btn w sm" onclick="app.doPublish('${r.id}')">再放到勾選的商品頁</button><button class="btn w sm" style="color:var(--red)" onclick="app.unpublish('${r.id}')">撤下</button></div></div>`;
     return `<div id="pubBox" data-id="${r.id}" style="padding:12px 18px;border-top:1px solid var(--line3);background:var(--sub);display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--mute);flex:none">YouTube 標題</span><input class="ipt" id="pubTitle" style="flex:1;height:32px" placeholder="產生中…"><button class="btn l sm" onclick="app.loadTitles('${r.id}')">換一句</button></div>
         <div id="pubProducts" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--mute)">讀取商品…</div>
         <div style="display:flex;gap:8px;align-items:center"><div class="bar" style="flex:1"><i id="pubBar" style="width:0"></i></div><span id="pubMsg" style="font-size:12px;color:var(--mute);min-width:120px"></span><button class="btn k" id="pubBtn" onclick="app.doPublish('${r.id}')">上傳 YouTube 並放到商品頁</button></div></div>`;
+  },
+  async unpublish(id){
+    if(!confirm('撤下：會從商品頁移除這支影片，並刪除 YouTube 上的影片。確定？')) return;
+    $('#pubMsg').textContent='撤下中…';
+    const r=await this.call('unpublish', id);
+    if(!r||!r.ok){ this.toast((r&&r.error)||'失敗', true); $('#pubMsg').textContent=r&&r.partial?r.partial:''; if(r&&r.need_auth) this.go('settings'); return; }
+    const rec=this.state.history.find(x=>x.id===id); if(rec){ delete rec.youtube_id; delete rec.youtube_url; delete rec.youtube_title; rec.embedded=[]; }
+    this.toast(r.msg||'已撤下'); this.renderHistory(); if(rec) this.showDetail(rec);
   },
   async loadPublish(r){ this.loadTitles(r.id); this.loadProducts(r); },
   _titles:{},

@@ -853,6 +853,34 @@ class Api:
         threading.Thread(target=self._publish_worker, args=(rec, path, title, list(product_ids or [])), daemon=True).start()
         return {"ok": True}
 
+    def unpublish(self, hist_id):
+        """撤下：從商品頁移除嵌入的影片，並刪除 YouTube 影片；成功後這筆紀錄回到「已匯出、未上傳」"""
+        rec = next((h for h in self.history if h.get("id") == hist_id), None)
+        if not rec or not rec.get("youtube_id"):
+            return {"ok": False, "error": "這筆沒有上傳紀錄"}
+        vid = rec["youtube_id"]
+        msgs = []
+        try:
+            if rec.get("embedded"):
+                r = self._cloud("removeVideo", {"productIds": rec["embedded"], "videoId": vid, "by": os.environ.get("COMPUTERNAME", "")})
+                bad = [x for x in r.get("results", []) if not x.get("ok")]
+                if bad:
+                    return {"ok": False, "error": "商品頁移除失敗：" + "；".join(f"{x.get('title') or x.get('id')}：{x.get('error')}" for x in bad)}
+                msgs.append(f"已從 {len(rec['embedded'])} 個商品頁移除")
+            d = self._cloud("ytDelete", {"videoId": vid})
+            if not d.get("ok"):
+                rec["embedded"] = []
+                _save_json(HISTORY_FILE, self.history)
+                return {"ok": False, "error": (d.get("error") or "YouTube 刪除失敗"), "need_auth": bool(d.get("needAuth")), "partial": "；".join(msgs)}
+            msgs.append("YouTube 影片已刪除")
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+        for k in ("youtube_id", "youtube_url", "youtube_title", "embedded"):
+            rec.pop(k, None)
+        _save_json(HISTORY_FILE, self.history)
+        self._status_set(rec.get("sku") or rec["name"], {"youtube": "", "embedded": []})
+        return {"ok": True, "msg": "；".join(msgs)}
+
     def _publish_worker(self, rec, path, title, product_ids):
         import urllib.request
         import urllib.error
