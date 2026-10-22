@@ -708,45 +708,16 @@ class Api:
             return {"ok": False, "error": str(e)}
 
     def product_lookup(self, q):
-        """製作頁查找商品：先比對待製作清單（試算表），再問 Shopline；回傳合併候選"""
+        """製作頁查找商品：Shopline 優先（商品描述裡有模特著用尺碼），排程表快取當備援"""
         q = (q or "").strip()
         if len(q) < 2:
             return {"ok": True, "items": []}
         ql = q.lower().replace(" ", "")
-        out = []
-        seen = set()
-        hints = []
-        try:
-            cache = _load_json(TODO_CACHE, None) or {}
-            if not cache.get("data"):
-                if (self.settings.get("todo_url") or "").strip():
-                    self.todo_list()
-                    cache = _load_json(TODO_CACHE, None) or {}
-                else:
-                    hints.append("排程表：設定頁還沒填待製作清單網址")
-            for t in (cache.get("data") or {}).get("tabs", []):
-                for it in t.get("items", []):
-                    hay = (it.get("name", "") + it.get("sku", "")).lower().replace(" ", "")
-                    if ql in hay:
-                        key = it.get("sku") or it.get("name")
-                        if key in seen:
-                            continue
-                        seen.add(key)
-                        models = [dict(m) for m in it.get("models", [])]
-                        specs = [x for x in it.get("specs", []) if x]
-                        if len(specs) == 1:  # 均碼（F）之類只有一個規格：模特沒寫著用尺碼就直接用它
-                            for m in models:
-                                if not m.get("size"):
-                                    m["size"] = specs[0]
-                        out.append({"source": "sheet", "tab": t.get("tab"), "name": it.get("name"), "sku": it.get("sku", ""),
-                                    "colors": it.get("colors", []), "features": it.get("features", []), "specs": specs,
-                                    "category": it.get("category", ""), "models": models})
-        except Exception:
-            traceback.print_exc()
-        err = ""
+        out, hints, err = [], [], ""
+        # ---- Shopline ----
         if (self.settings.get("tool_password") or "").strip():
             try:
-                r = self._cloud("findProducts", {"name": q}, timeout=30)
+                r = self._cloud("findProducts", {"name": q}, timeout=20)
                 groups = {}
                 for it in r.get("items", []):
                     title = it.get("title", "")
@@ -755,32 +726,72 @@ class Api:
                         base, color = title.rsplit("-", 1)
                         base, color = base.strip(), color.strip()
                     g_ = groups.setdefault(base, {"source": "shopline", "name": base, "sku": "", "colors": [], "features": [],
-                                                  "category": "", "models": [], "product_ids": [], "statuses": []})
+                                                  "category": "", "models": [], "specs": [], "product_ids": [], "statuses": []})
                     if color and color not in g_["colors"]:
                         g_["colors"].append(color)
                     g_["product_ids"].append(it.get("id"))
                     g_["statuses"].append(it.get("status"))
+                    for sz in it.get("sizes") or []:
+                        if sz not in g_["specs"]:
+                            g_["specs"].append(sz)
                     if not g_["models"] and it.get("models"):
-                        g_["models"] = it["models"]
+                        g_["models"] = [dict(m) for m in it["models"]]
                     if not g_["sku"] and it.get("sku"):
                         g_["sku"] = re.sub(r"[-_ ]?\d{3}[A-Z0-9]*$", "", it["sku"]) if len(it["sku"]) > 8 else it["sku"]
-                for base, g_ in groups.items():
-                    if base in seen or any(x["name"] == base for x in out):
-                        # 試算表已有同名：補上 Shopline 的模特尺碼（如果表上沒有）
-                        for x in out:
-                            if x["name"] == base:
-                                x["product_ids"] = g_["product_ids"]
-                                if not any(m.get("size") for m in x.get("models", [])) and g_["models"]:
-                                    x["models"] = g_["models"]
-                        continue
+                for g_ in groups.values():
+                    if len(g_["specs"]) == 1:
+                        for m in g_["models"]:
+                            if not m.get("size"):
+                                m["size"] = g_["specs"][0]
                     out.append(g_)
             except Exception as e:
                 err = str(e)
         else:
             hints.append("Shopline：設定頁還沒填工具密碼")
+        # ---- 排程表（快取）：補 Shopline 沒有的款，或補模特尺碼 ----
+        try:
+            cache = _load_json(TODO_CACHE, None) or {}
+            for t in (cache.get("data") or {}).get("tabs", []):
+                for it in t.get("items", []):
+                    hay = (it.get("name", "") + it.get("sku", "")).lower().replace(" ", "")
+                    if ql not in hay:
+                        continue
+                    models = [dict(m) for m in it.get("models", [])]
+                    specs = [x for x in it.get("specs", []) if x]
+                    if len(specs) == 1:
+                        for m in models:
+                            if not m.get("size"):
+                                m["size"] = specs[0]
+                    hit = next((x for x in out if x["name"] == it.get("name")), None)
+                    if hit:
+                        hit["tab"] = t.get("tab")
+                        if not hit.get("sku"):
+                            hit["sku"] = it.get("sku", "")
+                        if not hit.get("features"):
+                            hit["features"] = it.get("features", [])
+                        if not hit.get("category"):
+                            hit["category"] = it.get("category", "")
+                        if not any(m.get("size") for m in hit.get("models", [])) and models:
+                            hit["models"] = models
+                        continue
+                    out.append({"source": "sheet", "tab": t.get("tab"), "name": it.get("name"), "sku": it.get("sku", ""),
+                                "colors": it.get("colors", []), "features": it.get("features", []), "specs": specs,
+                                "category": it.get("category", ""), "models": models})
+            if not cache.get("data") and not (self.settings.get("todo_url") or "").strip():
+                hints.append("排程表：設定頁還沒填待製作清單網址")
+        except Exception:
+            traceback.print_exc()
         if hints and not err:
             err = "；".join(hints)
         return {"ok": True, "items": out[:20], "error": err}
+
+    def _warm_todo(self):
+        """開啟時在背景先抓排程表，之後查找才不會等"""
+        try:
+            if (self.settings.get("todo_url") or "").strip():
+                self.todo_list()
+        except Exception:
+            pass
 
     def find_products(self, name):
         try:
@@ -1189,6 +1200,7 @@ def main():
     win = webview.create_window("VV 實穿草稿產生器", f"http://127.0.0.1:{port}/", js_api=api, hidden=True,
                                 width=1360, height=860, min_size=(1100, 700), background_color=bg)
     api._window = win  # 底線開頭：pywebview 不會去掃描這個物件
+    threading.Timer(3.0, api._warm_todo).start()
     # 保險：介面 8 秒內沒回報就直接顯示
     threading.Timer(8.0, api._show_window).start()
     webview.start()
