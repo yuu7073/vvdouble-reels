@@ -113,6 +113,7 @@ if FROZEN:
     except Exception:
         pass
 SETTINGS_FILE = os.path.join(DATA_DIR, "settings.json")
+SESSION_FILE = os.path.join(DATA_DIR, "session.json")     # 上次關掉時製作頁的內容（商品、影片、設定），下次打開自動帶回
 MODELS_FILE = os.path.join(DATA_DIR, "models.json")
 HISTORY_FILE = os.path.join(DATA_DIR, "history.json")
 THUMB_DIR = os.path.join(DATA_DIR, "thumbs")
@@ -329,6 +330,42 @@ class Api:
             self._window.show()
         except Exception:
             pass
+
+    def session_save(self, data):
+        """製作頁內容本機暫存（每次變動都存，關掉再開會回來）"""
+        try:
+            _save_json(SESSION_FILE, {"ts": dt.datetime.now().timestamp(), "products": data.get("products") or [], "cur": int(data.get("cur") or 0)})
+        except Exception as e:
+            print(f"session_save 失敗：{e}")
+        return True
+
+    def session_load(self):
+        """讀回上次的製作頁內容；影片檔已經不存在的段落自動略過，沒有影片的商品也略過"""
+        s = _load_json(SESSION_FILE, None)
+        if not s:
+            return None
+        products = []
+        for p in s.get("products") or []:
+            clips = [c for c in (p.get("clips") or []) if c.get("path") and os.path.exists(c["path"])]
+            if not clips and not (p.get("name") or "").strip():
+                continue
+            p = dict(p, clips=clips)
+            if p.get("music") and not os.path.exists((p["music"] or {}).get("path", "")):
+                p["music"] = None
+            if p.get("background") and not os.path.exists(p["background"]):
+                p["background"] = ""
+            products.append(p)
+        if not products:
+            return None
+        return {"products": products, "cur": min(int(s.get("cur") or 0), len(products) - 1), "ts": s.get("ts")}
+
+    def session_clear(self):
+        try:
+            if os.path.exists(SESSION_FILE):
+                os.remove(SESSION_FILE)
+        except Exception:
+            pass
+        return True
 
     def save_settings(self, patch):
         self.settings.update(patch or {})

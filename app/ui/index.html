@@ -330,8 +330,13 @@ const app = {
     this.renderSettings(); this.renderMusicSel(); this.renderMusic(); this.renderModels(); this.renderHistory();
     this.updateCapcut(this.state.capcut_running);
     if (this.state.vision_ok===false) $('#visionHint').style.display='inline-flex';
+    const sess = await this.call('session_load');
+    if (sess && sess.products && sess.products.length) { this.products = sess.products; this.cur = sess.cur||0; this.renderAll(); this.toast('已帶回上次的內容'); }
     if (!this.products.length) this.addProduct();
+    this._sessionReady = true;
     setInterval(async () => { const r = await this.call('capcut_running'); if (r!==null) this.updateCapcut(r); }, 4000);
+    setInterval(() => this.sessionSave(), 3000);
+    window.addEventListener('beforeunload', () => this.sessionSave(true));
     setInterval(() => this.poll(), 500);
     $('#verInfo').textContent = `版本 ${this.state.version||''}・人物偵測 ${this.state.vision_ok?'可用':'未啟用：'+(this.state.vision_error||'')}`;
     const ready = () => this.call('ui_ready');
@@ -566,6 +571,14 @@ const app = {
   move(from,to) { const a=this.P().clips; const [x]=a.splice(from,1); a.splice(to,0,x); this.renderGrid(); },
 
   renderAll() { this.renderList(); $('#prodName').value=this.P().name; this.renderGrid(); this.renderMusicSel(); this.renderLayoutSel(); this.renderBgPick(); },
+  /* 製作頁內容本機暫存：每 3 秒比對一次，有變才存；關閉視窗時也存一次 */
+  sessionSave(force) {
+    if (!this._sessionReady) return;
+    const snap = JSON.stringify({products:this.products, cur:this.cur});
+    if (!force && snap === this._sessionSnap) return;
+    this._sessionSnap = snap;
+    this.call('session_save', {products:this.products, cur:this.cur});
+  },
   renderList() {
     $('#prodCount').textContent=this.products.length;
     $('#plist').innerHTML=this.products.map((p,i)=>{
