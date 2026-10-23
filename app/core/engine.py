@@ -386,8 +386,10 @@ def build_draft(spec, models, log=None, progress=None):
         if layout_meta.get("overlay"):
             ov = cc.VideoMaterial(os.path.join(layout_meta["dir"], layout_meta["overlay"]))
             oox, ooy = layout_meta.get("overlay_offset") or [0, 0]
+            osc = float(layout_meta.get("overlay_scale") or 1.0)
             script.add_segment(cc.VideoSegment(ov, cc.Timerange(t0, dur),
-                                               clip_settings=ClipSettings(transform_x=float(oox), transform_y=float(ooy))),
+                                               clip_settings=ClipSettings(transform_x=float(oox), transform_y=float(ooy),
+                                                                          scale_x=osc, scale_y=osc)),
                                layout_track(cc.TrackType.video, "版型框", 20))
         # 相片格：裁成框的比例、縮放到框位，再加矩形遮罩（圓角），使用者可在 CapCut 直接換圖或拖遮罩
         th = layout_meta.get("thumb")

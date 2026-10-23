@@ -63,9 +63,14 @@ LAYOUTS = {
                               "adjusts": [{"type": "particle", "effect_id": "7501974767453474064", "value": 0.2124}]}],
                  "thumb": {"box": [142, 1749, 252, 1859], "role": "D", "round_corner": 15},
                  "hide_title": True, "hide_site": True},
-    # 郵票：藍色區是斜的，但外面被白框／黑底整個蓋住，所以影片用矩形放就好（可在 CapCut 直接換影片）
-    "stamp":    {"name": "郵票", "file": "3_郵票.jpg", "pattern": "M,#,D,M,M,D",
-                 "regions": [{"color": "blue", "role": "M1", "force_rect": True}]},
+    # 郵票：照 Vivian 2026-10-23 在 CapCut 調好的草稿讀回——
+    #   版型段放最前面（#,M,D,M,M,D）；郵票框放大 1.0438；模特影片鋪滿畫面再放大 1.0438（郵票內只露中間）；
+    #   版型段期間商品名稱不顯示、網址移到上方 (0.0286, 0.8215)
+    #   框與迴紋針她嫌設計圖去背的不漂亮，改用程式畫仿真版（stamp_overlay.py）
+    "stamp":    {"name": "郵票", "file": "3_郵票.jpg", "pattern": "#,M,D,M,M,D", "overlay_draw": "stamp",
+                 "overlay_scale": 1.0438,
+                 "regions": [{"role": "M1", "box": [0, 0, 1080, 1920], "zoom": 1.0438}],
+                 "hide_title": True, "site_pos": [0.0286, 0.8215]},
     # 撕紙：Vivian 2026-10-23 改成「較直線」的撕紙接縫——上下兩段都是矩形（可在 CapCut 直接換影片），
     #   接縫用她給的撕紙邊 PNG 紋理（torn_overlay.py）蓋住；上段在上層、兩段在接縫處重疊一點不露縫
     #   她在 CapCut 調好後讀回：順序改為 滿版→近拍→版型→滿版→近拍→滿版；撕紙框往下移 y=-0.0356；其餘（商品名稱、網址）照標準
@@ -152,7 +157,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v19"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v20"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
@@ -241,6 +246,9 @@ def prepare(layout_id, cache_dir, image_path=None):
     elif L.get("overlay_draw") == "torn":
         import torn_overlay
         torn_overlay.draw(os.path.join(out, "overlay.png"))
+    elif L.get("overlay_draw") == "stamp":
+        import stamp_overlay
+        stamp_overlay.draw(os.path.join(out, "overlay.png"))
     else:
         Image.fromarray(arr, "RGBA").save(os.path.join(out, "overlay.png"))
     sx, sy = CANVAS_W / W, CANVAS_H / H
@@ -253,7 +261,7 @@ def prepare(layout_id, cache_dir, image_path=None):
             texts.append(dict(t, box=[int(x0 * sx), int(y0 * sy), int(x1 * sx), int(y1 * sy)]))
     meta = {"stamp": stamp, "overlay": "overlay.png" if L.get("overlay", True) else "", "regions": regions, "texts": texts, "dir": out,
             "site_pos": L.get("site_pos"), "hide_title": bool(L.get("hide_title")), "hide_site": bool(L.get("hide_site")), "thumb": L.get("thumb"),
-            "overlay_offset": L.get("overlay_offset")}
+            "overlay_offset": L.get("overlay_offset"), "overlay_scale": L.get("overlay_scale")}
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False)
     return meta
