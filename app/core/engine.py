@@ -357,7 +357,9 @@ def build_draft(spec, models, log=None, progress=None):
                 s = layout_source(full, c, dur, want_person=want_person)
                 if not reg.get("rect", True):
                     # 區塊有弧度（撕紙）：先照遮罩形狀裁成透明 .mov，放進 CapCut 仍是獨立一層
-                    mov = os.path.join(RENDER_DIR, f"{safe}_{layout_id}_{idx}_{layer_no}.mov")
+                    import hashlib, time as _t
+                    mkey = hashlib.md5(f"{full}|{s['start']:.3f}|{dur}|{box}|{_t.time():.0f}".encode("utf-8")).hexdigest()[:10]
+                    mov = os.path.join(RENDER_DIR, f"{safe}_{layout_id}_{idx}_{layer_no}_{mkey}.mov")   # 每次新檔，不覆蓋舊草稿引用的
                     layouts.render_alpha_clip(full, s["start"], dur / SEC, box, os.path.join(layout_meta["dir"], reg["mask"]),
                                               mov, s["focus_x"], s["focus_y"])
                     mat = cc.VideoMaterial(mov)
