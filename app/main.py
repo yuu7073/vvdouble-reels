@@ -805,7 +805,7 @@ class Api:
         try:
             r = self._cloud("aiTitle", {"name": rec.get("name", ""), "category": rec.get("category", ""), "features": rec.get("features", []),
                                         "colors": rec.get("colors", []), "models": "、".join(models), "extra": extra, "n": 3})
-            return {"ok": True, "titles": r.get("titles", [])}
+            return {"ok": True, "titles": r.get("titles", []), "ai_error": r.get("ai_error") or ""}
         except Exception as e:
             return {"ok": False, "error": str(e)}
 

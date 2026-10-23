@@ -464,6 +464,7 @@ const app = {
     if(box.i+1<box.list.length){ box.i++; $('#pubTitle').value=box.list[box.i]; this._titles[id]=box; return; }
     const r=await this.call('yt_titles', id); if(!r||!r.ok){ $('#pubTitle').placeholder=r?r.error:'無法產生'; return; }
     box.list=box.list.concat(r.titles||[]); box.i=Math.min(box.i+1, box.list.length-1); this._titles[id]=box; if(box.list.length) $('#pubTitle').value=box.list[box.i];
+    if(r.ai_error){ const msg=/credit balance/i.test(r.ai_error)?'AI 標題暫停：Anthropic API 餘額不足，目前是備用句':'AI 標題失敗（備用句）：'+r.ai_error; this.toast(msg,true); }
   },
   async loadProducts(r){
     const el=$('#pubProducts'); const q=await this.call('find_products', r.name);
