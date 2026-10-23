@@ -69,7 +69,9 @@ LAYOUTS = {
     #   框與迴紋針她嫌設計圖去背的不漂亮，改用程式畫仿真版（stamp_overlay.py）
     "stamp":    {"name": "郵票", "file": "3_郵票.jpg", "pattern": "#,M,D,M,M,D", "overlay_draw": "stamp",
                  "overlay_scale": 1.0438,
-                 "regions": [{"role": "M1", "box": [0, 0, 1080, 1920], "zoom": 1.0438}],
+                 #   最底下可放底圖（製作頁選的底圖，鋪滿畫面），影片蓋不到的地方就露底圖不露黑邊
+                 "regions": [{"role": "P", "box": [0, 0, 1080, 1920], "raw": True},
+                             {"role": "M1", "box": [0, 0, 1080, 1920], "zoom": 1.0438}],
                  "hide_title": True, "site_pos": [0.0286, 0.8215]},
     # 撕紙：Vivian 2026-10-23 改成「較直線」的撕紙接縫——上下兩段都是矩形（可在 CapCut 直接換影片），
     #   接縫用她給的撕紙邊 PNG 紋理（torn_overlay.py）蓋住；上段在上層、兩段在接縫處重疊一點不露縫
@@ -157,7 +159,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v20"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v22"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
@@ -224,7 +226,7 @@ def prepare(layout_id, cache_dir, image_path=None):
         name = f"mask_{len(regions)}.png"
         mk.save(os.path.join(out, name))
         regions.append({"mask": name, "role": spec["role"], "_ord": L["regions"].index(spec), "rect": True,
-                        "box": list(box), "raw": False, "zoom": spec.get("zoom", 1.0), "offset": spec.get("offset", [0, 0]),
+                        "box": list(box), "raw": bool(spec.get("raw")), "zoom": spec.get("zoom", 1.0), "offset": spec.get("offset", [0, 0]),
                         "effects": spec.get("effects", []), "adjusts": spec.get("adjusts", []),
                         "blur": 0, "dark": 0, "noise": 0, "still": False})
     regions.sort(key=lambda r: r.get("_ord", 0))

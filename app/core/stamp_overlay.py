@@ -77,67 +77,48 @@ def _stamp_layer(s):
     rgb -= inner[..., None] * 18
     # 內框（挖空）邊緣：內側一圈淡陰影，讓影片像壓在紙下面
     hole_blur = np.asarray(hole.filter(ImageFilter.GaussianBlur(3 * s))).astype(float) / 255
-    rgb -= (hole_blur * (pa > 0))[..., None] * 26
+    rgb -= (hole_blur * (pa > 0))[..., None] * 8
     layer = np.dstack([np.clip(rgb, 0, 255), pa]).astype("uint8")
     return Image.fromarray(layer, "RGBA"), hole
 
 
+def _clip_path(cx, top, bottom, ro, ri, gap):
+    """標準 Gem 迴紋針：一條連續的線。外圈由左下往上繞過頂端、沿右側下來、繞過底部接內圈往上、繞過內圈頂端再往下"""
+    pts = []
+    def arc(cx_, cy_, r, a0, a1, n=28):
+        for i in range(n + 1):
+            a = a0 + (a1 - a0) * i / n
+            pts.append((cx_ + r * math.cos(a), cy_ + r * math.sin(a)))
+    pts.append((cx - ro, bottom - ro - gap * 2))
+    pts.append((cx - ro, top + ro))
+    arc(cx, top + ro, ro, math.pi, 2 * math.pi)
+    pts.append((cx + ro, bottom - ro))
+    arc(cx, bottom - ro, ro, 0, math.pi)
+    pts.append((cx - ro, top + ro + gap))
+    arc(cx, top + ro + gap, ro - gap, math.pi, 2 * math.pi)
+    pts.append((cx + ri, bottom - ro - gap))
+    arc(cx, bottom - ro - gap, ri, 0, math.pi * 0.55)
+    return pts
+
+
 def _paperclip(s):
-    """金屬迴紋針（RGBA 超取樣尺寸），含在紙上的陰影"""
+    """細金屬迴紋針（RGBA 超取樣尺寸），陰影非常淡"""
     size = (W * s, H * s)
-    clip = Image.new("RGBA", size, (0, 0, 0, 0))
-    cx, top, bottom = 300, 215, 560
-    w_out, w_in = 72, 44
-    r_out, r_in = w_out / 2, w_in / 2
-    # 迴紋針路徑：外圈 U + 內圈 U，用圓弧與直線組成
-    def u_path(cx, top, bottom, half, flip):
-        # 回傳折線點（由上到下再回來），flip 決定開口方向
-        pts = []
-        steps = 24
-        # 頂端半圓
-        for i in range(steps + 1):
-            a = math.pi + math.pi * i / steps
-            pts.append((cx + half * math.cos(a), top + half + half * math.sin(a)))
-        return pts
-    def stroke(draw, pts, width, fill):
-        draw.line([(x * s, y * s) for x, y in pts], fill=fill, width=int(width * s), joint="curve")
-    # 組成一條連續路徑：外圈從左下往上繞頂端到右邊往下，再在底部繞回內圈往上
-    path = []
-    path.append((cx - r_out, bottom - 30))
-    path += [(cx - r_out, top + r_out)]
-    for i in range(25):
-        a = math.pi + math.pi * i / 24
-        path.append((cx + r_out * math.cos(a), top + r_out + r_out * math.sin(a)))
-    path.append((cx + r_out, bottom - r_out))
-    for i in range(25):
-        a = 0 + math.pi * i / 24
-        path.append((cx + r_out * math.cos(a), bottom - r_out + r_out * math.sin(a)))
-    path.append((cx - r_out, top + 110))
-    # 內圈
-    inner = []
-    inner.append((cx - r_in, top + 110))
-    inner.append((cx - r_in, top + r_in + 26))
-    for i in range(25):
-        a = math.pi + math.pi * i / 24
-        inner.append((cx + r_in * math.cos(a), top + r_in + 26 + r_in * math.sin(a)))
-    inner.append((cx + r_in, bottom - 70))
-    for i in range(13):
-        a = 0 + math.pi * i / 24
-        inner.append((cx + r_in * math.cos(a), bottom - 70 + r_in * math.sin(a)))
-    pts_all = _rot(path, cx, (top + bottom) / 2, -2.0)
-    inner_all = _rot(inner, cx, (top + bottom) / 2, -2.0)
-    # 陰影
+    cx, top, bottom = 255, 225, 500
+    ro, gap = 27, 9
+    ri = ro - gap
+    pts = _rot(_clip_path(cx, top, bottom, ro, ri, gap), cx, (top + bottom) / 2, -3.0)
+    def stroke(draw, P, width, fill):
+        draw.line([(x * s, y * s) for x, y in P], fill=fill, width=max(1, int(round(width * s))), joint="curve")
     sh = Image.new("RGBA", size, (0, 0, 0, 0))
-    sd = ImageDraw.Draw(sh)
-    for P in (pts_all, inner_all):
-        stroke(sd, [(x + 5, y + 8) for x, y in P], 11, (0, 0, 0, 110))
-    sh = sh.filter(ImageFilter.GaussianBlur(3 * s))
+    stroke(ImageDraw.Draw(sh), [(x + 3, y + 4) for x, y in pts], 7, (0, 0, 0, 38))
+    sh = sh.filter(ImageFilter.GaussianBlur(2.5 * s))
+    clip = Image.new("RGBA", size, (0, 0, 0, 0))
     d = ImageDraw.Draw(clip)
-    for P in (pts_all, inner_all):
-        stroke(d, P, 11, (70, 72, 76, 255))          # 外緣深色
-        stroke(d, P, 8.5, (168, 170, 174, 255))      # 金屬本體
-        stroke(d, [(x - 1.2, y - 1.2) for x, y in P], 3.2, (238, 240, 242, 255))   # 高光
-        stroke(d, [(x + 1.6, y + 1.6) for x, y in P], 1.6, (95, 97, 100, 255))     # 下緣暗線
+    stroke(d, pts, 6.4, (118, 120, 124, 255))                                   # 外緣
+    stroke(d, pts, 4.6, (196, 198, 202, 255))                                   # 本體
+    stroke(d, [(x - 0.9, y - 0.9) for x, y in pts], 1.6, (245, 246, 248, 255))  # 高光
+    stroke(d, [(x + 1.1, y + 1.1) for x, y in pts], 0.9, (140, 142, 146, 255))  # 下緣
     return Image.alpha_composite(sh, clip)
 
 
@@ -154,18 +135,18 @@ def draw(out_path):
     # 郵票在黑底上的柔和陰影
     shadow = Image.new("RGBA", size, (0, 0, 0, 0))
     sa = np.asarray(paper)[..., 3]
-    shadow.putalpha(Image.fromarray((sa * 0.55).astype("uint8")))
+    shadow.putalpha(Image.fromarray((sa * 0.35).astype("uint8")))
     shadow = shadow.transform(size, Image.AFFINE, (1, 0, -10 * s, 0, 1, -14 * s))
     shadow = shadow.filter(ImageFilter.GaussianBlur(10 * s))
     out = Image.alpha_composite(bg, shadow)
     out = Image.alpha_composite(out, paper)
-    out = Image.alpha_composite(out, _paperclip(s))
-    # 內部挖空：影片從這裡透出來（迴紋針壓在洞上的部分保留）
+    clip = _paperclip(s)
+    out = Image.alpha_composite(out, clip)
+    # 內部挖空：影片從這裡透出來；洞裡只留迴紋針本身（含它淡淡的陰影，半透明）
     a = np.asarray(out).copy()
-    hole_a = np.asarray(hole) > 128
-    clip_a = np.asarray(_paperclip(s))[..., 3] > 0
-    a[..., 3] = np.where(hole_a & ~clip_a, 0, a[..., 3])
-    out = Image.fromarray(a, "RGBA").resize((W, H), Image.LANCZOS)
+    hole_a = (np.asarray(hole) > 128)[..., None]
+    a = np.where(hole_a, np.asarray(clip), a)
+    out = Image.fromarray(a.astype("uint8"), "RGBA").resize((W, H), Image.LANCZOS)
     out.save(out_path)
     return out_path
 
