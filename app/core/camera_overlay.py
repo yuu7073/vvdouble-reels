@@ -112,7 +112,7 @@ def draw(out_path):
 
     # 翻轉鏡頭
     cx, cy, r = FLIP
-    d.ellipse(R(cx - r, cy - r, cx + r, cy + r), fill=(255, 255, 255, 36))   # 跟設計圖一樣只比底色淡一點，不是實心亮灰
+    d.ellipse(R(cx - r, cy - r, cx + r, cy + r), fill=(101, 96, 90, 255))   # 設計圖量到的實色，不靠半透明疊色（CapCut 疊起來會偏亮）
     ar = 22
     d.arc(R(cx - ar, cy - ar, cx + ar, cy + ar), start=200, end=340, fill=WHITE + (255,), width=3 * s)
     d.arc(R(cx - ar, cy - ar, cx + ar, cy + ar), start=20, end=160, fill=WHITE + (255,), width=3 * s)

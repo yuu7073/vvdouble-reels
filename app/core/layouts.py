@@ -168,7 +168,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     from PIL import Image
     L = LAYOUTS[layout_id]
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v28"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v29"
     # 每個版本各自一個資料夾，覆蓋圖永遠不被改寫（CapCut 舊草稿還會引用舊檔）
     import hashlib
     out = os.path.join(cache_dir, layout_id, hashlib.md5(stamp.encode("utf-8")).hexdigest()[:8])
