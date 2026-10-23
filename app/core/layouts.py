@@ -79,7 +79,9 @@ LAYOUTS = {
                            {"text": "Sun-warmed skin, ocean blues.\nA little texture, a slower pace.\nSummer, carried with you.",
                             "box": [726, 1246, 1104, 1335], "size": 3.0, "color": (0.1, 0.1, 0.1), "align": 0, "line_spacing": 4}],
                  "erase": [{"box": [60, 1230, 1130, 1350], "fill": (250, 249, 247)}]},
+    # 九宮格：照 Vivian 2026-10-23 在 CapCut 調好的草稿讀回——格位不變；版型段期間 商品名稱 不顯示、網址 移到上方 y=0.7597
     "grid":     {"name": "九宮格", "file": "7_九宮格.jpg", "pattern": "#,M,D,M,M,M",
+                 "hide_title": True, "site_pos": [0.0, 0.7597],
                  "regions": [{"color": "yellow", "index": 0, "role": "M1"},
                              {"color": "yellow", "index": 1, "role": "M2"},
                              {"color": "yellow", "index": 2, "role": "M1"},
@@ -145,7 +147,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v16"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v17"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
