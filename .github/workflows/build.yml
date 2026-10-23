@@ -54,13 +54,21 @@ jobs:
         run: |
           $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
           & $iscc /DAppVersion=${{ steps.ver.outputs.version }} build\installer.iss
+      - name: Release notes from commit message
+        if: steps.ver.outputs.exists != 'true'
+        shell: bash
+        run: |
+          git log -1 --pretty=%B | grep -v -e 'Co-Authored-By' -e 'Claude-Session' | sed -e 's/^[0-9.]*[：:]\s*//' > release_notes.md
+          echo "${{ steps.ver.outputs.version }}" > notes_head.md
+          { cat notes_head.md; sed 's/^/- /' release_notes.md | sed 's/^- $//'; } > body.md
+          cat body.md
       - name: Release
         if: steps.ver.outputs.exists != 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.ver.outputs.version }}
           name: v${{ steps.ver.outputs.version }}
-          body_path: CHANGELOG.md
+          body_path: body.md
           files: |
             dist/VVReels-Setup-${{ steps.ver.outputs.version }}.exe
             dist/VVReels-win-${{ steps.ver.outputs.version }}.zip
