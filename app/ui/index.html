@@ -485,7 +485,7 @@ const app = {
   /* ---------- 待製作清單 ---------- */
   todo:null, todoSel:new Set(), todoFilter:'all', todoQ:'',
   async loadTodo(force){
-    $('#todoMeta').textContent='讀取中…';
+    $('#todoMeta').textContent='讀取中…（試算表分頁多時要等一下）';
     const r=await this.call('todo_list',!!force);
     if(!r||!r.ok){ this.todo=null; $('#todoMeta').textContent=''; $('#todoMonths').innerHTML=''; $('#todoChips').innerHTML='';
       $('#todoRows').innerHTML=`<div style="padding:30px;text-align:center;color:var(--mute);line-height:1.8">${esc(r?r.error:'無法讀取')}<br><button class="btn w sm" onclick="app.go('settings')">到設定</button></div>`; return; }

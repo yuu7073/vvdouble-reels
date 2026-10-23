@@ -639,7 +639,7 @@ class Api:
             try:
                 import urllib.request
                 req = urllib.request.Request(url, headers={"User-Agent": "VVReels/1.0"})
-                with urllib.request.urlopen(req, timeout=25) as resp:
+                with urllib.request.urlopen(req, timeout=120) as resp:   # 試算表分頁多時 Apps Script 要跑幾十秒
                     data = json.loads(resp.read().decode("utf-8"))
                 _save_json(TODO_CACHE, {"url": url, "ts": dt.datetime.now().timestamp(), "data": data})
             except Exception as e:
