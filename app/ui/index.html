@@ -355,7 +355,8 @@ const app = {
   emit(ev, p) {
     if (ev==='analyzing') { $('#analyzing').textContent = p.i<p.n ? `分析中 ${p.i+1}/${p.n}　${p.name}` : ''; }
     else if (ev==='drop_start') { $('#analyzing').textContent = `讀取 ${p.n} 個檔案…`; document.body.classList.remove('dragging'); }
-    else if (ev==='dropped') { this.ingest(p); }
+    else if (ev==='dropped') { clearTimeout(this._dropWait); this.ingest(p); }
+    else if (ev==='drop_nopath') { clearTimeout(this._dropWait); $('#analyzing').textContent=''; this.toast('拖曳拿不到檔案路徑（WebView2 太舊），請用「＋ 加入影片」或「＋ 加入資料夾」', true); }
     else if (ev==='job_start') { this.progress(p.job, 0, 1, '準備中'); $('#progLog').style.display='block'; $('#progLog').textContent=''; this.go('done'); }
     else if (ev==='log') { const l=$('#progLog'); l.textContent += p.msg+'\n'; l.scrollTop=l.scrollHeight; }
     else if (ev==='progress') { this.progress(p.job, p.i, p.n, p.name); }
@@ -784,7 +785,12 @@ document.addEventListener('drop',async e=>{ if([...e.dataTransfer.types].include
   const files=[...e.dataTransfer.files]; const paths=files.map(f=>f.pywebviewFullPath||f.path).filter(Boolean);
   console.log('drop', files.length, paths.length);
   if(paths.length){ $('#analyzing').textContent=`讀取 ${paths.length} 個檔案…`; const r=await app.call('add_paths', paths); if(r) app.ingest(r); }
-  else if(files.length){ app.toast('這個環境拖曳拿不到檔案路徑，請用「＋ 加入影片」或「＋ 加入資料夾」', true); } } });
+  else if(files.length){
+    // Windows 上路徑由 Python 端的拖曳事件補上（會回 dropped 事件）；4 秒內沒回應才提示
+    $('#analyzing').textContent='讀取中…';
+    clearTimeout(app._dropWait);
+    app._dropWait=setTimeout(()=>{ $('#analyzing').textContent=''; app.toast('這個環境拖曳拿不到檔案路徑，請用「＋ 加入影片」或「＋ 加入資料夾」', true); }, 4000);
+  } } });
 document.addEventListener('DOMContentLoaded', ()=>app.init());
 </script>
 </body>

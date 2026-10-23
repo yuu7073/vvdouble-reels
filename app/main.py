@@ -1331,6 +1331,28 @@ def main():
     win = webview.create_window("VV 實穿草稿產生器", f"http://127.0.0.1:{port}/", js_api=api, hidden=True,
                                 width=1360, height=860, min_size=(1100, 700), background_color=bg)
     api._window = win  # 底線開頭：pywebview 不會去掃描這個物件
+
+    def _on_drop(ev):
+        # pywebview 的 DOM 事件：Windows 上只有走這條路才拿得到拖進來的檔案完整路徑（pywebviewFullPath）
+        try:
+            files = (ev.get("dataTransfer") or {}).get("files") or []
+            paths = [f.get("pywebviewFullPath") for f in files if f.get("pywebviewFullPath")]
+            if not paths:
+                api._emit("drop_nopath", {"n": len(files)})
+                return
+            api._emit("analyzing", {"i": 0, "n": len(paths), "name": "讀取中…"})
+            res = api.add_paths(paths)
+            api._emit("dropped", res)
+        except Exception as e:
+            api._emit("drop_nopath", {"n": 0, "error": str(e)})
+
+    def _hook_drop():
+        try:
+            win.dom.document.events.drop += _on_drop
+        except Exception as e:
+            print(f"拖曳掛載失敗：{e}")
+
+    win.events.loaded += _hook_drop
     threading.Timer(3.0, api._warm_todo).start()
     # 保險：介面 8 秒內沒回報就直接顯示
     threading.Timer(8.0, api._show_window).start()
