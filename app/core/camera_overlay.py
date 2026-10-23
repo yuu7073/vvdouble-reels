@@ -55,11 +55,6 @@ def draw(out_path):
     d.rectangle(R(*TOP_BAR), fill=BAR + (a,))
     d.rectangle(R(*BOTTOM_BAR), fill=BAR + (a,))
 
-    # 上方箭頭圓鈕
-    cx, cy, r = CHEVRON
-    d.ellipse(R(cx - r, cy - r, cx + r, cy + r), fill=(255, 255, 255, 64))
-    d.line([R(cx - 11, cy + 5), R(cx, cy - 6), R(cx + 11, cy + 5)], fill=WHITE + (255,), width=3 * s, joint="curve")
-
     # 三分構圖線
     for x in (360, 720):
         d.line([R(x, 181), R(x, 1576)], fill=(255, 255, 255, 90), width=max(1, s // 2))
