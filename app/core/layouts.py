@@ -65,12 +65,11 @@ LAYOUTS = {
                  "hide_title": True, "hide_site": True},
     "stamp":    {"name": "郵票", "file": "3_郵票.jpg", "pattern": "M,#,D,M,M,D",
                  "regions": [{"color": "blue", "role": "M1"}]},
-    "torn_diag": {"name": "撕紙斜版", "file": "4_撕紙斜.jpg", "pattern": "M,D,#,D,M,M",
-                  "regions": [{"color": "yellow", "role": "M1"}, {"color": "blue", "role": "D"}]},
-    "torn_band": {"name": "撕紙橫版", "file": "5_撕紙橫.jpg", "pattern": "M,M,#,D,M",
-                  "regions": [{"color": "blue", "index": 0, "role": "M1"},
-                              {"color": "blue", "index": 1, "role": "M2"},
-                              {"color": "yellow", "role": "D"}]},
+    # 撕紙：Vivian 2026-10-23 改成「較直線」的撕紙接縫——上下兩段都是矩形（可在 CapCut 直接換影片），
+    #   接縫用程式畫的撕紙白邊（torn_overlay.py）蓋住；上段在上層、兩段在接縫處重疊一點不露縫
+    "torn_diag": {"name": "撕紙", "file": "4_撕紙斜.jpg", "pattern": "M,D,#,D,M,M", "overlay_draw": "torn",
+                  "regions": [{"role": "D", "box": "torn_bottom"}, {"role": "M1", "box": "torn_top"}]},
+    # 撕紙橫版：2026-10-23 她決定不用
     "detail":   {"name": "DETAIL", "file": "6_DETAIL.jpg", "pattern": "M,M,#,M,M,D",
                  "regions": [{"color": "blue", "role": "D"}, {"color": "yellow", "role": "D2"}],
                  "texts": [{"text": "DETAIL", "box": [90, 1262, 346, 1313], "size": 7.0, "bold": True,
@@ -89,7 +88,7 @@ LAYOUTS = {
                              {"color": "blue", "index": 3, "role": "D"},
                              {"color": "blue", "index": 4, "role": "M1"}]},
 }
-ORDER = ["lookbook", "camera", "stamp", "torn_diag", "torn_band", "detail", "grid"]
+ORDER = ["lookbook", "camera", "stamp", "torn_diag", "detail", "grid"]
 
 
 def list_layouts():
@@ -141,7 +140,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v12"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v13"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
@@ -159,7 +158,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     alpha_all = np.zeros((H, W))
     regions = []
     for color_name, k in COLORS.items():
-        if not any(r["color"] == color_name for r in L["regions"]):
+        if not any(r.get("color") == color_name for r in L["regions"]):
             continue
         a, fgc = _key(p, k)
         hard = a > 0.5
@@ -175,7 +174,7 @@ def prepare(layout_id, cache_dir, image_path=None):
             comps.append((int(ys.min()), int(xs.min()), m))
         comps.sort(key=lambda c: (c[0] // int(H * 0.1), c[1]))
         for idx, (_, _, m) in enumerate(comps):
-            spec = next((r for r in L["regions"] if r["color"] == color_name and r.get("index", 0) == idx), None)
+            spec = next((r for r in L["regions"] if r.get("color") == color_name and r.get("index", 0) == idx), None)
             if not spec:
                 continue
             mk = Image.fromarray((m * 255).astype(np.uint8)).resize((CANVAS_W, CANVAS_H), Image.LANCZOS)
@@ -192,6 +191,25 @@ def prepare(layout_id, cache_dir, image_path=None):
                             "effects": spec.get("effects", []), "adjusts": spec.get("adjusts", []),
                             "blur": spec.get("blur", 0), "dark": spec.get("dark", 0),
                             "noise": spec.get("noise", 0), "still": bool(spec.get("still"))})
+    for spec in L["regions"]:
+        if spec.get("color"):
+            continue
+        box = spec["box"]
+        if box == "torn_top":
+            import torn_overlay
+            box = torn_overlay.seam_box_top()
+        elif box == "torn_bottom":
+            import torn_overlay
+            box = torn_overlay.seam_box_bottom()
+        mk = Image.new("L", (CANVAS_W, CANVAS_H), 0)
+        from PIL import ImageDraw
+        ImageDraw.Draw(mk).rectangle([box[0], box[1], box[2] - 1, box[3] - 1], fill=255)
+        name = f"mask_{len(regions)}.png"
+        mk.save(os.path.join(out, name))
+        regions.append({"mask": name, "role": spec["role"], "_ord": L["regions"].index(spec), "rect": True,
+                        "box": list(box), "raw": False, "zoom": spec.get("zoom", 1.0), "offset": spec.get("offset", [0, 0]),
+                        "effects": spec.get("effects", []), "adjusts": spec.get("adjusts", []),
+                        "blur": 0, "dark": 0, "noise": 0, "still": False})
     regions.sort(key=lambda r: r.get("_ord", 0))
     alpha = np.where(alpha_all > 0.5, 0, 255).astype(float)
     for er in L.get("erase", []):
@@ -208,6 +226,9 @@ def prepare(layout_id, cache_dir, image_path=None):
     if L.get("overlay_draw") == "camera":
         import camera_overlay
         camera_overlay.draw(os.path.join(out, "overlay.png"))
+    elif L.get("overlay_draw") == "torn":
+        import torn_overlay
+        torn_overlay.draw(os.path.join(out, "overlay.png"))
     else:
         Image.fromarray(arr, "RGBA").save(os.path.join(out, "overlay.png"))
     sx, sy = CANVAS_W / W, CANVAS_H / H
