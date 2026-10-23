@@ -626,33 +626,54 @@ class Api:
         except Exception:
             traceback.print_exc()
 
-    def todo_list(self, force=False):
-        url = (self.settings.get("todo_url") or "").strip()
-        if not url:
-            return {"ok": False, "error": "尚未設定待製作清單網址（設定頁）", "tabs": [], "status": {}}
+    def todo_list(self, force=False, days=90):
+        """待製作清單：直接從 Shopline 抓近期商品（依排程上架日分檔期）；沒有工具密碼時才退回上架排程試算表"""
         cache = _load_json(TODO_CACHE, None)
-        data, err = None, ""
-        fresh = cache and cache.get("url") == url and (dt.datetime.now().timestamp() - cache.get("ts", 0) < 300)
-        if fresh and not force:
-            data = cache.get("data")
+        data, err, source = None, "", "shopline"
+        fresh = cache and cache.get("source") == "shopline" and cache.get("days") == days and (dt.datetime.now().timestamp() - cache.get("ts", 0) < 300)
+        if (self.settings.get("tool_password") or "").strip():
+            if fresh and not force:
+                data = cache.get("data")
+            else:
+                try:
+                    data = self._cloud("upcoming", {"days": days}, timeout=60)
+                    if not data.get("ok"):
+                        raise RuntimeError(data.get("error") or "雲端沒有回應")
+                    _save_json(TODO_CACHE, {"source": "shopline", "days": days, "ts": dt.datetime.now().timestamp(), "data": data})
+                except Exception as e:
+                    err = f"Shopline 讀取失敗：{type(e).__name__}: {e}"
+                    data = cache.get("data") if (cache and cache.get("source") == "shopline") else None
         else:
-            try:
-                import urllib.request
-                req = urllib.request.Request(url, headers={"User-Agent": "VVReels/1.0"})
-                with urllib.request.urlopen(req, timeout=120) as resp:   # 試算表分頁多時 Apps Script 要跑幾十秒
-                    data = json.loads(resp.read().decode("utf-8"))
-                _save_json(TODO_CACHE, {"url": url, "ts": dt.datetime.now().timestamp(), "data": data})
-            except Exception as e:
-                err = f"讀取失敗：{type(e).__name__}: {e}"
-                data = cache.get("data") if cache else None
+            err = "設定頁還沒填工具密碼"
+        if not data:
+            url = (self.settings.get("todo_url") or "").strip()
+            if url:
+                source = "sheet"
+                try:
+                    import urllib.request
+                    req = urllib.request.Request(url, headers={"User-Agent": "VVReels/1.0"})
+                    with urllib.request.urlopen(req, timeout=120) as resp:
+                        data = json.loads(resp.read().decode("utf-8"))
+                    err = ""
+                except Exception as e:
+                    err = (err + "；" if err else "") + f"排程表讀取失敗：{type(e).__name__}: {e}"
         if not data:
             return {"ok": False, "error": err or "沒有資料", "tabs": [], "status": {}}
-        # 把分頁依檔期代碼由新到舊排
-        tabs = sorted(data.get("tabs", []), key=lambda t: (t.get("year") or 0, t.get("code", "")), reverse=True)
+        tabs = data.get("tabs", [])
+        if source == "sheet":
+            # 試算表分頁：只認 YYYY-MMDD（前面可帶 emoji），其餘分頁不列
+            kept = []
+            for t in tabs:
+                m = re.search(r"(20\d{2})-(\d{2})(\d{2})", t.get("tab", ""))
+                if not m:
+                    continue
+                t["year"], t["month"], t["day"], t["code"] = int(m.group(1)), int(m.group(2)), int(m.group(3)), m.group(2) + m.group(3)
+                kept.append(t)
+            tabs = sorted(kept, key=lambda t: (t["year"], t["month"], t["day"]), reverse=True)[:12]
         for t in tabs:
             t["ym"] = f"{t.get('year') or ''}-{t.get('month')}"
-        cached_at = (cache or {}).get("ts") if (fresh and not force) or err else dt.datetime.now().timestamp()
-        return {"ok": True, "tabs": tabs, "status": self._status_index(), "error": err,
+        cached_at = (cache or {}).get("ts") if (fresh and not force) or (err and source == "shopline") else dt.datetime.now().timestamp()
+        return {"ok": True, "tabs": tabs, "status": self._status_index(), "error": err, "source": source,
                 "cached_at": dt.datetime.fromtimestamp(cached_at or dt.datetime.now().timestamp()).strftime("%H:%M"),
                 "history_names": [h.get("name") for h in self.history if h.get("ok")],
                 "history_skus": [h.get("sku") for h in self.history if h.get("ok") and h.get("sku")]}
@@ -1021,7 +1042,7 @@ class Api:
     def _warm_todo(self):
         """開啟時在背景先抓排程表，之後查找才不會等"""
         try:
-            if (self.settings.get("todo_url") or "").strip():
+            if (self.settings.get("tool_password") or self.settings.get("todo_url") or "").strip():
                 self.todo_list()
         except Exception:
             pass

@@ -129,7 +129,7 @@ input.ipt::placeholder{color:var(--faint)}
     <div style="flex:1;min-width:0;padding:18px 22px;display:flex;flex-direction:column;gap:12px;overflow:hidden">
       <div style="display:flex;align-items:center;gap:8px" id="todoChips"></div>
       <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden">
-        <div class="tr head" style="grid-template-columns:28px 110px 1fr 150px 180px 100px 96px"><span><input type="checkbox" id="todoAll" onchange="app.todoCheckAll(this.checked)" title="全選目前列出的"></span><span>檔期</span><span>名稱</span><span>顏色</span><span>拍攝特點</span><span>狀態</span><span></span></div>
+        <div class="tr head" style="grid-template-columns:28px 110px 1fr 150px 180px 100px 96px"><span><input type="checkbox" id="todoAll" onchange="app.todoCheckAll(this.checked)" title="全選目前列出的"></span><span>檔期</span><span>名稱</span><span>顏色</span><span>標籤／特點</span><span>狀態</span><span></span></div>
         <div id="todoRows" style="overflow:auto;flex:1"></div>
       </div>
     </div>
@@ -284,7 +284,7 @@ input.ipt::placeholder{color:var(--faint)}
         <div class="row"><span>CapCut 草稿資料夾</span><div style="display:flex;gap:8px;width:520px"><input class="ipt" id="setDraft" readonly><button class="btn w sm" onclick="app.pickSetting('draft_folder')">變更</button></div></div>
         <div class="row"><span>成品資料夾（CapCut 匯出位置）</span><div style="display:flex;gap:8px;width:520px"><input class="ipt" id="setExport" readonly placeholder="尚未設定"><button class="btn w sm" onclick="app.pickSetting('export_folder')">變更</button></div></div>
         <div class="row"><span>音樂庫資料夾</span><div style="display:flex;gap:8px;width:520px"><input class="ipt" id="setMusic" readonly placeholder="尚未設定"><button class="btn w sm" onclick="app.pickSetting('music_folder')">變更</button></div></div>
-        <div class="row"><span>待製作清單網址</span><div style="display:flex;gap:8px;width:520px"><input class="ipt" id="setTodo" placeholder="Apps Script 網頁應用程式網址" onchange="app.saveTodoUrl(this.value)"></div></div>
+        <div class="row"><span>待製作清單網址（備援）</span><div style="display:flex;gap:8px;width:520px"><input class="ipt" id="setTodo" placeholder="沒填工具密碼時才會用的上架排程表網址" onchange="app.saveTodoUrl(this.value)"></div></div>
       </div>
       <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px">
         <div class="row"><span>工具密碼（同官網批次中心）</span><div style="display:flex;gap:8px;width:520px"><input class="ipt" id="setPw" type="password" placeholder="輸入後才能上傳 YouTube／放到商品頁" onchange="app.savePw(this.value)"><button class="btn w sm" onclick="app.cloudCheck()">測試</button></div></div>
@@ -507,7 +507,7 @@ const app = {
     if(!this.todoSel.size){ // 預設勾最新的兩個檔期
       r.tabs.slice(0,2).forEach(t=>this.todoSel.add(t.code));
     }
-    $('#todoMeta').textContent=`來源：上架排程試算表・${r.cached_at} 更新${r.error?'（離線資料）':''}`;
+    $('#todoMeta').textContent=`來源：${r.source==='shopline'?'Shopline 近 90 天商品':'上架排程試算表'}・${r.cached_at} 更新${r.error?'（'+esc(r.error)+'）':''}`;
     this.renderTodo();
   },
   todoStatus(it){
@@ -541,10 +541,11 @@ const app = {
       <span class="st ${it._st.cls}" style="background:var(--${it._st.cls==='g'?'green':it._st.cls==='b'?'blue':'orange'}-bg);color:var(--${it._st.cls==='g'?'green':it._st.cls==='b'?'blue':'orange'})"><i style="background:currentColor"></i>${it._st.t}</span>
       <button class="btn ${it._st.k==='todo'?'k':'w'} sm" onclick='app.startFromTodo(${JSON.stringify(it).replace(/'/g,"&#39;")})'>${it._st.k==='todo'?'開始製作':'再做一支'}</button></div>`).join('')||`<div style="padding:30px;text-align:center;color:var(--mute)">沒有符合的款式</div>`;
   },
-  startFromTodo(it){
+  async startFromTodo(it){
     const ex=this.products.find(p=>p.name===it.name);
     if(ex){ this.cur=this.products.indexOf(ex); }
     else {
+      if(!(it.models||[]).length){ const q=await this.call('product_lookup', it.name); const hit=q&&(q.items||[]).find(x=>x.name===it.name); if(hit){ it.models=hit.models||[]; if(!it.sku) it.sku=hit.sku||''; if(!(it.specs||[]).length) it.specs=hit.specs||[]; } }
       const cur=this.P(); const fresh=cur&&!cur.name&&!cur.clips.length;
       const P={name:it.name, sku:it.sku, colors:it.colors||[], features:it.features||[], category:it.category||'', clips:[], music:null, musicStart:'', modelSizes:{}};
       const one=(it.specs||[]).filter(Boolean).length===1?it.specs.filter(Boolean)[0]:'';
