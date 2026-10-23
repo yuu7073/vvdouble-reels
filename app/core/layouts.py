@@ -72,12 +72,16 @@ LAYOUTS = {
                   "overlay_offset": [0.0, -0.0356],
                   "regions": [{"role": "D", "box": "torn_bottom"}, {"role": "M1", "box": "torn_top"}]},
     # 撕紙橫版：2026-10-23 她決定不用
+    # DETAIL：照 Vivian 2026-10-23 在 CapCut 調好的草稿讀回——
+    #   上下近拍位置不變（白帶本來就在正中央 862–1057）；DETAIL 字位置 x=-0.5966、放大 1.199；
+    #   英文改成中性文案、位置 x=0.3412、行距 0.22；版型段期間網址不顯示、商品名稱照常
     "detail":   {"name": "DETAIL", "file": "6_DETAIL.jpg", "pattern": "M,M,#,M,M,D",
                  "regions": [{"color": "blue", "role": "D"}, {"color": "yellow", "role": "D2"}],
-                 "texts": [{"text": "DETAIL", "box": [90, 1262, 346, 1313], "size": 7.0, "bold": True,
+                 "texts": [{"text": "DETAIL", "pos": [-0.5966, 0.0], "scale": 1.1992, "size": 7.0, "bold": True,
                             "color": (0.05, 0.05, 0.05), "align": 0},
-                           {"text": "Sun-warmed skin, ocean blues.\nA little texture, a slower pace.\nSummer, carried with you.",
-                            "box": [726, 1246, 1104, 1335], "size": 3.0, "color": (0.1, 0.1, 0.1), "align": 0, "line_spacing": 4}],
+                           {"text": "Clean cuts, easy layers.\nNothing loud, nothing extra.\nJust the everyday, done well.",
+                            "pos": [0.3412, 0.0], "size": 3.0, "color": (0.1, 0.1, 0.1), "align": 0, "line_spacing": 4}],   # CapCut 裡顯示 0.22
+                 "hide_site": True,
                  "erase": [{"box": [60, 1230, 1130, 1350], "fill": (250, 249, 247)}]},
     # 九宮格：照 Vivian 2026-10-23 在 CapCut 調好的草稿讀回——格位不變；版型段期間 商品名稱 不顯示、網址 移到上方 y=0.7597
     "grid":     {"name": "九宮格", "file": "7_九宮格.jpg", "pattern": "#,M,D,M,M,M",
@@ -147,7 +151,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v17"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v18"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
