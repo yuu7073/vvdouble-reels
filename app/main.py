@@ -187,6 +187,48 @@ def _probe_duration(path):
     return int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))
 
 
+HEAVY_MBPS = 80          # 超過這個碼率（或 >50fps）的相機檔，CapCut 時間軸會播不動、匯出凍格，先轉成 30fps H.264
+TRANSCODE_DIR = os.path.join(DATA_DIR, "transcode")
+
+
+def _probe_info(path):
+    """回傳 (秒數, fps, Mbps)"""
+    r = _run([_ffmpeg(), "-hide_banner", "-i", path])
+    err = r.stderr.decode("utf-8", "ignore")
+    m = re.search(r"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)", err)
+    dur = (int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))) if m else 0.0
+    f = re.search(r"(\d+(?:\.\d+)?)\s*fps", err)
+    fps = float(f.group(1)) if f else 30.0
+    try:
+        mbps = os.path.getsize(path) * 8 / max(0.1, dur) / 1e6
+    except Exception:
+        mbps = 0.0
+    return dur, fps, mbps
+
+
+def _maybe_transcode(path, emit=None):
+    """太重的檔轉成輕量版（1080p 以內、30fps、H.264 CRF18、保留旋轉與聲音）；回傳要用的路徑與說明"""
+    dur, fps, mbps = _probe_info(path)
+    if mbps <= HEAVY_MBPS and fps <= 50:
+        return path, ""
+    os.makedirs(TRANSCODE_DIR, exist_ok=True)
+    stem = os.path.splitext(os.path.basename(path))[0]
+    out = os.path.join(TRANSCODE_DIR, f"{stem}_{_file_key(path)[:8]}.mp4")
+    if os.path.exists(out) and os.path.getsize(out) > 0:
+        return out, f"已用轉檔版（原檔 {mbps:.0f}Mbps/{fps:.0f}fps）"
+    if emit:
+        emit("analyzing", {"i": 0, "n": 1, "name": f"{os.path.basename(path)} 太重，轉檔中…（{mbps:.0f}Mbps/{fps:.0f}fps）"})
+    cmd = [_ffmpeg(), "-y", "-v", "error", "-i", path,
+           "-vf", "scale='min(1080,iw)':-2:flags=lanczos,fps=30",
+           "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+           "-c:a", "aac", "-b:a", "128k", out + ".part.mp4"]
+    r = _run(cmd, timeout=1800)
+    if r.returncode != 0 or not os.path.exists(out + ".part.mp4"):
+        return path, "轉檔失敗，使用原檔"
+    os.replace(out + ".part.mp4", out)
+    return out, f"已轉檔（原檔 {mbps:.0f}Mbps/{fps:.0f}fps）"
+
+
 def _file_key(path):
     st = os.stat(path)
     return hashlib.md5(f"{path}|{st.st_size}|{int(st.st_mtime)}".encode("utf-8")).hexdigest()
@@ -419,13 +461,17 @@ class Api:
                 out["music"].append({"path": fp, "name": os.path.basename(fp)})
                 continue
             try:
+                src = fp
+                fp, note = _maybe_transcode(fp, self._emit)
+                if note:
+                    print(f"{os.path.basename(src)}：{note}")
                 dur = _probe_duration(fp)
                 key = _file_key(fp)
                 thumb = _thumb(fp, min(1.0, dur / 2), key)
                 person = _has_person(fp, dur)
                 out["clips"].append({
-                    "id": key, "path": fp, "name": os.path.basename(fp), "duration": round(dur, 1),
-                    "thumb": thumb, "closeup": (person is False), "person": person,
+                    "id": key, "path": fp, "source": src, "name": os.path.basename(src), "duration": round(dur, 1),
+                    "thumb": thumb, "closeup": (person is False), "person": person, "transcoded": bool(note),
                 })
             except Exception as e:
                 out["clips"].append({"id": _file_key(fp), "path": fp, "name": os.path.basename(fp),
@@ -459,6 +505,15 @@ class Api:
         try:
             for ji, spec in enumerate(jobs):
                 name = spec.get("name") or f"草稿{ji + 1}"
+                # 太重的相機檔（舊的工作階段帶回來、或轉檔失敗的）在產生前再轉一次；轉過的直接用快取
+                for c in spec.get("clips") or []:
+                    try:
+                        p2, note = _maybe_transcode(c.get("path", ""), lambda ev, p: self._emit("log", {"job": ji, "msg": p.get("name", "")}))
+                        if p2 != c.get("path"):
+                            self._emit("log", {"job": ji, "msg": f"{os.path.basename(c.get('path', ''))}：{note}"})
+                            c["path"] = p2
+                    except Exception as e:
+                        self._emit("log", {"job": ji, "msg": f"轉檔檢查失敗：{e}"})
                 spec.setdefault("options", {})
                 for k in ("max_total", "mid_closeup", "person_center", "stabilize", "beauty"):
                     spec["options"].setdefault(k, self.settings.get(k))

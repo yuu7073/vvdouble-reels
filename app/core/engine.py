@@ -113,7 +113,16 @@ def build_draft(spec, models, log=None, progress=None):
         bgm = None
 
     draft_folder = cc.DraftFolder(g.DRAFT_FOLDER)
-    script = draft_folder.create_draft(name, g.WIDTH, g.HEIGHT, allow_replace=True)
+    # 同名草稿已存在就另取名字（名稱 -2、-3…），不要原地覆蓋：
+    # CapCut 對同一個草稿資料夾留有快取（穩定矩陣、素材索引），覆蓋後重開會有片段讀不到、播放與匯出凍格
+    base_name = name
+    n = 2
+    while os.path.exists(os.path.join(g.DRAFT_FOLDER, name)):
+        name = f"{base_name} -{n}"
+        n += 1
+    if name != base_name:
+        _log(log, f"同名草稿已存在，這支叫「{name}」")
+    script = draft_folder.create_draft(name, g.WIDTH, g.HEIGHT, allow_replace=False)
     script.add_track(cc.TrackType.video, "影片")
     script.add_track(cc.TrackType.text, "MODEL卡", relative_index=1)
     script.add_track(cc.TrackType.text, "商品名稱", relative_index=2)
@@ -606,7 +615,7 @@ def build_draft(spec, models, log=None, progress=None):
             progress(total_steps, total_steps, "完成")
         except Exception:
             pass
-    return {"ok": True, "name": name, "layout": layout_id if L else "", "total_sec": round(cursor / SEC, 1), "segments": out_segments,
+    return {"ok": True, "name": base_name, "draft_name": name, "layout": layout_id if L else "", "total_sec": round(cursor / SEC, 1), "segments": out_segments,
             "notes": [str(x) for x in post], "skipped": skipped,
             "bpm": round(bpm) if bpm else None, "music_start": round(music_start, 1) if bgm else None,
             "draft_path": os.path.join(g.DRAFT_FOLDER, name)}
