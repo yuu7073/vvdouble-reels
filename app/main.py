@@ -888,6 +888,136 @@ class Api:
             err = "；".join(hints)
         return {"ok": True, "items": out[:20], "error": err}
 
+    # ---------- 批次製作 ----------
+    _FW = str.maketrans('\\/:*?"<>|', '＼／：＊？＂＜＞｜')
+
+    @staticmethod
+    def _norm_name(s):
+        import unicodedata
+        return re.sub(r"\s+", "", unicodedata.normalize("NFKC", s or "")).lower()
+
+    def make_folders(self, parent, names):
+        """待製作頁：把勾選的商品名稱一個一個建成資料夾（Windows 不能用的符號換全形）"""
+        made, existed, failed = [], [], []
+        for n in names or []:
+            safe = (n or "").strip().translate(self._FW).rstrip(". ").strip()
+            if not safe:
+                continue
+            fp = os.path.join(parent, safe)
+            try:
+                if os.path.isdir(fp):
+                    existed.append(safe)
+                else:
+                    os.makedirs(fp)
+                    made.append(safe)
+            except Exception as e:
+                failed.append(f"{safe}：{e}")
+        return {"ok": True, "made": made, "existed": existed, "failed": failed}
+
+    def _match_product(self, folder_name):
+        """資料夾名 → 商品（排程表快取精確比對 → 包含比對 → Shopline）"""
+        q = self._norm_name(folder_name)
+        if not q:
+            return None
+        cache = _load_json(TODO_CACHE, None) or {}
+        items = [it for t in (cache.get("data") or {}).get("tabs", []) for it in t.get("items", [])]
+
+        def pack(it, source):
+            models = [dict(m) for m in it.get("models", [])]
+            specs = [x for x in it.get("specs", []) if x]
+            if len(specs) == 1:
+                for m in models:
+                    if not m.get("size"):
+                        m["size"] = specs[0]
+            return {"source": source, "name": it.get("name", ""), "sku": it.get("sku", ""), "colors": it.get("colors", []),
+                    "features": it.get("features", []), "category": it.get("category", ""), "specs": specs, "models": models}
+        for it in items:
+            if self._norm_name(it.get("name")) == q or (it.get("sku") and self._norm_name(it["sku"]) == q):
+                return pack(it, "sheet")
+        hits = [it for it in items if q in self._norm_name(it.get("name")) or self._norm_name(it.get("name")) in q]
+        if len(hits) == 1:
+            return pack(hits[0], "sheet~")
+        try:
+            r = self.product_lookup(folder_name)
+            for it in r.get("items", []):
+                if self._norm_name(it.get("name")) == q:
+                    return dict(it, source="shopline")
+            if len(r.get("items", [])) == 1:
+                return dict(r["items"][0], source="shopline~")
+        except Exception:
+            traceback.print_exc()
+        return None
+
+    def _period_bg_pool(self, parent):
+        """當期底圖池：找到 官網部門\\<檔期>，用裡面的「形象擺拍」（沒有就「空景」），依用過次數排序"""
+        root = self._bg_root()
+        period = ""
+        if root:
+            p = os.path.normpath(parent)
+            rootn = os.path.normcase(os.path.normpath(root))
+            while True:
+                up = os.path.dirname(p)
+                if not up or up == p:
+                    break
+                if os.path.normcase(up) == rootn:
+                    period = p
+                    break
+                p = up
+            if not period:
+                try:
+                    for d in sorted(os.listdir(root), reverse=True):
+                        if os.path.isdir(os.path.join(root, d, "形象擺拍")) or os.path.isdir(os.path.join(root, d, BG_SUBDIR)):
+                            period = os.path.join(root, d)
+                            break
+                except Exception:
+                    pass
+        if not period:
+            return [], ""
+        idx = self._bg_index()
+        pool = []
+        for sub in ("形象擺拍", BG_SUBDIR):
+            folder = os.path.join(period, sub)
+            if not os.path.isdir(folder):
+                continue
+            for dp, dns, fns in os.walk(folder):
+                if dp[len(folder):].count(os.sep) >= 2:
+                    dns[:] = []
+                for f in sorted(fns):
+                    if f.lower().endswith(IMAGE_EXT) and not f.startswith("."):
+                        fp = os.path.join(dp, f)
+                        pool.append({"path": fp, "name": os.path.splitext(f)[0], "group": f"{os.path.basename(period)}/{sub}",
+                                     "uses": len(idx.get(self._bg_key(fp), {}).get("uses", []))})
+            if pool:
+                break
+        pool.sort(key=lambda i: i["uses"])
+        return pool, period
+
+    def scan_batch(self, parent):
+        """製作頁匯入大資料夾：每個子資料夾一個商品（子資料夾再一層也收），配對商品、附當期底圖池"""
+        if not parent or not os.path.isdir(parent):
+            return {"ok": False, "error": "資料夾不存在"}
+        items = []
+        try:
+            subs = sorted(os.listdir(parent))
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+        for i, d in enumerate(subs):
+            fp = os.path.join(parent, d)
+            if not os.path.isdir(fp) or d.startswith(".") or d.startswith("_"):
+                continue
+            vids = []
+            for dp, dns, fns in os.walk(fp):
+                if dp[len(fp):].count(os.sep) >= 1:
+                    dns[:] = []
+                vids += [os.path.join(dp, f) for f in sorted(fns) if f.lower().endswith(VIDEO_EXT) and not f.startswith(".")]
+            if not vids:
+                continue
+            self._emit("analyzing", {"i": i, "n": len(subs), "name": f"配對 {d}"})
+            items.append({"folder": fp, "folder_name": d, "videos": vids, "match": self._match_product(d)})
+        self._emit("analyzing", {"i": 0, "n": 0, "name": ""})
+        pool, period = self._period_bg_pool(parent)
+        return {"ok": True, "items": items, "bg_pool": pool, "period": period}
+
     def _warm_todo(self):
         """開啟時在背景先抓排程表，之後查找才不會等"""
         try:

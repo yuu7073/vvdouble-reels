@@ -129,7 +129,7 @@ input.ipt::placeholder{color:var(--faint)}
     <div style="flex:1;min-width:0;padding:18px 22px;display:flex;flex-direction:column;gap:12px;overflow:hidden">
       <div style="display:flex;align-items:center;gap:8px" id="todoChips"></div>
       <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden">
-        <div class="tr head" style="grid-template-columns:110px 1fr 150px 180px 100px 96px"><span>檔期</span><span>名稱</span><span>顏色</span><span>拍攝特點</span><span>狀態</span><span></span></div>
+        <div class="tr head" style="grid-template-columns:28px 110px 1fr 150px 180px 100px 96px"><span><input type="checkbox" id="todoAll" onchange="app.todoCheckAll(this.checked)" title="全選目前列出的"></span><span>檔期</span><span>名稱</span><span>顏色</span><span>拍攝特點</span><span>狀態</span><span></span></div>
         <div id="todoRows" style="overflow:auto;flex:1"></div>
       </div>
     </div>
@@ -152,6 +152,7 @@ input.ipt::placeholder{color:var(--faint)}
         <div style="position:relative;flex:1;min-width:0"><input class="ipt" id="prodName" style="height:38px;font-size:15px;font-weight:700" placeholder="商品名稱（輸入兩個字以上自動查找）" oninput="app.renameProduct(this.value);app.lookupProduct(this.value)" onfocus="app.lookupProduct(this.value)" onblur="setTimeout(()=>$('#lookup').style.display='none',200)"><div id="lookup" class="card" style="display:none;position:absolute;left:0;right:0;top:42px;z-index:5;max-height:360px;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.15)"></div></div>
         <button class="btn w" onclick="app.pickVideos()">＋ 加入影片</button>
         <button class="btn w" onclick="app.pickFolder()">＋ 加入資料夾</button>
+        <button class="btn w" onclick="app.pickBatch()" title="大資料夾裡每個子資料夾一個商品，自動配對商品、分配版型與音樂">＋ 匯入大資料夾</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;color:var(--mute)" id="filterBar">
         <span class="chip k" id="cntAll">全部 0</span>
@@ -484,7 +485,18 @@ const app = {
   },
 
   /* ---------- 待製作清單 ---------- */
-  todo:null, todoSel:new Set(), todoFilter:'all', todoQ:'',
+  todo:null, todoSel:new Set(), todoFilter:'all', todoQ:'', todoChk:new Set(),
+  todoCheck(k,on){ on?this.todoChk.add(k):this.todoChk.delete(k); this.renderTodo(); },
+  todoCheckAll(on){ (this._todoRows||[]).forEach(it=>{ const k=it.sku||it.name; on?this.todoChk.add(k):this.todoChk.delete(k); }); this.renderTodo(); },
+  async todoMakeFolders(){
+    const names=(this._todoAllItems||[]).filter(it=>this.todoChk.has(it.sku||it.name)).map(it=>it.name);
+    if(!names.length) return;
+    const p=await this.call('choose_folder','選要建立商品資料夾的位置'); if(!p) return;
+    const r=await this.call('make_folders',p,names); if(!r) return;
+    this.toast(`建好 ${r.made.length} 個資料夾${r.existed.length?`，${r.existed.length} 個已存在`:''}${r.failed.length?`，${r.failed.length} 個失敗`:''}`, !!r.failed.length);
+    if(r.failed.length) console.warn(r.failed);
+    this.todoChk.clear(); this.renderTodo(); this.call('open_path',p);
+  },
   async loadTodo(force){
     $('#todoMeta').textContent='讀取中…（試算表分頁多時要等一下）';
     const r=await this.call('todo_list',!!force);
@@ -512,13 +524,15 @@ const app = {
       return `<div class="mrow ${some?'on':''}" onclick="app.toggleMonth('${m}')"><div class="cb ${on?'on':''}">${on?'✓':''}</div><span>${y?y+' 年 ':''}${mo} 月</span><span style="color:var(--faint);font-weight:400;margin-left:auto">${tabs.length} 檔</span></div>`+
         tabs.map(t=>`<div class="mrow sub ${this.todoSel.has(t.code)?'on':''}" onclick="app.toggleTab('${t.code}')"><div class="cb ${this.todoSel.has(t.code)?'on':''}">${this.todoSel.has(t.code)?'✓':''}</div><span>${esc(t.tab)}</span></div>`).join(''); }).join('');
     let items=[]; T.tabs.filter(t=>this.todoSel.has(t.code)).forEach(t=>t.items.forEach(it=>items.push({...it,tab:t.tab,code:t.code,_st:null})));
-    items.forEach(it=>it._st=this.todoStatus(it));
+    items.forEach(it=>it._st=this.todoStatus(it)); this._todoAllItems=items;
     const n={all:items.length,todo:items.filter(i=>i._st.k==='todo').length,draft:items.filter(i=>i._st.k==='draft').length,exported:items.filter(i=>i._st.k==='exported').length};
     $('#todoChips').innerHTML=[['all','全部'],['todo','未製作'],['draft','已產草稿'],['exported','已匯出']].map(([k,t])=>`<span class="chip ${this.todoFilter===k?'k':'w'}" style="cursor:pointer" onclick="app.todoFilter='${k}';app.renderTodo()">${t} ${n[k]}</span>`).join('')+
-      `<div class="sp"></div><input class="ipt" style="width:220px;height:32px" placeholder="搜尋名稱／貨號" value="${esc(this.todoQ)}" oninput="app.todoQ=this.value;app.renderTodo()">`;
+      `<div class="sp"></div><button class="btn w sm" onclick="app.todoMakeFolders()" ${this.todoChk.size?'':'disabled'}>建立資料夾（${this.todoChk.size}）</button><input class="ipt" style="width:220px;height:32px" placeholder="搜尋名稱／貨號" value="${esc(this.todoQ)}" oninput="app.todoQ=this.value;app.renderTodo()">`;
     const q=this.todoQ.trim().toLowerCase();
     const rows=items.filter(it=>(this.todoFilter==='all'||it._st.k===this.todoFilter)&&(!q||(it.name+' '+it.sku).toLowerCase().includes(q)));
-    $('#todoRows').innerHTML=rows.map((it,i)=>`<div class="tr" style="grid-template-columns:110px 1fr 150px 180px 100px 96px;min-height:56px">
+    this._todoRows=rows;
+    $('#todoRows').innerHTML=rows.map((it,i)=>`<div class="tr" style="grid-template-columns:28px 110px 1fr 150px 180px 100px 96px;min-height:56px">
+      <span><input type="checkbox" ${this.todoChk.has(it.sku||it.name)?'checked':''} onchange="app.todoCheck('${esc(it.sku||it.name)}',this.checked)"></span>
       <span class="chip w" style="overflow:hidden;text-overflow:ellipsis;display:block;line-height:24px">${esc(it.tab)}</span>
       <div><div style="font-weight:500;line-height:1.35">${esc(it.name)}</div><div style="font-size:12px;color:var(--faint)">${esc(it.sku)}${it.order?'・順序 '+esc(it.order):''}</div></div>
       <span style="color:var(--mute);font-size:12.5px">${esc(it.colors.join('・'))}</span>
@@ -547,6 +561,33 @@ const app = {
   P() { return this.products[this.cur]; },
   async pickVideos() { const r = await this.call('choose_videos'); if (r) this.ingest(r); },
   async pickFolder() { const p = await this.call('choose_folder'); if (!p) return; $('#analyzing').textContent='讀取中…'; const r = await this.call('add_paths', [p]); if (r) { if(!this.P().name){ this.P().name=p.split(/[\\/]/).pop(); } this.ingest(r); } },
+  async pickBatch(){
+    const p=await this.call('choose_folder','選大資料夾（裡面每個子資料夾是一個商品）'); if(!p) return;
+    $('#analyzing').textContent='掃描資料夾…';
+    const r=await this.call('scan_batch',p);
+    if(!r||!r.ok){ $('#analyzing').textContent=''; this.toast(r?r.error:'讀取失敗',true); return; }
+    if(!r.items.length){ $('#analyzing').textContent=''; this.toast('裡面沒有放影片的子資料夾',true); return; }
+    // 版型：每 5 支 → 標準、版型、版型、標準、版型（40% 標準）；其他版型洗牌後輪流，同一批不連續重複
+    const lays=(this.state.layouts||[]).map(l=>l.id); for(let i=lays.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [lays[i],lays[j]]=[lays[j],lays[i]]; }
+    const tracks=((this.state.music&&this.state.music.tracks)||[]).slice(); for(let i=tracks.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [tracks[i],tracks[j]]=[tracks[j],tracks[i]]; }
+    const pool=r.bg_pool||[]; let li=0, ti=0, bi=0; const slot=['','L','L','','L'];
+    const cur=this.P(); const fresh=cur&&!cur.name&&!cur.clips.length; if(fresh) this.products.splice(this.cur,1);
+    let unmatched=0;
+    for(let i=0;i<r.items.length;i++){
+      const it=r.items[i], m=it.match;
+      $('#analyzing').textContent=`批次匯入 ${i+1}/${r.items.length}：${it.folder_name}`;
+      const P={name:m?m.name:it.folder_name, sku:m?m.sku||'':'', colors:m?m.colors||[]:[], features:m?m.features||[]:[], category:m?m.category||'':'', clips:[], music:null, musicStart:'', modelSizes:{}, unmatched:!m, folder:it.folder};
+      if(m){ const one=(m.specs||[]).filter(Boolean).length===1?m.specs.filter(Boolean)[0]:''; (m.models||[]).forEach(x=>{ P.modelSizes[String(x.name||'').toUpperCase()]={size:x.size||one||'', fit:x.fit||''}; }); } else unmatched++;
+      const lay=slot[i%5]==='L'&&lays.length?lays[li++%lays.length]:''; P.layout=lay;
+      if(tracks.length){ const t=tracks[ti++%tracks.length]; P.music={path:t.path,name:t.name}; }
+      const needs=(this.state.layouts||[]).find(l=>l.id===lay); if(needs&&needs.needs_photo&&pool.length){ P.background=pool[bi++%pool.length].path; }
+      this.products.push(P); this.cur=this.products.length-1;
+      const res=await this.call('add_paths',it.videos); if(res) this.ingest(res);
+    }
+    $('#analyzing').textContent='';
+    this.cur=Math.max(0,this.products.length-r.items.length); this.renderAll();
+    this.toast(`匯入 ${r.items.length} 個商品${unmatched?`，${unmatched} 個沒配對到商品（名稱左側標紅）`:''}${pool.length?`，底圖用 ${esc((pool[0].group||'').split('/')[0])} 檔期`:'，沒找到當期底圖（需要底圖的版型請手動選）'}`, !!unmatched||!pool.length);
+  },
   ingest(res) {
     $('#analyzing').textContent='';
     const P=this.P(); const s=this.state.settings;
@@ -593,7 +634,7 @@ const app = {
     $('#plist').innerHTML=this.products.map((p,i)=>{
       const n=p.clips.filter(c=>!c.closeup).length, k=p.clips.filter(c=>c.closeup).length;
       const m=p.music?'音樂 ✓':'<span style="color:var(--red)">缺音樂</span>';
-      return `<div class="pitem ${i===this.cur?'on':''}" onclick="app.selectProduct(${i})"><div class="n">${esc(p.name)||'<span style="color:var(--faint)">未命名</span>'}</div><div class="m">${p.clips.length?`${n} 段實穿・${k} 段近拍・${m}`:'尚未放入影片'}${this.products.length>1?` <a href="#" onclick="event.stopPropagation();app.removeProduct(${i});return false" style="float:right;color:var(--faint);text-decoration:none">✕</a>`:''}</div></div>`;
+      return `<div class="pitem ${i===this.cur?'on':''}" onclick="app.selectProduct(${i})"><div class="n">${esc(p.name)||'<span style="color:var(--faint)">未命名</span>'}${p.unmatched?' <span style="color:var(--red);font-size:11px">未配對</span>':''}</div><div class="m">${p.clips.length?`${n} 段實穿・${k} 段近拍・${m}`:'尚未放入影片'}${this.products.length>1?` <a href="#" onclick="event.stopPropagation();app.removeProduct(${i});return false" style="float:right;color:var(--faint);text-decoration:none">✕</a>`:''}</div></div>`;
     }).join('');
   },
   renderCounts() {

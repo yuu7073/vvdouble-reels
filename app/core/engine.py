@@ -153,13 +153,15 @@ def build_draft(spec, models, log=None, progress=None):
             _log(log, "卡點失敗，改用固定秒數")
     beat_idx = 0
 
-    def length_for(mat, target_sec, skip, sec_range=None):
+    def length_for(mat, target_sec, skip, sec_range=None, exact=False):
         nonlocal beat_idx
         avail = mat.duration - skip
         if not beats:
             return min(int(target_sec * SEC), avail)
         nb = g.beats_for(target_sec, beat_len)
-        if sec_range:
+        if exact:
+            nb = max(1, min(8, round(target_sec / beat_len)))
+        elif sec_range:
             lo, hi = sec_range
             fits = [k for k in range(1, 9) if lo <= k * beat_len <= hi]
             nb = fits[0] if fits else min(range(1, 9), key=lambda k: abs(k * beat_len - (lo + hi) / 2))
@@ -215,6 +217,7 @@ def build_draft(spec, models, log=None, progress=None):
     # ---- 版型：照版型的固定順序排（#＝版型段、M＝滿版模特、D＝滿版近拍） ----
     layout_id = (spec.get("layout") or "").strip()
     L = layouts.LAYOUTS.get(layout_id) if (layouts and layout_id) else None
+    clip_target = None      # 版型多放段時每段滿版的目標秒數（None＝照 CLIP_SEC）
     layout_meta = None
     if L:
         try:
@@ -225,6 +228,23 @@ def build_draft(spec, models, log=None, progress=None):
     if L:
         pattern = L["pattern"].split(",")
         n_m, n_d = pattern.count("M"), pattern.count("D")
+        # 模特影片多的時候多放 1–2 段滿版（≥5 支 +1、≥7 支 +2），總長不變：每段滿版平均縮短一點，仍對拍
+        extra = 2 if len(pairs) >= 7 else (1 if len(pairs) >= 5 else 0)
+        extra = min(extra, max(0, len(pairs) - n_m))
+        clip_target = None
+        while extra and n_m:
+            clip_target = n_m * clip_len / (n_m + extra)
+            if clip_target >= 1.95:      # 每段滿版不短於 2 秒，不夠就少加一段
+                break
+            extra -= 1
+            clip_target = None
+        if extra:
+            m_pos = [i for i, t in enumerate(pattern) if t == "M"]
+            for k in range(extra):
+                at = m_pos[-1 - k] if k < len(m_pos) else len(pattern) - 1
+                pattern.insert(at + 1, "M")
+            n_m += extra
+            _log(log, f"模特影片 {len(pairs)} 支，多放 {extra} 段滿版，每段約 {clip_target:.1f} 秒")
         quota = [0] * len(groups)
         left = n_m
         while left > 0 and groups:
@@ -512,7 +532,10 @@ def build_draft(spec, models, log=None, progress=None):
         model_name = (c.get("model") or "").strip()
         g.MODEL_BY_PATH[full] = model_name.upper() if (model_name and beauty_on) else ""
         skip, _ = g.cut(mat, g.CLIP_SEC, g.CLIP_SKIP)
-        dur = length_for(mat, g.CLIP_SEC, skip)
+        if clip_target:
+            dur = length_for(mat, clip_target, skip, exact=True)
+        else:
+            dur = length_for(mat, g.CLIP_SEC, skip)
         info = g.analyze_clip(full) if g.AUTO_BEST_SEGMENT else None
         if manual is not None:
             skip = int(max(0.0, min(float(manual), mat.duration / SEC - dur / SEC)) * SEC)
