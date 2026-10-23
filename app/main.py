@@ -506,6 +506,14 @@ class Api:
             self._emit("all_done", {"results": results})
 
     # ---------- 已匯出 ----------
+    def history_delete(self, ids):
+        """刪除完成頁的紀錄（只刪 app 內的紀錄，不動 CapCut 草稿、YouTube、商品頁）"""
+        ids = set(ids or [])
+        before = len(self.history)
+        self.history = [h for h in self.history if h.get("id") not in ids]
+        _save_json(HISTORY_FILE, self.history)
+        return {"ok": True, "removed": before - len(self.history)}
+
     def mark_exported(self, hist_id, exported):
         rec = next((h for h in self.history if h.get("id") == hist_id), None)
         if not rec:

@@ -732,7 +732,25 @@ const app = {
     const h=[...(this.state.history||[])].reverse().slice(0,30);
     $('#doneList').innerHTML=h.map(r=>`<div class="li" style="cursor:pointer" onclick="app.showDetailId('${r.id}')">
       ${r.ok?'<div class="ok">✓</div>':'<div class="chip r">✕</div>'}<div style="flex:1;min-width:0"><div style="font-weight:500;line-height:1.3">${esc(r.name)}</div><div style="font-size:12px;color:var(--mute);margin-top:2px">${this.fmtTime(r.created)}${r.layout_name?'・'+esc(r.layout_name):''}${r.total_sec?'・'+r.total_sec+' 秒':''}${r.youtube_id?'・<span style="color:var(--green)">YouTube ✓</span>':''}</div></div>
-      <label onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" ${r.exported?'checked':''} onchange="app.markExported('${r.id}',this.checked,this)" style="width:16px;height:16px;margin:0;accent-color:var(--green)">已匯出</label></div>`).join('')||`<div style="padding:24px;text-align:center;color:var(--mute)">還沒有產生過草稿</div>`;
+      <label onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" ${r.exported?'checked':''} onchange="app.markExported('${r.id}',this.checked,this)" style="width:16px;height:16px;margin:0;accent-color:var(--green)">已匯出</label>
+      <a href="#" title="刪除這筆紀錄" onclick="event.stopPropagation();app.deleteHistory('${r.id}');return false" style="color:var(--faint);text-decoration:none;padding:0 4px;font-size:14px">✕</a></div>`).join('')||`<div style="padding:24px;text-align:center;color:var(--mute)">還沒有產生過草稿</div>`;
+    const stale=(this.state.history||[]).filter(r=>!r.exported&&!r.youtube_id).length;
+    if(stale>1) $('#doneList').insertAdjacentHTML('beforeend',`<div style="padding:10px 14px;text-align:right"><a href="#" onclick="app.clearHistory();return false" style="font-size:12px;color:var(--mute)">清除未匯出的 ${stale} 筆紀錄</a></div>`);
+  },
+  async deleteHistory(id){
+    const rec=(this.state.history||[]).find(x=>x.id===id); if(!rec) return;
+    if(rec.youtube_id && !confirm('這筆已上傳 YouTube，只會刪除 app 裡的紀錄，影片與商品頁不受影響。確定？')) return;
+    const r=await this.call('history_delete',[id]); if(!r||!r.ok){ this.toast('刪除失敗',true); return; }
+    this.state.history=this.state.history.filter(x=>x.id!==id);
+    if($('#detail')&&$('#detail').dataset.id===id) $('#detail').innerHTML='';
+    this.renderHistory();
+  },
+  async clearHistory(){
+    const ids=(this.state.history||[]).filter(r=>!r.exported&&!r.youtube_id).map(r=>r.id);
+    if(!ids.length) return;
+    if(!confirm(`清除 ${ids.length} 筆未匯出的紀錄？（CapCut 裡的草稿不會被刪）`)) return;
+    const r=await this.call('history_delete',ids); if(!r||!r.ok){ this.toast('清除失敗',true); return; }
+    this.state.history=this.state.history.filter(x=>!ids.includes(x.id)); $('#detail').innerHTML=''; this.renderHistory(); this.toast(`已清除 ${ids.length} 筆`);
   },
   async markExported(id,checked,el){ const r=await this.call('mark_exported',id,checked); if(!r||!r.ok){ el.checked=!checked; this.toast(r?r.error+(r.export_folder?'':'（請到設定指定成品資料夾）'):'失敗',true); return; } const rec=this.state.history.find(x=>x.id===id); if(rec){ rec.exported=checked; if(r.export_file) rec.export_file=r.export_file; } this.toast(checked?`已記錄匯出${r.music_uses!=null?'・這首歌用過 '+r.music_uses+' 次':''}`:'已取消'); this.reloadMusic(); const open=$('#pubBox')?$('#pubBox').dataset.id:null; const detailOpen=$('#detail')&&$('#detail').dataset.id===id; if(rec&&(detailOpen||checked)) this.showDetail(rec); },
   showDetailId(id){ const r=(this.state.history||[]).find(x=>x.id===id)||(this.results||[]).find(x=>x.id===id); if(r) this.showDetail(r); },
