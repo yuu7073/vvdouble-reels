@@ -424,6 +424,9 @@ LAYOUT_EFFECTS = {}       # 片段 id → [CapCut 特效設定]（版型底圖�
 LAYOUT_ADJUSTS = {}       # 片段 id → [調節項目]（例：顆粒 particle），寫法照 CapCut 自己存的 materials.effects
 
 
+STABILIZE_MAX_MBPS = 80      # 超過這個碼率的素材不自動開穩定（CapCut 會卡）
+
+
 def maybe_stabilize(mat, full, start, dur, how):
     """判斷這段要不要開穩定；要的話記下素材 id，存檔後寫進草稿"""
     if not AUTO_STABILIZE or vision is None:
@@ -435,6 +438,13 @@ def maybe_stabilize(mat, full, start, dur, how):
     if pct is None:
         return how
     if pct >= SHAKE_THRESHOLD:
+        # 高碼率相機檔（例如 Fuji ALL-Intra 200Mbps 1080p60）CapCut 的穩定分析會卡住、播放與匯出都停在那段，這類直接不開穩定
+        try:
+            mbps = os.path.getsize(full) * 8 / max(0.1, mat.duration / SEC) / 1e6
+        except Exception:
+            mbps = 0
+        if mbps > STABILIZE_MAX_MBPS:
+            return how + f"，抖{pct:.1f}%但檔案 {mbps:.0f}Mbps 太重不開穩定"
         STABILIZE_IDS.add(mat.material_id)
         return how + f"，穩定(抖{pct:.1f}%)"
     return how
