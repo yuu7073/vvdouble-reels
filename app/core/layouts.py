@@ -42,7 +42,7 @@ LAYOUTS = {
     # LOOKBOOK：照 Vivian 2026-10-23 在 CapCut 調好的草稿逐項讀回來——
     #   底圖（模糊壓暗）加「色差默片」特效、模特影片照設計框位、不放框線層、
     #   版型段期間 網址 移到上方、商品名稱不顯示、LOOKBOOK 文字用 Windows「Modern」字型
-    "lookbook": {"name": "LOOKBOOK", "file": "1_LOOKBOOK.jpg", "pattern": "#,M,M,D,M,D", "overlay": False,
+    "lookbook": {"name": "01 LOOKBOOK", "file": "1_LOOKBOOK.jpg", "pattern": "#,M,M,D,M,D", "overlay": False,
                  "regions": [{"color": "purple", "role": "P", "blur": 10, "dark": 0.10,
                               "effects": [{"effect_id": "7395465862666390789", "name": "色差默片", "category_id": "8959", "category_name": "復古",
                                            "params": [("effects_adjust_vertical_chromatic", 0.57, 0.75),
@@ -58,7 +58,7 @@ LAYOUTS = {
     #   overlay 用程式畫（camera_overlay.py，上下條不透明、Inter 字型、沒有上方箭頭）
     #   模特影片不裁切、放大 1.147、往上移 y=0.2153，加「調節 > 顆粒」0.21
     #   左下相片格一層（矩形遮罩、圓角 15%），版型段期間 商品名稱 與 網址 都不顯示
-    "camera":   {"name": "相機介面", "file": "2_相機.jpg", "pattern": "#,M,M,D,M,D", "overlay_draw": "camera",
+    "camera":   {"name": "02 相機介面", "file": "2_相機.jpg", "pattern": "#,M,M,D,M,D", "overlay_draw": "camera",
                  "regions": [{"color": "yellow", "role": "M1", "box": [0, 0, 1080, 1920], "zoom": 1.1474, "offset": [0.0, 0.2153],
                               "adjusts": [{"type": "particle", "effect_id": "7501974767453474064", "value": 0.2124}]}],
                  "thumb": {"box": [142, 1749, 252, 1859], "role": "D", "round_corner": 15},
@@ -67,7 +67,7 @@ LAYOUTS = {
     #   版型段放最前面（#,M,D,M,M,D）；郵票框放大 1.0438；模特影片鋪滿畫面再放大 1.0438（郵票內只露中間）；
     #   版型段期間商品名稱不顯示、網址移到上方 (0.0286, 0.8215)
     #   框與迴紋針她嫌設計圖去背的不漂亮，改用程式畫仿真版（stamp_overlay.py）
-    "stamp":    {"name": "郵票", "file": "3_郵票.jpg", "pattern": "#,M,D,M,M,D", "overlay_draw": "stamp",
+    "stamp":    {"name": "03 郵票", "file": "3_郵票.jpg", "pattern": "#,M,D,M,M,D", "overlay_draw": "stamp",
                  "overlay_scale": 1.0438,
                  #   最底下可放底圖（製作頁選的底圖，鋪滿畫面），影片蓋不到的地方就露底圖不露黑邊
                  #   影片直接套斜的矩形遮罩（照郵票內框），黑底改透明，露底圖
@@ -84,14 +84,14 @@ LAYOUTS = {
     # 撕紙：Vivian 2026-10-23 改成「較直線」的撕紙接縫——上下兩段都是矩形（可在 CapCut 直接換影片），
     #   接縫用她給的撕紙邊 PNG 紋理（torn_overlay.py）蓋住；上段在上層、兩段在接縫處重疊一點不露縫
     #   她在 CapCut 調好後讀回：順序改為 滿版→近拍→版型→滿版→近拍→滿版；撕紙框往下移 y=-0.0356；其餘（商品名稱、網址）照標準
-    "torn_diag": {"name": "撕紙", "file": "4_撕紙斜.jpg", "pattern": "M,D,#,M,D,M", "overlay_draw": "torn",
+    "torn_diag": {"name": "04 撕紙", "file": "4_撕紙斜.jpg", "pattern": "M,D,#,M,D,M", "overlay_draw": "torn",
                   "overlay_offset": [0.0, -0.0356],
                   "regions": [{"role": "D", "box": "torn_bottom"}, {"role": "M1", "box": "torn_top"}]},
     # 撕紙橫版：2026-10-23 她決定不用
     # DETAIL：照 Vivian 2026-10-23 在 CapCut 調好的草稿讀回——
     #   上下近拍位置不變（白帶本來就在正中央 862–1057）；DETAIL 字位置 x=-0.5966、放大 1.199；
     #   英文改成中性文案、位置 x=0.3412、行距 0.22；版型段期間網址不顯示、商品名稱照常
-    "detail":   {"name": "DETAIL", "file": "6_DETAIL.jpg", "pattern": "M,M,#,M,M,D",
+    "detail":   {"name": "05 DETAIL", "file": "6_DETAIL.jpg", "pattern": "M,M,#,M,M,D",
                  "regions": [{"color": "blue", "role": "D"}, {"color": "yellow", "role": "D2"}],
                  "texts": [{"text": "DETAIL", "pos": [-0.5966, 0.0], "scale": 1.1992, "size": 7.0, "bold": True,
                             "color": (0.05, 0.05, 0.05), "align": 0},
@@ -100,7 +100,7 @@ LAYOUTS = {
                  "hide_site": True,
                  "erase": [{"box": [60, 1230, 1130, 1350], "fill": (250, 249, 247)}]},
     # 九宮格：照 Vivian 2026-10-23 在 CapCut 調好的草稿讀回——格位不變；版型段期間 商品名稱 不顯示、網址 移到上方 y=0.7597
-    "grid":     {"name": "九宮格", "file": "7_九宮格.jpg", "pattern": "#,M,D,M,M,M",
+    "grid":     {"name": "06 九宮格", "file": "7_九宮格.jpg", "pattern": "#,M,D,M,M,M",
                  "hide_title": True, "site_pos": [0.0, 0.7597],
                  "regions": [{"color": "yellow", "index": 0, "role": "M1"},
                              {"color": "yellow", "index": 1, "role": "M2"},
@@ -115,7 +115,7 @@ LAYOUTS = {
                  "erase": [{"box": [0, 0, 1449, 432], "fill": (0, 0, 0)}, {"box": [0, 958, 1449, 1156], "fill": (0, 0, 0)},
                            {"box": [0, 1683, 1449, 1880], "fill": (0, 0, 0)}, {"box": [0, 2407, 1449, 2576], "fill": (0, 0, 0)}]},
 }
-ORDER = ["lookbook", "camera", "stamp", "torn_diag", "detail", "grid"]
+ORDER = ["lookbook", "camera", "stamp", "torn_diag", "detail", "grid"]   # 編號照 Vivian 的設計圖順序（撕紙橫版停用）
 
 
 def list_layouts():

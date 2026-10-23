@@ -642,7 +642,7 @@ const app = {
   renderLayoutSel() {
     const P=this.P?this.P():null; const list=this.state.layouts||[]; const cur=P&&P.layout||'';
     const sel=$('#layoutSel'); if(!sel) return;
-    sel.innerHTML=`<option value="">標準版</option>`+list.map(l=>`<option value="${l.id}" ${l.id===cur?'selected':''}>${esc(l.name)}</option>`).join('');
+    sel.innerHTML=`<option value="">00 標準版</option>`+list.map(l=>`<option value="${l.id}" ${l.id===cur?'selected':''}>${esc(l.name)}</option>`).join('');
     const l=list.find(x=>x.id===cur);
     $('#layoutMeta').textContent=l?l.pattern.split(',').map(t=>t==='#'?'版型':(t==='M'?'滿版':'近拍')).join(' → ')+(l.needs_photo?'　需要底圖':''):'';
   },
