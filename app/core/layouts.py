@@ -168,7 +168,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     from PIL import Image
     L = LAYOUTS[layout_id]
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v29"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v30"
     # 每個版本各自一個資料夾，覆蓋圖永遠不被改寫（CapCut 舊草稿還會引用舊檔）
     import hashlib
     out = os.path.join(cache_dir, layout_id, hashlib.md5(stamp.encode("utf-8")).hexdigest()[:8])
@@ -220,8 +220,16 @@ def prepare(layout_id, cache_dir, image_path=None):
             ma = np.asarray(mk) > 0
             ys, xs = np.where(ma)
             bbox_area = (xs.max() - xs.min() + 1) * (ys.max() - ys.min() + 1)
+            # 所有設計圖的影片區都是矩形；設計圖上壓在色塊上的字、圖示（LOOKBOOK 字、對焦框…）不能把影片裁出剪影，
+            # 所以一律用外框矩形放整段影片，只有 spec 明寫 "shape": True 才照形狀裁成透明 .mov
+            is_rect = not spec.get("shape")
+            if is_rect:
+                # 覆蓋圖同一塊也挖成整個矩形，免得設計圖上壓在色塊上的字留在覆蓋圖裡疊到影片上
+                ys0, xs0 = np.where(m)
+                alpha_all[ys0.min():ys0.max() + 1, xs0.min():xs0.max() + 1] = 1
+                fg[ys0.min():ys0.max() + 1, xs0.min():xs0.max() + 1] = WHT
             regions.append({"mask": name, "role": spec["role"], "_ord": L["regions"].index(spec),
-                            "rect": bool(spec.get("force_rect") or ma.sum() >= bbox_area * 0.985),      # 不是矩形就要照形狀裁
+                            "rect": is_rect,
                             "box": spec.get("box") or [int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1],
                             "raw": bool(spec.get("raw")), "zoom": spec.get("zoom", 1.0), "offset": spec.get("offset", [0, 0]),
                             "effects": spec.get("effects", []), "adjusts": spec.get("adjusts", []),
