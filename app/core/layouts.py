@@ -59,7 +59,8 @@ LAYOUTS = {
     #   模特影片不裁切、放大 1.147、往上移 y=0.2153，加「調節 > 顆粒」0.21
     #   左下相片格一層（矩形遮罩、圓角 15%），版型段期間 商品名稱 與 網址 都不顯示
     "camera":   {"name": "02 相機介面", "file": "2_相機.jpg", "pattern": "#,M,M,D,M,D", "overlay_draw": "camera",
-                 "regions": [{"color": "yellow", "role": "M1", "box": [0, 0, 1080, 1920], "zoom": 1.1474, "offset": [0.0, 0.2153],
+                 # force_rect：設計圖黃色區上有對焦框、太陽、倍率列，不加這個會被當成非矩形去裁成透明 .mov，影片上就出現黑洞
+                 "regions": [{"color": "yellow", "role": "M1", "box": [0, 0, 1080, 1920], "force_rect": True, "zoom": 1.1474, "offset": [0.0, 0.2153],
                               "adjusts": [{"type": "particle", "effect_id": "7501974767453474064", "value": 0.2124}]}],
                  "thumb": {"box": [142, 1749, 252, 1859], "role": "D", "round_corner": 15},
                  "hide_title": True, "hide_site": True},
@@ -167,7 +168,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     from PIL import Image
     L = LAYOUTS[layout_id]
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v26"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v27"
     # 每個版本各自一個資料夾，覆蓋圖永遠不被改寫（CapCut 舊草稿還會引用舊檔）
     import hashlib
     out = os.path.join(cache_dir, layout_id, hashlib.md5(stamp.encode("utf-8")).hexdigest()[:8])
