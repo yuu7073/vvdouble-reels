@@ -56,7 +56,7 @@ LAYOUTS = {
                  "erase": [{"box": [60, 1440, 1420, 1660]}]},
     # 相機介面：overlay 用程式畫（camera_overlay.py）——上下遮罩半透明、真字型；左下相片格另放一層帶矩形遮罩的圖，使用者可在 CapCut 換圖
     "camera":   {"name": "相機介面", "file": "2_相機.jpg", "pattern": "#,M,M,D,M,D", "overlay_draw": "camera",
-                 "regions": [{"color": "yellow", "role": "M1"}],
+                 "regions": [{"color": "yellow", "role": "M1", "box": [0, 0, 1080, 1920]}],   # 遮罩半透明，影片要鋪滿整個畫面不裁切
                  "thumb": {"box": [142, 1749, 252, 1859], "role": "D", "round_corner": 15}},
     "stamp":    {"name": "郵票", "file": "3_郵票.jpg", "pattern": "M,#,D,M,M,D",
                  "regions": [{"color": "blue", "role": "M1"}]},
@@ -136,7 +136,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v8"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v9"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
