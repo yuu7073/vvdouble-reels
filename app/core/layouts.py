@@ -66,8 +66,10 @@ LAYOUTS = {
     "stamp":    {"name": "郵票", "file": "3_郵票.jpg", "pattern": "M,#,D,M,M,D",
                  "regions": [{"color": "blue", "role": "M1"}]},
     # 撕紙：Vivian 2026-10-23 改成「較直線」的撕紙接縫——上下兩段都是矩形（可在 CapCut 直接換影片），
-    #   接縫用程式畫的撕紙白邊（torn_overlay.py）蓋住；上段在上層、兩段在接縫處重疊一點不露縫
-    "torn_diag": {"name": "撕紙", "file": "4_撕紙斜.jpg", "pattern": "M,D,#,D,M,M", "overlay_draw": "torn",
+    #   接縫用她給的撕紙邊 PNG 紋理（torn_overlay.py）蓋住；上段在上層、兩段在接縫處重疊一點不露縫
+    #   她在 CapCut 調好後讀回：順序改為 滿版→近拍→版型→滿版→近拍→滿版；撕紙框往下移 y=-0.0356；其餘（商品名稱、網址）照標準
+    "torn_diag": {"name": "撕紙", "file": "4_撕紙斜.jpg", "pattern": "M,D,#,M,D,M", "overlay_draw": "torn",
+                  "overlay_offset": [0.0, -0.0356],
                   "regions": [{"role": "D", "box": "torn_bottom"}, {"role": "M1", "box": "torn_top"}]},
     # 撕紙橫版：2026-10-23 她決定不用
     "detail":   {"name": "DETAIL", "file": "6_DETAIL.jpg", "pattern": "M,M,#,M,M,D",
@@ -86,7 +88,10 @@ LAYOUTS = {
                              {"color": "blue", "index": 1, "role": "M2"},
                              {"color": "blue", "index": 2, "role": "D"},
                              {"color": "blue", "index": 3, "role": "D"},
-                             {"color": "blue", "index": 4, "role": "M1"}]},
+                             {"color": "blue", "index": 4, "role": "M1"}],
+                 # 設計圖上的 (1)–(9) 編號是標示用，正式不要：格子以外全部填黑
+                 "erase": [{"box": [0, 0, 1449, 432], "fill": (0, 0, 0)}, {"box": [0, 958, 1449, 1156], "fill": (0, 0, 0)},
+                           {"box": [0, 1683, 1449, 1880], "fill": (0, 0, 0)}, {"box": [0, 2407, 1449, 2576], "fill": (0, 0, 0)}]},
 }
 ORDER = ["lookbook", "camera", "stamp", "torn_diag", "detail", "grid"]
 
@@ -140,7 +145,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v15"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v16"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
@@ -240,7 +245,8 @@ def prepare(layout_id, cache_dir, image_path=None):
             x0, y0, x1, y1 = t["box"]
             texts.append(dict(t, box=[int(x0 * sx), int(y0 * sy), int(x1 * sx), int(y1 * sy)]))
     meta = {"stamp": stamp, "overlay": "overlay.png" if L.get("overlay", True) else "", "regions": regions, "texts": texts, "dir": out,
-            "site_pos": L.get("site_pos"), "hide_title": bool(L.get("hide_title")), "hide_site": bool(L.get("hide_site")), "thumb": L.get("thumb")}
+            "site_pos": L.get("site_pos"), "hide_title": bool(L.get("hide_title")), "hide_site": bool(L.get("hide_site")), "thumb": L.get("thumb"),
+            "overlay_offset": L.get("overlay_offset")}
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False)
     return meta
