@@ -63,8 +63,9 @@ LAYOUTS = {
                               "adjusts": [{"type": "particle", "effect_id": "7501974767453474064", "value": 0.2124}]}],
                  "thumb": {"box": [142, 1749, 252, 1859], "role": "D", "round_corner": 15},
                  "hide_title": True, "hide_site": True},
+    # 郵票：藍色區是斜的，但外面被白框／黑底整個蓋住，所以影片用矩形放就好（可在 CapCut 直接換影片）
     "stamp":    {"name": "郵票", "file": "3_郵票.jpg", "pattern": "M,#,D,M,M,D",
-                 "regions": [{"color": "blue", "role": "M1"}]},
+                 "regions": [{"color": "blue", "role": "M1", "force_rect": True}]},
     # 撕紙：Vivian 2026-10-23 改成「較直線」的撕紙接縫——上下兩段都是矩形（可在 CapCut 直接換影片），
     #   接縫用她給的撕紙邊 PNG 紋理（torn_overlay.py）蓋住；上段在上層、兩段在接縫處重疊一點不露縫
     #   她在 CapCut 調好後讀回：順序改為 滿版→近拍→版型→滿版→近拍→滿版；撕紙框往下移 y=-0.0356；其餘（商品名稱、網址）照標準
@@ -151,7 +152,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v18"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v19"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
@@ -196,7 +197,7 @@ def prepare(layout_id, cache_dir, image_path=None):
             ys, xs = np.where(ma)
             bbox_area = (xs.max() - xs.min() + 1) * (ys.max() - ys.min() + 1)
             regions.append({"mask": name, "role": spec["role"], "_ord": L["regions"].index(spec),
-                            "rect": bool(ma.sum() >= bbox_area * 0.985),      # 不是矩形（撕紙弧度等）就要照形狀裁
+                            "rect": bool(spec.get("force_rect") or ma.sum() >= bbox_area * 0.985),      # 不是矩形就要照形狀裁
                             "box": spec.get("box") or [int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1],
                             "raw": bool(spec.get("raw")), "zoom": spec.get("zoom", 1.0), "offset": spec.get("offset", [0, 0]),
                             "effects": spec.get("effects", []), "adjusts": spec.get("adjusts", []),
