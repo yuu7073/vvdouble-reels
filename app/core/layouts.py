@@ -54,8 +54,10 @@ LAYOUTS = {
                             "size": 16.417, "scale": 1.4805, "bold": True, "color": (0.96, 0.93, 0.86), "letter_spacing": 0, "align": 1}],
                  "site_pos": [0.0, 0.6836], "hide_title": True,
                  "erase": [{"box": [60, 1440, 1420, 1660]}]},
-    "camera":   {"name": "相機介面", "file": "2_相機.jpg", "pattern": "#,M,M,D,M,D",
-                 "regions": [{"color": "yellow", "role": "M1"}]},
+    # 相機介面：overlay 用程式畫（camera_overlay.py）——上下遮罩半透明、真字型；左下相片格另放一層帶矩形遮罩的圖，使用者可在 CapCut 換圖
+    "camera":   {"name": "相機介面", "file": "2_相機.jpg", "pattern": "#,M,M,D,M,D", "overlay_draw": "camera",
+                 "regions": [{"color": "yellow", "role": "M1"}],
+                 "thumb": {"box": [142, 1749, 252, 1859], "role": "D", "round_corner": 15}},
     "stamp":    {"name": "郵票", "file": "3_郵票.jpg", "pattern": "M,#,D,M,M,D",
                  "regions": [{"color": "blue", "role": "M1"}]},
     "torn_diag": {"name": "撕紙斜版", "file": "4_撕紙斜.jpg", "pattern": "M,D,#,D,M,M",
@@ -134,7 +136,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v7"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v8"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
@@ -196,7 +198,11 @@ def prepare(layout_id, cache_dir, image_path=None):
     ov = Image.fromarray(rgba, "RGBA").resize((CANVAS_W, CANVAS_H), Image.LANCZOS)
     arr = np.asarray(ov).copy()
     arr[..., 3] = np.where(arr[..., 3] >= 128, 255, 0)
-    Image.fromarray(arr, "RGBA").save(os.path.join(out, "overlay.png"))
+    if L.get("overlay_draw") == "camera":
+        import camera_overlay
+        camera_overlay.draw(os.path.join(out, "overlay.png"))
+    else:
+        Image.fromarray(arr, "RGBA").save(os.path.join(out, "overlay.png"))
     sx, sy = CANVAS_W / W, CANVAS_H / H
     texts = []
     for t in L.get("texts", []):
@@ -206,7 +212,7 @@ def prepare(layout_id, cache_dir, image_path=None):
             x0, y0, x1, y1 = t["box"]
             texts.append(dict(t, box=[int(x0 * sx), int(y0 * sy), int(x1 * sx), int(y1 * sy)]))
     meta = {"stamp": stamp, "overlay": "overlay.png" if L.get("overlay", True) else "", "regions": regions, "texts": texts, "dir": out,
-            "site_pos": L.get("site_pos"), "hide_title": bool(L.get("hide_title"))}
+            "site_pos": L.get("site_pos"), "hide_title": bool(L.get("hide_title")), "thumb": L.get("thumb")}
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False)
     return meta

@@ -368,6 +368,23 @@ def build_draft(spec, models, log=None, progress=None):
             ov = cc.VideoMaterial(os.path.join(layout_meta["dir"], layout_meta["overlay"]))
             script.add_segment(cc.VideoSegment(ov, cc.Timerange(t0, dur)),
                                layout_track(cc.TrackType.video, "版型框", 20))
+        # 相片格：裁成框的比例、縮放到框位，再加矩形遮罩（圓角），使用者可在 CapCut 直接換圖或拖遮罩
+        th = layout_meta.get("thumb")
+        if th:
+            pair, want_person = by_role.get(th.get("role", "D"), (None, False))
+            if pair:
+                full, c = pair
+                box = th["box"]
+                s = layout_source(full, c, dur, want_person=want_person)
+                sw, sh = layouts.probe(full)
+                crop, scale, tx, ty = layouts.place(box, sw, sh, s["focus_x"], s["focus_y"])
+                mat = cc.VideoMaterial(full, crop_settings=cc.CropSettings(**crop))
+                st = int(s["start"] * SEC)
+                d = min(dur, mat.duration - st)
+                seg = cc.VideoSegment(mat, cc.Timerange(t0, d), source_timerange=cc.Timerange(st, d), volume=0.0,
+                                      clip_settings=ClipSettings(scale_x=scale, scale_y=scale, transform_x=tx, transform_y=ty))
+                seg.add_mask(cc.MaskType.矩形, size=1.0, rect_width=1.0, round_corner=float(th.get("round_corner", 0)))
+                script.add_segment(seg, layout_track(cc.TrackType.video, "版型相片", 21))
         # 文字
         for ti, t in enumerate(layout_meta.get("texts", [])):
             tx, ty = t["pos"] if t.get("pos") else layouts.text_place(t["box"])
