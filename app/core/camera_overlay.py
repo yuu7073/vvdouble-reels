@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 W, H = 1080, 1920
 BAR = (89, 83, 69)          # 設計稿的深色條顏色
-BAR_ALPHA = 0.60            # 上下遮罩透明度（iOS 相機介面實際約 55–65%）
+BAR_ALPHA = 1.0             # 上下遮罩：真實 iPhone 相機介面是全不透明
 YEL = (242, 201, 76)
 WHITE = (255, 255, 255)
 SS = 3                      # 超取樣倍率，讓線條與字邊緣乾淨
