@@ -555,7 +555,7 @@ def build_draft(spec, models, log=None, progress=None):
             script.add_segment(cc.TextSegment("- CLOSE UP DETAIL -", cc.Timerange(start, dur),
                                               style=TextStyle(size=5.0, bold=True, align=1, letter_spacing=2),
                                               clip_settings=ClipSettings(transform_y=g.CLOSEUP_Y)), "近拍標示")
-    title_size = min(5.0, 5.0 * 30 / max(len(name), 1))
+    title_size = min(5.0, 5.0 * 30 / max(len(base_name), 1))
 
     def outside_windows(total, windows):
         """把 0~total 扣掉版型段，回傳剩下的 (start, dur) 片段"""
@@ -570,7 +570,7 @@ def build_draft(spec, models, log=None, progress=None):
 
     title_windows = layout_windows if (layout_meta and layout_meta.get("hide_title")) else []
     for st, du in outside_windows(cursor, title_windows):
-        script.add_segment(cc.TextSegment(name, cc.Timerange(st, du),
+        script.add_segment(cc.TextSegment(base_name, cc.Timerange(st, du),
                                           style=TextStyle(size=title_size, color=(0.0, 0.0, 0.0), align=1),
                                           background=TextBackground(color="#FFFFFF", alpha=1.0, height=0.2, width=0.12),
                                           clip_settings=ClipSettings(transform_y=g.TITLE_Y)), "商品名稱")
