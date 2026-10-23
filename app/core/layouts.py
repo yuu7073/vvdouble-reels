@@ -140,7 +140,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v14"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v15"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:

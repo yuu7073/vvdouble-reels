@@ -65,6 +65,7 @@ def _ref_strip():
 
 
 STRIP_ABOVE, STRIP_BELOW = 72, 6
+CORE = 14              # 接縫上方一定實心的厚度（像素）
 
 
 def draw(out_path, seed=7):
@@ -72,7 +73,18 @@ def draw(out_path, seed=7):
     sh, sw = strip.shape[:2]
     # 寬度拉到畫布寬（1280 → 1080），纖維粗細照原圖
     band = Image.fromarray(strip.astype("uint8"), "RGBA").resize((W, sh), Image.LANCZOS)
-    band = np.asarray(band).astype(float)
+    band = np.asarray(band).astype(float).copy()
+    # 不能有斷掉的地方：再疊一份左右錯開的同一條紋理，薄的地方互相補；接縫上方再鋪一條實心底
+    second = np.roll(band, W // 2, axis=1)
+    second[..., 3] *= 0.92
+    pick = second[..., 3:4] > band[..., 3:4]
+    band = np.where(pick, second, band)
+    core_top, core_bot = STRIP_ABOVE - CORE, STRIP_ABOVE + 3
+    core = np.zeros_like(band)
+    core[core_top:core_bot, :, :3] = (236, 232, 224)
+    core[core_top:core_bot, :, 3] = 255
+    pick = core[..., 3:4] > band[..., 3:4]
+    band = np.where(pick, core, band)
     y = _line(seed)
     im = np.zeros((H, W, 4), dtype=float)
     for x in range(W):
