@@ -421,6 +421,7 @@ STABILIZE_IDS = set()
 MODEL_BY_PATH = {}        # 介面模式：影片路徑 → 模特名字（取代從檔名解析）
 LAYOUT_FONT_PATHS = {}    # 版型文字 → 本機字型檔（例如 C:/WINDOWS/Fonts/modern.fon）
 LAYOUT_EFFECTS = {}       # 片段 id → [CapCut 特效設定]（版型底圖層的特效）
+LAYOUT_ADJUSTS = {}       # 片段 id → [調節項目]（例：顆粒 particle），寫法照 CapCut 自己存的 materials.effects
 
 
 def maybe_stabilize(mat, full, start, dur, how):
@@ -823,6 +824,32 @@ def apply_presets(draft_name):
                         "enable_video_mask_stroke": True, "enable_video_mask_shadow": True,
                     })
                     seg.setdefault("extra_material_refs", []).append(fid)
+
+    # 版型層的「調節」（顆粒等）：寫進 materials.effects，跟 CapCut 手動調的寫法一樣
+    if LAYOUT_ADJUSTS:
+        m.setdefault("effects", [])
+        for t in d["tracks"]:
+            if t["type"] != "video":
+                continue
+            for seg in t["segments"]:
+                for adj in LAYOUT_ADJUSTS.get(seg["id"], []):
+                    fid = new_id().upper()
+                    m["effects"].append({
+                        "id": fid, "effect_id": adj["effect_id"], "resource_id": adj["effect_id"], "third_resource_id": "",
+                        "name": "", "report_name": "", "type": adj["type"], "sub_type": "none", "path": "",
+                        "value": float(adj.get("value", 0)), "visible": True, "item_effect_type": 0,
+                        "category_id": "", "category_name": "", "category_key": "", "sub_category_id": "", "sub_category_name": "",
+                        "platform": "all", "apply_target_type": 0, "source_platform": 1, "version": "v2", "adjust_params": [],
+                        "time_range": None, "formula_id": "", "enable_skin_tone_correction": False, "algorithm_artifact_path": "",
+                        "intensity_key": "", "face_adjust_params": [], "exclusion_group": [], "panel_id": "", "bloom_params": None,
+                        "request_id": "", "color_match_info": {"target_feature_path": "", "source_feature_path": "", "target_image_path": ""},
+                        "multi_language_current": "", "lumi_hub_path": "", "covering_relation_change": 0,
+                        "beauty_face_auto_preset_id": "", "beauty_body_auto_preset_id": "",
+                        "beauty_face_auto_retouch_info": {"face_id": [], "beauty_face_auto_retouch_id": ""},
+                        "smart_color_mode": 0, "is_from_intelligent_quality": False,
+                    })
+                    seg.setdefault("extra_material_refs", []).append(fid)
+                    seg["enable_adjust"] = True
 
     # 原影片靜音（跟 CapCut 手動「關閉原聲」一樣的寫法）
     d.setdefault("config", {})["video_mute"] = True

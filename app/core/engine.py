@@ -353,6 +353,9 @@ def build_draft(spec, models, log=None, progress=None):
                 s = layout_source(full, c, dur, want_person=want_person)
                 sw, sh = layouts.probe(full)
                 crop, scale, tx, ty = layouts.place(box, sw, sh, s["focus_x"], s["focus_y"])
+                scale *= float(reg.get("zoom", 1.0) or 1.0)
+                ox, oy = reg.get("offset") or [0, 0]
+                tx, ty = tx + float(ox), ty + float(oy)
                 mat = cc.VideoMaterial(full, crop_settings=cc.CropSettings(**crop))
                 st = int(s["start"] * SEC)
                 d = min(dur, mat.duration - st)
@@ -362,6 +365,8 @@ def build_draft(spec, models, log=None, progress=None):
             script.add_segment(seg, tname)
             for fx in reg.get("effects") or []:
                 g.LAYOUT_EFFECTS.setdefault(seg.segment_id, []).append(fx)
+            for adj in reg.get("adjusts") or []:
+                g.LAYOUT_ADJUSTS.setdefault(seg.segment_id, []).append(adj)
             layer_no += 1
         # 框線／裝飾（設計稿去掉色塊和文字後的部分）
         if layout_meta.get("overlay"):
@@ -404,6 +409,7 @@ def build_draft(spec, models, log=None, progress=None):
     g.MODEL_BY_PATH.clear()
     g.LAYOUT_FONT_PATHS.clear()
     g.LAYOUT_EFFECTS.clear()
+    g.LAYOUT_ADJUSTS.clear()
     layout_windows = []     # [(t0, dur)] 版型段的時間，網址／商品名稱要避開或改位置
     cursor = 0
     card_runs, close_runs, out_segments = [], [], []
@@ -532,13 +538,14 @@ def build_draft(spec, models, log=None, progress=None):
                                           clip_settings=ClipSettings(transform_y=g.TITLE_Y)), "商品名稱")
     site_style = TextStyle(size=4.0, bold=True, align=1, letter_spacing=2)
     site_pos = layout_meta.get("site_pos") if layout_meta else None
-    site_windows = layout_windows if site_pos else []
+    hide_site = bool(layout_meta and layout_meta.get("hide_site"))
+    site_windows = layout_windows if (site_pos or hide_site) else []
     for st, du in outside_windows(cursor, site_windows):
         script.add_segment(cc.TextSegment(g.SITE_TEXT, cc.Timerange(st, du), style=site_style,
                                           clip_settings=ClipSettings(transform_y=g.SITE_Y)), "網址")
-    if site_windows:
+    if site_windows and site_pos:
         script.add_track(cc.TrackType.text, "網址版型", relative_index=8)   # 版型段期間網址換位置（apply_presets 會保留這軌的位置）
-    for st, du in site_windows:
+    for st, du in (site_windows if site_pos else []):
         script.add_segment(cc.TextSegment(g.SITE_TEXT, cc.Timerange(st, du), style=site_style,
                                           clip_settings=ClipSettings(transform_x=site_pos[0], transform_y=site_pos[1])), "網址版型")
     if bgm:

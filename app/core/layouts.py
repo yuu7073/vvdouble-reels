@@ -54,10 +54,15 @@ LAYOUTS = {
                             "size": 16.417, "scale": 1.4805, "bold": True, "color": (0.96, 0.93, 0.86), "letter_spacing": 0, "align": 1}],
                  "site_pos": [0.0, 0.6836], "hide_title": True,
                  "erase": [{"box": [60, 1440, 1420, 1660]}]},
-    # 相機介面：overlay 用程式畫（camera_overlay.py）——上下遮罩半透明、真字型；左下相片格另放一層帶矩形遮罩的圖，使用者可在 CapCut 換圖
+    # 相機介面：照 Vivian 2026-10-23 在 CapCut 調好的草稿逐項讀回來——
+    #   overlay 用程式畫（camera_overlay.py，上下條不透明、Inter 字型、沒有上方箭頭）
+    #   模特影片不裁切、放大 1.147、往上移 y=0.2153，加「調節 > 顆粒」0.21
+    #   左下相片格一層（矩形遮罩、圓角 15%），版型段期間 商品名稱 與 網址 都不顯示
     "camera":   {"name": "相機介面", "file": "2_相機.jpg", "pattern": "#,M,M,D,M,D", "overlay_draw": "camera",
-                 "regions": [{"color": "yellow", "role": "M1", "box": [0, 0, 1080, 1920]}],   # 遮罩半透明，影片要鋪滿整個畫面不裁切
-                 "thumb": {"box": [142, 1749, 252, 1859], "role": "D", "round_corner": 15}},
+                 "regions": [{"color": "yellow", "role": "M1", "box": [0, 0, 1080, 1920], "zoom": 1.1474, "offset": [0.0, 0.2153],
+                              "adjusts": [{"type": "particle", "effect_id": "7501974767453474064", "value": 0.2124}]}],
+                 "thumb": {"box": [142, 1749, 252, 1859], "role": "D", "round_corner": 15},
+                 "hide_title": True, "hide_site": True},
     "stamp":    {"name": "郵票", "file": "3_郵票.jpg", "pattern": "M,#,D,M,M,D",
                  "regions": [{"color": "blue", "role": "M1"}]},
     "torn_diag": {"name": "撕紙斜版", "file": "4_撕紙斜.jpg", "pattern": "M,D,#,D,M,M",
@@ -136,7 +141,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v10"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v11"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
@@ -182,7 +187,7 @@ def prepare(layout_id, cache_dir, image_path=None):
             regions.append({"mask": name, "role": spec["role"], "_ord": L["regions"].index(spec),
                             "box": spec.get("box") or [int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1],
                             "raw": bool(spec.get("raw")), "zoom": spec.get("zoom", 1.0), "offset": spec.get("offset", [0, 0]),
-                            "effects": spec.get("effects", []),
+                            "effects": spec.get("effects", []), "adjusts": spec.get("adjusts", []),
                             "blur": spec.get("blur", 0), "dark": spec.get("dark", 0),
                             "noise": spec.get("noise", 0), "still": bool(spec.get("still"))})
     regions.sort(key=lambda r: r.get("_ord", 0))
@@ -212,7 +217,7 @@ def prepare(layout_id, cache_dir, image_path=None):
             x0, y0, x1, y1 = t["box"]
             texts.append(dict(t, box=[int(x0 * sx), int(y0 * sy), int(x1 * sx), int(y1 * sy)]))
     meta = {"stamp": stamp, "overlay": "overlay.png" if L.get("overlay", True) else "", "regions": regions, "texts": texts, "dir": out,
-            "site_pos": L.get("site_pos"), "hide_title": bool(L.get("hide_title")), "thumb": L.get("thumb")}
+            "site_pos": L.get("site_pos"), "hide_title": bool(L.get("hide_title")), "hide_site": bool(L.get("hide_site")), "thumb": L.get("thumb")}
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False)
     return meta
