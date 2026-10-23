@@ -71,8 +71,15 @@ LAYOUTS = {
                  "overlay_scale": 1.0438,
                  #   最底下可放底圖（製作頁選的底圖，鋪滿畫面），影片蓋不到的地方就露底圖不露黑邊
                  #   影片直接套斜的矩形遮罩（照郵票內框），黑底改透明，露底圖
-                 "regions": [{"role": "P", "box": [0, 0, 1080, 1920], "raw": True},
-                             {"role": "M1", "box": [0, 0, 1080, 1920], "zoom": 1.0438, "mask": "stamp"}],
+                 #   2026-10-24 她再調：底圖加特效「折痕」(紋理 1.0)＋調節飽和度 -0.3157；
+                 #   模特影片放大 1.0838、下移 y=-0.0438、加特效「膠片框」；遮罩維持原值（照 1.0438 算）
+                 "regions": [{"role": "P", "box": [0, 0, 1080, 1920], "raw": True,
+                              "effects": [{"effect_id": "7399470789449256198", "name": "折痕", "category_id": "12083", "category_name": "紋理",
+                                           "params": [("effects_adjust_texture", 1.0, 1.0)]}],
+                              "adjusts": [{"type": "saturation", "effect_id": "7501974767453474064", "value": -0.3157}]},
+                             {"role": "M1", "box": [0, 0, 1080, 1920], "zoom": 1.0838, "offset": [0.0, -0.0438],
+                              "mask": "stamp", "mask_video_scale": 1.0438,
+                              "effects": [{"effect_id": "7399464865909198086", "name": "膠片框", "category_id": "8959", "category_name": "復古", "params": []}]}],
                  "hide_title": True, "site_pos": [0.0286, 0.8215]},
     # 撕紙：Vivian 2026-10-23 改成「較直線」的撕紙接縫——上下兩段都是矩形（可在 CapCut 直接換影片），
     #   接縫用她給的撕紙邊 PNG 紋理（torn_overlay.py）蓋住；上段在上層、兩段在接縫處重疊一點不露縫
@@ -160,7 +167,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v23"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v24"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
@@ -227,7 +234,7 @@ def prepare(layout_id, cache_dir, image_path=None):
         name = f"mask_{len(regions)}.png"
         mk.save(os.path.join(out, name))
         regions.append({"mask": name, "role": spec["role"], "_ord": L["regions"].index(spec), "rect": True,
-                        "box": list(box), "raw": bool(spec.get("raw")), "zoom": spec.get("zoom", 1.0), "offset": spec.get("offset", [0, 0]), "mask": spec.get("mask"),
+                        "box": list(box), "raw": bool(spec.get("raw")), "zoom": spec.get("zoom", 1.0), "offset": spec.get("offset", [0, 0]), "mask": spec.get("mask"), "mask_video_scale": spec.get("mask_video_scale"),
                         "effects": spec.get("effects", []), "adjusts": spec.get("adjusts", []),
                         "blur": 0, "dark": 0, "noise": 0, "still": False})
     regions.sort(key=lambda r: r.get("_ord", 0))

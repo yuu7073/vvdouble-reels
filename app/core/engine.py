@@ -378,7 +378,7 @@ def build_draft(spec, models, log=None, progress=None):
                 tname = "影片" if layer_no == 0 else layout_track(cc.TrackType.video, f"版型層{layer_no + 1}", layer_no)
                 if reg.get("mask") == "stamp":
                     import stamp_overlay
-                    mk = stamp_overlay.video_mask(float(layout_meta.get("overlay_scale") or 1.0), scale)
+                    mk = stamp_overlay.video_mask(float(layout_meta.get("overlay_scale") or 1.0), float(reg.get("mask_video_scale") or scale))
                     seg.add_mask(cc.MaskType.矩形, center_x=mk["center_x"], center_y=mk["center_y"],
                                  size=mk["size"], rect_width=mk["rect_width"], rotation=mk["rotation"])
             script.add_segment(seg, tname)
