@@ -351,6 +351,20 @@ def build_draft(spec, models, log=None, progress=None):
                     mn = c.get("model") or ""
                     g.MODEL_BY_PATH.setdefault(full, mn.upper() if (mn and beauty_on) else "")
                 s = layout_source(full, c, dur, want_person=want_person)
+                if not reg.get("rect", True):
+                    # 區塊有弧度（撕紙）：先照遮罩形狀裁成透明 .mov，放進 CapCut 仍是獨立一層
+                    mov = os.path.join(RENDER_DIR, f"{safe}_{layout_id}_{idx}_{layer_no}.mov")
+                    layouts.render_alpha_clip(full, s["start"], dur / SEC, box, os.path.join(layout_meta["dir"], reg["mask"]),
+                                              mov, s["focus_x"], s["focus_y"])
+                    mat = cc.VideoMaterial(mov)
+                    d = min(dur, mat.duration)
+                    seg = cc.VideoSegment(mat, cc.Timerange(t0, d), source_timerange=cc.Timerange(0, d), volume=0.0)
+                    tname = "影片" if layer_no == 0 else layout_track(cc.TrackType.video, f"版型層{layer_no + 1}", layer_no)
+                    script.add_segment(seg, tname)
+                    for adj in reg.get("adjusts") or []:
+                        g.LAYOUT_ADJUSTS.setdefault(seg.segment_id, []).append(adj)
+                    layer_no += 1
+                    continue
                 sw, sh = layouts.probe(full)
                 crop, scale, tx, ty = layouts.place(box, sw, sh, s["focus_x"], s["focus_y"])
                 scale *= float(reg.get("zoom", 1.0) or 1.0)

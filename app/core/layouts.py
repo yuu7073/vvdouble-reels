@@ -141,7 +141,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v11"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v12"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
@@ -184,7 +184,9 @@ def prepare(layout_id, cache_dir, image_path=None):
             mk.save(os.path.join(out, name))
             ma = np.asarray(mk) > 0
             ys, xs = np.where(ma)
+            bbox_area = (xs.max() - xs.min() + 1) * (ys.max() - ys.min() + 1)
             regions.append({"mask": name, "role": spec["role"], "_ord": L["regions"].index(spec),
+                            "rect": bool(ma.sum() >= bbox_area * 0.985),      # 不是矩形（撕紙弧度等）就要照形狀裁
                             "box": spec.get("box") or [int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1],
                             "raw": bool(spec.get("raw")), "zoom": spec.get("zoom", 1.0), "offset": spec.get("offset", [0, 0]),
                             "effects": spec.get("effects", []), "adjusts": spec.get("adjusts", []),
@@ -294,6 +296,31 @@ def background_photo(photo, box, out_path, blur=10, dark=0.10):
         if dark:
             im = Image.eval(im, lambda v: int(v * (1 - dark)))
         im.save(out_path)
+    return out_path
+
+
+def render_alpha_clip(src, start, dur, box, mask_png, out_path, focus_x=0.5, focus_y=0.3, fps=30, adjusts=None):
+    """
+    區塊不是矩形（撕紙弧度等）時：把影片 cover 進 box、墊成整個畫布，再用遮罩 PNG 當 alpha，
+    輸出帶透明的 .mov（ProRes 4444）。放進 CapCut 後仍是獨立一層，可以移動、縮放。
+    """
+    sw, sh = probe(src)
+    bw, bh = box[2] - box[0], box[3] - box[1]
+    r = max(bw / sw, bh / sh)
+    s_w, s_h = int(round(sw * r)) + 2, int(round(sh * r)) + 2
+    ox = int(max(0, min(s_w - bw, (s_w - bw) * focus_x)))
+    oy = int(max(0, min(s_h - bh, (s_h - bh) * focus_y)))
+    chain = (f"[0:v]scale={s_w}:{s_h}:flags=lanczos,crop={bw}:{bh}:{ox}:{oy},fps={fps},format=rgba,"
+             f"pad={CANVAS_W}:{CANVAS_H}:{box[0]}:{box[1]}:color=black@0.0[v];"
+             f"[1:v]format=gray,fps={fps}[m];[v][m]alphamerge,format=yuva444p10le[out]")
+    args = [_ffmpeg(), "-y", "-v", "error", "-ss", f"{start:.3f}", "-t", f"{dur:.3f}", "-i", src,
+            "-loop", "1", "-t", f"{dur:.3f}", "-i", mask_png,
+            "-filter_complex", chain, "-map", "[out]", "-t", f"{dur:.3f}", "-r", str(fps),
+            "-c:v", "prores_ks", "-profile:v", "4444", "-pix_fmt", "yuva444p10le", "-an", out_path]
+    rr = subprocess.run(args, capture_output=True, timeout=600,
+                        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    if rr.returncode != 0 or not os.path.exists(out_path):
+        raise RuntimeError("ffmpeg 裁切失敗：" + rr.stderr.decode("utf-8", "ignore")[-500:])
     return out_path
 
 
