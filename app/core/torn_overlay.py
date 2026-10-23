@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 W, H = 1080, 1920
 SEAM_Y = 1000          # 接縫中心（畫布像素）
-WAVE = 14              # 線的起伏幅度
+WAVE = 10              # 線的起伏幅度（接近直線）
 FIBER = (16, 34)       # 纖維帶厚度範圍（上緣）
 OVERLAP = 60           # 上下影片在接縫處重疊的像素（確保不露縫）
 
@@ -32,50 +32,63 @@ def _line(seed=7):
     return y + jit
 
 
-def _smooth_noise(shape, scale, seed):
-    """平滑的 2D 亂數（0~1）：先做小圖再放大"""
-    rs = np.random.RandomState(seed)
-    h, w = shape
-    small = rs.rand(max(2, h // scale + 2), max(2, w // scale + 2))
-    im = Image.fromarray((small * 255).astype("uint8")).resize((w, h), Image.BICUBIC)
-    return np.asarray(im).astype(float) / 255.0
+def _ref_strip():
+    """從 Vivian 給的撕紙參考圖（版型/撕紙邊.png，透明 PNG）把紙邊的纖維帶拉直成一條：回傳 RGBA 陣列 (STRIP_H, W_ref)"""
+    import os, sys
+    cands = [os.path.join(os.path.dirname(os.path.abspath(__file__)), "版型", "撕紙邊.png")]
+    base = getattr(sys, "_MEIPASS", None)
+    if base:
+        cands.insert(0, os.path.join(base, "core", "版型", "撕紙邊.png"))
+    src = next(c for c in cands if os.path.exists(c))
+    a = np.asarray(Image.open(src).convert("RGBA")).astype(float)
+    A, L = a[..., 3], a[..., :3].mean(-1)
+    H, Wr = A.shape
+    solid = (A > 200) & (L < 120)                    # 深色紙
+    edge = np.full(Wr, H - 1)
+    for x in range(Wr):
+        c = solid[:, x]
+        for i in range(H - 8):
+            if c[i:i + 8].all():
+                edge[x] = i
+                break
+    strip = np.zeros((STRIP_ABOVE + STRIP_BELOW, Wr, 4), dtype=float)
+    for x in range(Wr):
+        y0 = edge[x] - STRIP_ABOVE
+        for k in range(STRIP_ABOVE + STRIP_BELOW):
+            y = y0 + k
+            if 0 <= y < H:
+                strip[k, x] = a[y, x]
+    # 深色紙的部分變透明（那裡是下方影片），只留淺色纖維
+    dark = (strip[..., 3] > 0) & (strip[..., :3].mean(-1) < 125)
+    strip[dark, 3] = 0
+    return strip
+
+
+STRIP_ABOVE, STRIP_BELOW = 72, 6
 
 
 def draw(out_path, seed=7):
-    rnd = random.Random(seed)
+    strip = _ref_strip()
+    sh, sw = strip.shape[:2]
+    # 寬度拉到畫布寬（1280 → 1080），纖維粗細照原圖
+    band = Image.fromarray(strip.astype("uint8"), "RGBA").resize((W, sh), Image.LANCZOS)
+    band = np.asarray(band).astype(float)
     y = _line(seed)
-    T = FIBER[1] + 10                        # 毛邊最大厚度
-    band_h = T + 12
-    y0 = int(SEAM_Y - WAVE * 2 - T - 8)
-    y1 = int(SEAM_Y + WAVE * 2 + 12)
-    hh = y1 - y0
-    yy = np.arange(y0, y1)[:, None]
-    yl = y[None, :]
-    dist = (yl - yy) / T                    # 線上方：0 在線上，1 在最厚處
-    n1 = _smooth_noise((hh, W), 18, seed)   # 大塊起伏
-    n2 = _smooth_noise((hh, W), 5, seed + 1)  # 細碎纖維
-    thick = 0.45 + 0.55 * n1                # 每個位置的厚度係數
-    ragged = n2 * 0.35
-    alpha = np.where((dist >= -0.06) & (dist < thick - ragged), 1.0, 0.0)
-    # 外緣再長一些細毛
-    hair = (dist >= thick - ragged) & (dist < thick + 0.25) & (n2 > 0.72) & (((np.arange(W)[None, :] * 7919) % 13) < 4)
-    alpha = np.maximum(alpha, hair * 0.85)
-    alpha = np.clip(alpha, 0, 1)
-    rgba = np.zeros((hh, W, 4), dtype=float)
-    tone = 240 + 12 * n2                    # 紙白帶一點明暗
-    rgba[..., 0] = tone; rgba[..., 1] = tone - 2; rgba[..., 2] = tone - 6
-    rgba[..., 3] = alpha * 255
-    band = Image.fromarray(rgba.astype("uint8"), "RGBA")
-    im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    im.paste(band, (0, y0))
-    # 線下方一道淡陰影，讓上層紙有厚度
-    sh = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    sd = ImageDraw.Draw(sh)
+    im = np.zeros((H, W, 4), dtype=float)
     for x in range(W):
-        sd.line([(x, int(y[x]) + 1), (x, int(y[x]) + 8)], fill=(0, 0, 0, 80))
-    sh = sh.filter(ImageFilter.GaussianBlur(2.5))
-    out = Image.alpha_composite(sh, im)
-    out.save(out_path)
+        top = int(round(y[x])) - STRIP_ABOVE
+        for k in range(sh):
+            yy = top + k
+            if 0 <= yy < H:
+                im[yy, x] = band[k, x]
+    out = Image.fromarray(im.astype("uint8"), "RGBA")
+    # 線下方一道淡陰影，讓上層紙有厚度
+    shd = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shd)
+    for x in range(W):
+        sd.line([(x, int(y[x]) + 1), (x, int(y[x]) + 7)], fill=(0, 0, 0, 70))
+    shd = shd.filter(ImageFilter.GaussianBlur(2.5))
+    Image.alpha_composite(shd, out).save(out_path)
     return out_path
 
 
