@@ -111,7 +111,9 @@ LAYOUTS = {
                              {"color": "blue", "index": 2, "role": "D"},
                              {"color": "blue", "index": 3, "role": "D"},
                              {"color": "blue", "index": 4, "role": "M1"}],
-                 # 設計圖上的 (1)–(9) 編號是標示用，正式不要：格子以外全部填黑
+                 # 格子以外全部填黑；設計圖上每格下方的 (1)–(9) 編號改用 CapCut 文字放上去（可編輯），位置照設計圖量出
+                 "texts": [{"text": f"({n})", "pos": [x, y], "size": 3.0, "color": (1.0, 1.0, 1.0), "align": 1}
+                           for n, (x, y) in enumerate([(x, y) for y in (0.2213, -0.3412, -0.9049) for x in (-0.6681, 0.0, 0.6660)], 1)],
                  "erase": [{"box": [0, 0, 1449, 432], "fill": (0, 0, 0)}, {"box": [0, 958, 1449, 1156], "fill": (0, 0, 0)},
                            {"box": [0, 1683, 1449, 1880], "fill": (0, 0, 0)}, {"box": [0, 2407, 1449, 2576], "fill": (0, 0, 0)}]},
 }
@@ -167,7 +169,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
     out = os.path.join(cache_dir, layout_id)
     os.makedirs(out, exist_ok=True)
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v24"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v25"
     meta_path = os.path.join(out, "regions.json")
     if os.path.exists(meta_path):
         try:
