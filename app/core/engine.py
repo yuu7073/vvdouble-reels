@@ -376,6 +376,11 @@ def build_draft(spec, models, log=None, progress=None):
                 seg = cc.VideoSegment(mat, cc.Timerange(t0, d), source_timerange=cc.Timerange(st, d), volume=0.0,
                                       clip_settings=ClipSettings(scale_x=scale, scale_y=scale, transform_x=tx, transform_y=ty))
                 tname = "影片" if layer_no == 0 else layout_track(cc.TrackType.video, f"版型層{layer_no + 1}", layer_no)
+                if reg.get("mask") == "stamp":
+                    import stamp_overlay
+                    mk = stamp_overlay.video_mask(float(layout_meta.get("overlay_scale") or 1.0), scale)
+                    seg.add_mask(cc.MaskType.矩形, center_x=mk["center_x"], center_y=mk["center_y"],
+                                 size=mk["size"], rect_width=mk["rect_width"], rotation=mk["rotation"])
             script.add_segment(seg, tname)
             for fx in reg.get("effects") or []:
                 g.LAYOUT_EFFECTS.setdefault(seg.segment_id, []).append(fx)

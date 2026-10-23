@@ -27,6 +27,20 @@ def interior_box():
     return [int(CX - bw / 2) + 6, int(CY - bh / 2) + 6, int(CX + bw / 2) - 6, int(CY + bh / 2) - 6]
 
 
+def video_mask(overlay_scale=1.0, video_scale=1.0, inset=10):
+    """
+    影片層要套的 CapCut 矩形遮罩（照郵票內框、同樣傾斜），單位照 pycapcut add_mask：
+    center 以素材像素（相對素材中心）、寬高以素材寬高比例、rotation 順時針角度
+    假設影片素材是 9:16（1080×1920 比例）、置中放大 video_scale；郵票框放大 overlay_scale
+    """
+    iw, ih = SW - 2 * BORDER - 2 * inset, SH - 2 * BORDER - 2 * inset
+    cx = W / 2 + (CX - W / 2) * overlay_scale
+    cy = H / 2 + (CY - H / 2) * overlay_scale
+    k = overlay_scale / video_scale
+    return {"center_x": (cx - W / 2) / video_scale, "center_y": (cy - H / 2) / video_scale,
+            "rect_width": iw * k / W, "size": ih * k / H, "rotation": ANGLE}
+
+
 def _rot(points, cx, cy, deg):
     a = math.radians(deg)
     out = []
@@ -125,12 +139,7 @@ def _paperclip(s):
 def draw(out_path):
     s = SS
     size = (W * s, H * s)
-    bg = Image.new("RGBA", size, BG + (255,))
-    # 黑底加一點紙張顆粒，不要死黑
-    rs = np.random.RandomState(9)
-    arr = np.asarray(bg).astype(float)
-    arr[..., :3] += rs.normal(0, 3, (H * s, W * s, 1))
-    bg = Image.fromarray(np.clip(arr, 0, 255).astype("uint8"), "RGBA")
+    bg = Image.new("RGBA", size, (0, 0, 0, 0))      # 底色透明：讓底圖從郵票外面透出來
     paper, hole = _stamp_layer(s)
     # 郵票在黑底上的柔和陰影
     shadow = Image.new("RGBA", size, (0, 0, 0, 0))
