@@ -335,8 +335,12 @@ def build_draft(spec, models, log=None, progress=None):
                     scale = layouts.cover_scale(mat.width, mat.height) * float(reg.get("zoom", 1.0))
                     tx, ty = reg.get("offset", [0, 0])
                 else:
-                    png = os.path.join(RENDER_DIR, f"{safe}_{layout_id}_bg_{idx}.png")
-                    layouts.background_photo(photo, box, png, reg.get("blur", 0), reg.get("dark", 0))
+                    # 檔名帶內容雜湊：同一張底圖重做不會覆蓋舊檔（CapCut 已開的草稿若底下的檔被換掉會讀不到）
+                    import hashlib
+                    key = hashlib.md5(f"{photo}|{os.path.getmtime(photo)}|{box}|{reg.get('blur', 0)}|{reg.get('dark', 0)}".encode("utf-8")).hexdigest()[:10]
+                    png = os.path.join(RENDER_DIR, f"{safe}_{layout_id}_bg_{key}.png")
+                    if not os.path.exists(png):
+                        layouts.background_photo(photo, box, png, reg.get("blur", 0), reg.get("dark", 0))
                     mat = cc.VideoMaterial(png)
                     crop, scale, tx, ty = layouts.place(box, box[2] - box[0], box[3] - box[1])
                 seg = cc.VideoSegment(mat, cc.Timerange(t0, dur),
