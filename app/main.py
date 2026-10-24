@@ -571,6 +571,7 @@ class Api:
                                                              "draft_by": os.environ.get("COMPUTERNAME", "")})
                     if r.get("music"):
                         self._music_touch(r["music"], bpm=r.get("bpm"), start=r.get("music_start"))
+                    self._cloud_event("draft", name, r.get("layout_name") or "標準")
                 self._emit("job_done", r)
         finally:
             try:
@@ -604,6 +605,8 @@ class Api:
         self._status_set(rec.get("sku") or rec["name"], {"name": rec["name"], "exported_at": rec["exported_at"],
                                                           "export_file": rec["export_file"]})
         uses = None
+        if exported:
+            self._cloud_event("export", rec["name"])
         if rec.get("music"):
             uses = self._music_use(rec["music"], rec["name"], +1 if exported else -1)
         if rec.get("background"):
@@ -758,6 +761,37 @@ class Api:
             threading.Thread(target=lambda: self._cloud("errorReport", payload, timeout=20), daemon=True).start()
         except Exception:
             pass
+
+    def _cloud_event(self, kind, name, extra=""):
+        """產草稿／匯出／上傳 回報雲端（每日 LINE 摘要用），背景送、失敗不管"""
+        if not (self.settings.get("tool_password") or "").strip():
+            return
+        payload = {"kind": kind, "name": name, "by": os.environ.get("COMPUTERNAME", "") or os.environ.get("USERNAME", ""), "extra": extra}
+        threading.Thread(target=lambda: self._safe_cloud("event", payload), daemon=True).start()
+
+    def _safe_cloud(self, action, payload):
+        try:
+            self._cloud(action, payload, timeout=20)
+        except Exception:
+            pass
+
+    def line_setup(self, token, secret):
+        try:
+            return self._cloud("lineSetup", {"lineToken": token or "", "lineSecret": secret or ""}, timeout=20)
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
+    def line_ping(self, send=False):
+        try:
+            return self._cloud("linePing", {"send": bool(send)}, timeout=30)
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
+    def line_summary_now(self):
+        try:
+            return self._cloud("lineSummaryNow", {}, timeout=60)
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
 
     def error_list(self):
         try:
@@ -1256,6 +1290,7 @@ class Api:
                 _save_json(HISTORY_FILE, self.history)
             self._status_set(rec.get("sku") or rec["name"], {"youtube": rec["youtube_url"], "embedded": rec.get("embedded", [])})
             self._emit("pub_done", {"id": hid, "ok": True, "youtube_url": rec["youtube_url"], "results": results, "record": rec})
+            self._cloud_event("upload", rec.get("name", ""), rec.get("youtube_url", ""))
         except Exception as e:
             traceback.print_exc()
             self._emit("pub_done", {"id": hid, "ok": False, "error": str(e), "record": rec})

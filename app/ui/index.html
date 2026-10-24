@@ -295,6 +295,7 @@ input.ipt::placeholder{color:var(--faint)}
       </div>
       <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px">
         <div class="row"><span>工具密碼（同官網批次中心）</span><div style="display:flex;gap:8px;width:520px"><input class="ipt" id="setPw" type="password" placeholder="輸入後才能上傳 YouTube／放到商品頁" onchange="app.savePw(this.value)"><button class="btn w sm" onclick="app.cloudCheck()">測試</button></div></div>
+        <div class="row"><span>LINE 通知</span><div style="display:flex;gap:8px;width:520px;align-items:center"><span id="lineState" style="flex:1;color:var(--mute)">—</span><button class="btn w sm" onclick="app.lineSetup()">設定</button><button class="btn w sm" onclick="app.lineTest()">傳測試</button></div></div>
         <div class="row"><span>YouTube 頻道</span><div style="display:flex;gap:8px;width:520px;align-items:center"><span id="ytState" style="flex:1;color:var(--mute)">—</span><button class="btn w sm" onclick="app.ytSetup()">設定／授權</button></div></div>
       </div>
       <div style="display:flex;align-items:center;gap:10px"><div style="font-size:12px;color:var(--mute)" id="verInfo"></div><div class="sp"></div><button class="btn w sm" onclick="app.checkUpdate(true)">檢查更新</button><button class="btn w sm" onclick="app.errorReport()">複製錯誤紀錄</button></div>
@@ -380,7 +381,7 @@ const app = {
     else if (ev==='pub_done') { const rec=this.state.history.find(x=>x.id===p.id); if(rec&&p.record) Object.assign(rec,p.record); if(p.ok){ this.toast('已上傳 YouTube'+(p.results&&p.results.length?`，放到 ${p.results.filter(x=>x.ok).length} 個商品頁`:'')); } else this.toast(p.error,true); if(rec) this.showDetail(rec); }
     else if (ev==='music_analyzing') { $('#mAnalyzing').textContent = p.i<p.n ? `分析 ${p.i+1}/${p.n}　${p.name}` : ''; if (p.i>=p.n) this.reloadMusic(); }
   },
-  go(v) { this.view=v; document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='view-'+v)); document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on', b.dataset.view===v)); if(v==='todo'&&!this.todo) this.loadTodo(); if(v==='bg'&&!this.bg) this.reloadBg(); if(v==='settings'&&!this._errLoaded){ this._errLoaded=true; this.loadErrors(); } },
+  go(v) { this.view=v; document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='view-'+v)); document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on', b.dataset.view===v)); if(v==='todo'&&!this.todo) this.loadTodo(); if(v==='bg'&&!this.bg) this.reloadBg(); if(v==='settings'&&!this._errLoaded){ this._errLoaded=true; this.loadErrors(); this.lineStatus(); } },
 
   toggleTheme(){ const cur=document.documentElement.dataset.theme==='dark'?'light':'dark'; this.applyTheme(cur); try{ localStorage.setItem('vv_theme',cur); }catch(e){} this.call('save_settings',{theme:cur}); },
   applyTheme(t){ document.documentElement.dataset.theme=t; const b=$('#themeBtn'); if(b) b.textContent=t==='dark'?'☀':'☾'; },
@@ -447,6 +448,19 @@ const app = {
     if(!manual){ this.toast(`有新版本 ${r.latest}，到「設定」更新`); }
   },
   async doUpdate(){ const r=await this.call('do_update', this.upd.zip); if(!r||!r.ok){ this.toast(r?r.error:'更新失敗',true); } },
+  async lineStatus(){ const el=$('#lineState'); if(!el) return; const r=await this.call('line_ping',false); if(!r||!r.ok){ el.textContent=r?r.error:'—'; return; } el.textContent=r.has_token?`已設定・已加入 ${r.targets} 個群組／好友`:'尚未設定'; },
+  lineSetup(){
+    $('#modalBox').innerHTML=`<div style="padding:18px;border-bottom:1px solid var(--line3);font-weight:700">LINE 官方帳號</div>
+      <div style="padding:18px;display:flex;flex-direction:column;gap:10px">
+        <input class="ipt" id="lnTok" type="password" placeholder="Channel access token（long-lived）">
+        <input class="ipt" id="lnSec" type="password" placeholder="Channel secret">
+        <div style="font-size:12px;color:var(--mute)">Webhook URL：<span style="user-select:all">https://asia-east1-vvdouble-shopline.cloudfunctions.net/reels?op=line</span></div>
+      </div>
+      <div style="padding:14px 18px;border-top:1px solid var(--line3);display:flex;gap:10px;justify-content:flex-end"><button class="btn w" onclick="$('#modal').classList.remove('show')">取消</button><button class="btn k" onclick="app.lineSave()">儲存到雲端</button></div>`;
+    $('#modal').classList.add('show');
+  },
+  async lineSave(){ const t=$('#lnTok').value.trim(), sct=$('#lnSec').value.trim(); if(!t){ this.toast('請貼 Channel access token',true); return; } const r=await this.call('line_setup',t,sct); if(!r||!r.ok){ this.toast(r?r.error:'失敗',true); return; } $('#modal').classList.remove('show'); this.toast('已存到雲端'); this.lineStatus(); },
+  async lineTest(){ const r=await this.call('line_ping',true); if(!r||!r.ok){ this.toast(r?(r.error||(r.errors||[]).join('；')||'失敗'):'失敗',true); return; } this.toast(`已送出到 ${r.sent} 個群組／好友`); },
   async loadErrors(){ const el=$('#errList'); el.textContent='讀取中…'; const r=await this.call('error_list'); if(!r||!r.ok){ el.textContent=r?r.error:'無法讀取'; return; } if(!r.items.length){ el.textContent='目前沒有錯誤回報'; return; }
     el.innerHTML=r.items.map(it=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)"><div><b style="color:var(--text)">${esc(it.computer||it.user||'')}</b>　${esc((it.at||'').replace('T',' ').slice(0,16))}　v${esc(it.version||'')}</div><div style="color:var(--red)">${esc(it.context||'')}：${esc(it.error||'')}</div></div>`).join(''); },
   async errorReport(){ const r=await this.call('error_report'); if(!r) return; this.toast(r.ok?'已複製最近的紀錄，貼給 Vivian 即可':'複製失敗，紀錄檔在 '+r.file, !r.ok); },
