@@ -50,8 +50,10 @@ LAYOUTS = {
                                                       ("effects_adjust_noise", 0.57, 1.0),
                                                       ("effects_adjust_filter", 0.36, 1.0)]}]},
                              {"color": "yellow", "role": "M1"}],
-                 "texts": [{"text": "LOOKBOOK", "pos": [0.0, -0.6341], "font_path": "C:/WINDOWS/Fonts/modern.fon",
-                            "size": 16.417, "scale": 1.4805, "bold": True, "color": (0.96, 0.93, 0.86), "letter_spacing": 0, "align": 1}],
+                 # LOOKBOOK 字：CapCut 讀不到 Windows 的 Modern (.fon)，改用程式畫成透明 PNG 一層（Modern No. 20 字型，寬約 68% 畫面）
+                 "texts": [{"text": "LOOKBOOK", "pos": [0.0, -0.6341], "render": True, "width_frac": 0.68,
+                            "fonts": ["C:/WINDOWS/Fonts/MOD20.TTF", "C:/Windows/Fonts/MOD20.TTF", "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"],
+                            "color": (0.96, 0.93, 0.86), "letter_spacing": 0, "align": 1}],
                  "site_pos": [0.0, 0.6836], "hide_title": True,
                  "erase": [{"box": [60, 1440, 1420, 1660]}]},
     # 相機介面：照 Vivian 2026-10-23 在 CapCut 調好的草稿逐項讀回來——
@@ -168,7 +170,7 @@ def prepare(layout_id, cache_dir, image_path=None):
     from PIL import Image
     L = LAYOUTS[layout_id]
     src = image_path or os.path.join(LAYOUT_DIR, L["file"])
-    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v30"
+    stamp = f"{os.path.getmtime(src)}|{os.path.getsize(src)}|v31"
     # 每個版本各自一個資料夾，覆蓋圖永遠不被改寫（CapCut 舊草稿還會引用舊檔）
     import hashlib
     out = os.path.join(cache_dir, layout_id, hashlib.md5(stamp.encode("utf-8")).hexdigest()[:8])
@@ -292,6 +294,30 @@ def prepare(layout_id, cache_dir, image_path=None):
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False)
     return meta
+
+
+def render_text_png(t, out_path):
+    """把一行字畫成整個畫布大小的透明 PNG：字置中於畫布中心（位置交給 CapCut 的 transform），寬度照 width_frac"""
+    from PIL import Image, ImageDraw, ImageFont
+    text = t["text"]
+    font_path = next((f for f in t.get("fonts", []) if os.path.exists(f)), None)
+    target_w = int(CANVAS_W * float(t.get("width_frac", 0.6)))
+    size = 100
+    font = ImageFont.truetype(font_path, size) if font_path else ImageFont.load_default()
+    if font_path:
+        w = ImageDraw.Draw(Image.new("L", (1, 1))).textlength(text, font=font)
+        size = max(10, int(size * target_w / max(1, w)))
+        font = ImageFont.truetype(font_path, size)
+    im = Image.new("RGBA", (CANVAS_W, CANVAS_H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    r, g_, b = [int(round(c * 255)) for c in t.get("color", (1, 1, 1))]
+    bbox = d.textbbox((0, 0), text, font=font, anchor="ls")
+    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    x = (CANVAS_W - tw) / 2 - bbox[0]
+    y = (CANVAS_H - th) / 2 - bbox[1]
+    d.text((x, y), text, font=font, fill=(r, g_, b, 255), anchor="ls")
+    im.save(out_path)
+    return out_path
 
 
 # ---------- 放進 CapCut（原生圖層，不先壓成影片） ----------

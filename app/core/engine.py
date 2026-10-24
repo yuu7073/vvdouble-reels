@@ -2,6 +2,7 @@
 # 引擎：依介面傳入的片段規格產生 CapCut 草稿（沿用 generator 的卡點／置中／穩定／潤飾／預設組）
 
 import os
+import json
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -451,6 +452,17 @@ def build_draft(spec, models, log=None, progress=None):
         # 文字
         for ti, t in enumerate(layout_meta.get("texts", [])):
             tx, ty = t["pos"] if t.get("pos") else layouts.text_place(t["box"])
+            if t.get("render"):
+                # 畫成透明 PNG 一層（CapCut 讀不到的字型用這條路；位置、大小在 CapCut 仍可調，只是不能改字）
+                import hashlib
+                key = hashlib.md5(json.dumps(t, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()[:10]
+                png = os.path.join(RENDER_DIR, f"{layout_id}_text{ti}_{key}.png")
+                if not os.path.exists(png):
+                    layouts.render_text_png(t, png)
+                mat = cc.VideoMaterial(png)
+                seg = cc.VideoSegment(mat, cc.Timerange(t0, dur), clip_settings=ClipSettings(transform_x=tx, transform_y=ty))
+                script.add_segment(seg, layout_track(cc.TrackType.video, "版型文字圖" + (str(ti + 1) if ti else ""), 22 + ti))
+                continue
             font = getattr(cc.FontType, t["font"], None) if t.get("font") else None
             if t.get("font_path"):
                 g.LAYOUT_FONT_PATHS[t["text"]] = t["font_path"]

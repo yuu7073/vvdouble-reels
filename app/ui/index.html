@@ -55,8 +55,15 @@ input.ipt::placeholder{color:var(--faint)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;overflow:auto;padding-bottom:12px;align-content:start}
 .clip{padding:10px;display:flex;flex-direction:column;gap:8px;position:relative;cursor:grab}
 .clip.closeup{border-color:var(--selb)}
-.clip.dragover{outline:2px solid var(--blue);outline-offset:-2px}
+.clip{position:relative}
+.clip.ins-left::before,.clip.ins-right::before{content:"";position:absolute;top:6px;bottom:6px;width:3px;border-radius:2px;background:var(--blue);z-index:3}
+.clip.ins-left::before{left:-7px}
+.clip.ins-right::before{right:-7px}
 .clip.ghost{opacity:.4}
+.thumb .strip{position:absolute;inset:0;background-size:600% 100%;background-repeat:no-repeat;display:none}
+.thumb:hover .strip{display:block}
+.thumb .strip i{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.25)}
+.thumb .strip i b{display:block;height:100%;width:16.6%;background:var(--blue)}
 .thumb{position:relative;width:100%;aspect-ratio:9/16;border-radius:8px;overflow:hidden;background:#111}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
 .num{position:absolute;top:8px;left:8px;width:26px;height:26px;border-radius:13px;background:var(--ink);color:var(--onink);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
@@ -292,6 +299,10 @@ input.ipt::placeholder{color:var(--faint)}
       </div>
       <div style="display:flex;align-items:center;gap:10px"><div style="font-size:12px;color:var(--mute)" id="verInfo"></div><div class="sp"></div><button class="btn w sm" onclick="app.checkUpdate(true)">檢查更新</button><button class="btn w sm" onclick="app.errorReport()">複製錯誤紀錄</button></div>
       <div id="updBox" class="card" style="display:none;padding:12px 16px;gap:10px;align-items:center;border-color:var(--blue)"></div>
+      <div class="card" style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
+        <div class="row"><div class="h">錯誤回報（全公司）</div><div class="sp"></div><button class="btn w sm" onclick="app.loadErrors()">重新整理</button></div>
+        <div id="errList" style="font-size:12.5px;color:var(--mute);max-height:260px;overflow:auto">—</div>
+      </div>
     </div>
   </div>
 </div>
@@ -357,6 +368,7 @@ const app = {
     if (ev==='analyzing') { $('#analyzing').textContent = p.i<p.n ? `分析中 ${p.i+1}/${p.n}　${p.name}` : ''; }
     else if (ev==='drop_start') { $('#analyzing').textContent = `讀取 ${p.n} 個檔案…`; document.body.classList.remove('dragging'); }
     else if (ev==='dropped') { clearTimeout(this._dropWait); this.ingest(p); }
+    else if (ev==='auto_exported') { const rec=this.state.history.find(x=>x.id===p.id); if(rec){ rec.exported=true; rec.export_file=p.file; } this.renderHistory(); this.toast(`偵測到成品，已自動勾匯出：${p.name}`); this.reloadMusic&&this.reloadMusic(); const detailOpen=$('#detail')&&$('#detail').dataset.id===p.id; if(rec&&detailOpen) this.showDetail(rec); }
     else if (ev==='drop_nopath') { clearTimeout(this._dropWait); $('#analyzing').textContent=''; this.toast('拖曳拿不到檔案路徑（WebView2 太舊），請用「＋ 加入影片」或「＋ 加入資料夾」', true); }
     else if (ev==='job_start') { this.progress(p.job, 0, 1, '準備中'); $('#progLog').style.display='block'; $('#progLog').textContent=''; this.go('done'); }
     else if (ev==='log') { const l=$('#progLog'); l.textContent += p.msg+'\n'; l.scrollTop=l.scrollHeight; }
@@ -368,7 +380,7 @@ const app = {
     else if (ev==='pub_done') { const rec=this.state.history.find(x=>x.id===p.id); if(rec&&p.record) Object.assign(rec,p.record); if(p.ok){ this.toast('已上傳 YouTube'+(p.results&&p.results.length?`，放到 ${p.results.filter(x=>x.ok).length} 個商品頁`:'')); } else this.toast(p.error,true); if(rec) this.showDetail(rec); }
     else if (ev==='music_analyzing') { $('#mAnalyzing').textContent = p.i<p.n ? `分析 ${p.i+1}/${p.n}　${p.name}` : ''; if (p.i>=p.n) this.reloadMusic(); }
   },
-  go(v) { this.view=v; document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='view-'+v)); document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on', b.dataset.view===v)); if(v==='todo'&&!this.todo) this.loadTodo(); if(v==='bg'&&!this.bg) this.reloadBg(); },
+  go(v) { this.view=v; document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='view-'+v)); document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on', b.dataset.view===v)); if(v==='todo'&&!this.todo) this.loadTodo(); if(v==='bg'&&!this.bg) this.reloadBg(); if(v==='settings'&&!this._errLoaded){ this._errLoaded=true; this.loadErrors(); } },
 
   toggleTheme(){ const cur=document.documentElement.dataset.theme==='dark'?'light':'dark'; this.applyTheme(cur); try{ localStorage.setItem('vv_theme',cur); }catch(e){} this.call('save_settings',{theme:cur}); },
   applyTheme(t){ document.documentElement.dataset.theme=t; const b=$('#themeBtn'); if(b) b.textContent=t==='dark'?'☀':'☾'; },
@@ -435,6 +447,8 @@ const app = {
     if(!manual){ this.toast(`有新版本 ${r.latest}，到「設定」更新`); }
   },
   async doUpdate(){ const r=await this.call('do_update', this.upd.zip); if(!r||!r.ok){ this.toast(r?r.error:'更新失敗',true); } },
+  async loadErrors(){ const el=$('#errList'); el.textContent='讀取中…'; const r=await this.call('error_list'); if(!r||!r.ok){ el.textContent=r?r.error:'無法讀取'; return; } if(!r.items.length){ el.textContent='目前沒有錯誤回報'; return; }
+    el.innerHTML=r.items.map(it=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)"><div><b style="color:var(--text)">${esc(it.computer||it.user||'')}</b>　${esc((it.at||'').replace('T',' ').slice(0,16))}　v${esc(it.version||'')}</div><div style="color:var(--red)">${esc(it.context||'')}：${esc(it.error||'')}</div></div>`).join(''); },
   async errorReport(){ const r=await this.call('error_report'); if(!r) return; this.toast(r.ok?'已複製最近的紀錄，貼給 Vivian 即可':'複製失敗，紀錄檔在 '+r.file, !r.ok); },
 
   /* ---------- YouTube ＋ 商品頁 ---------- */
@@ -618,6 +632,7 @@ const app = {
     this.renderAll();
   },
   removeClip(i) { this.P().clips.splice(i,1); this.renderGrid(); },
+  scrub(el,e){ const r=el.getBoundingClientRect(); const k=Math.max(0,Math.min(5,Math.floor((e.clientX-r.left)/r.width*6))); el.style.backgroundPosition=`${k*20}% 0`; const b=el.querySelector('b'); if(b) b.style.marginLeft=`${k*16.6}%`; },
   setClip(i, k, v) { const c=this.P().clips[i]; c[k]=v; if(k==='closeup'){ if(v){c.model='';c.size='';} else {c.model=c.model||this.state.models[0]?.name||''; c.size=c.size||'大碼';} this.renderGrid(); } else { if(k==='model'){ this.state.settings.last_model=v; const sh=(this.P().modelSizes||{})[String(v).toUpperCase()]; if(sh&&sh.size){ c.size=sh.size; if(sh.fit) c.fit=sh.fit; this.renderGrid(); return; } } if(k==='size') this.state.settings.last_size=v; this.renderCounts(); } },
   applyToRest(i) { const src=this.P().clips[i]; this.P().clips.forEach((c,j)=>{ if(j>i && !c.closeup){c.model=src.model;c.size=src.size;c.fit=src.fit;} }); this.renderGrid(); this.toast('已套用到後面的片段'); },
   move(from,to) { const a=this.P().clips; const [x]=a.splice(from,1); a.splice(to,0,x); this.renderGrid(); },
@@ -662,7 +677,7 @@ const app = {
     $('#emptyHint').style.display=P.clips.length?'none':'flex'; g.style.display=P.clips.length?'grid':'none';
     g.innerHTML=P.clips.map((c,i)=>`
       <div class="card clip ${c.closeup?'closeup':''}" draggable="true" data-i="${i}">
-        <div class="thumb">${c.thumb?`<img src="${c.thumb}" alt="">`:''}<div class="num">${i+1}</div><div class="dur">${c.duration}s</div><button class="del" onclick="app.removeClip(${i})" title="移除">✕</button></div>
+        <div class="thumb">${c.thumb?`<img src="${c.thumb}" alt="">`:''}${c.strip?`<div class="strip" style="background-image:url(${c.strip})" onmousemove="app.scrub(this,event)"><i><b></b></i></div>`:''}<div class="num">${i+1}</div><div class="dur">${c.duration}s</div><button class="del" onclick="app.removeClip(${i})" title="移除">✕</button></div>
         ${c.closeup?`<div class="ipt" style="color:var(--faint)">CLOSE UP DETAIL</div>`:`
         <div class="two">
           <select class="sel" onchange="app.setClip(${i},'model',this.value)">${ms.map(m=>`<option ${m.name===c.model?'selected':''}>${esc(m.name)}</option>`).join('')}${ms.some(m=>m.name===c.model)?'':`<option selected>${esc(c.model||'選模特')}</option>`}</select>
@@ -675,9 +690,9 @@ const app = {
     g.querySelectorAll('.clip').forEach(el=>{
       el.addEventListener('dragstart',e=>{ if(e.target.closest('input,select')) {e.preventDefault();return;} e.dataTransfer.setData('text/plain',el.dataset.i); el.classList.add('ghost'); e.dataTransfer.effectAllowed='move'; });
       el.addEventListener('dragend',()=>el.classList.remove('ghost'));
-      el.addEventListener('dragover',e=>{ if(e.dataTransfer.types.includes('text/plain')){e.preventDefault(); el.classList.add('dragover');} });
-      el.addEventListener('dragleave',()=>el.classList.remove('dragover'));
-      el.addEventListener('drop',e=>{ const from=+e.dataTransfer.getData('text/plain'); if(!isNaN(from)){ e.preventDefault(); e.stopPropagation(); this.move(from,+el.dataset.i);} });
+      el.addEventListener('dragover',e=>{ if(e.dataTransfer.types.includes('text/plain')){ e.preventDefault(); const r=el.getBoundingClientRect(); const right=(e.clientX-r.left)>r.width/2; el.classList.toggle('ins-left',!right); el.classList.toggle('ins-right',right); } });
+      el.addEventListener('dragleave',()=>el.classList.remove('ins-left','ins-right'));
+      el.addEventListener('drop',e=>{ const from=+e.dataTransfer.getData('text/plain'); if(!isNaN(from)){ e.preventDefault(); e.stopPropagation(); const right=el.classList.contains('ins-right'); el.classList.remove('ins-left','ins-right'); let to=+el.dataset.i+(right?1:0); if(from<to) to--; if(to!==from) this.move(from,to); } });
     });
     this.renderCounts();
   },

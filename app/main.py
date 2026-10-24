@@ -11,6 +11,7 @@ import re
 import subprocess
 import sys
 import threading
+import time
 import traceback
 
 FROZEN = getattr(sys, "frozen", False)
@@ -245,6 +246,21 @@ def _thumb(path, t, key):
     return ""
 
 
+def _thumb_strip(path, dur, key, n=6):
+    """滑過看片段用：抽 n 張小圖橫向拼成一張（每格 160×284）。只解關鍵影格，4K 大檔也只要一兩秒"""
+    out = os.path.join(THUMB_DIR, key + "_strip.jpg")
+    if not os.path.exists(out):
+        dur = max(0.5, float(dur or 0))
+        vf = (f"fps={n}/{dur:.3f}:round=up,scale=160:284:force_original_aspect_ratio=increase,crop=160:284,setsar=1,"
+              f"tile={n}x1")
+        _run([_ffmpeg(), "-hide_banner", "-y", "-skip_frame", "nokey", "-i", path, "-vf", vf,
+              "-frames:v", "1", "-q:v", "6", out], timeout=120)
+    if os.path.exists(out):
+        with open(out, "rb") as f:
+            return "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("ascii")
+    return ""
+
+
 def _has_person(path, duration):
     """快速看 3 格有沒有人；偵測不到 → 當近拍"""
     if vision is None or not vision.available():
@@ -468,10 +484,14 @@ class Api:
                 dur = _probe_duration(fp)
                 key = _file_key(fp)
                 thumb = _thumb(fp, min(1.0, dur / 2), key)
+                try:
+                    strip = _thumb_strip(fp, dur, key)
+                except Exception:
+                    strip = ""
                 person = _has_person(fp, dur)
                 out["clips"].append({
                     "id": key, "path": fp, "source": src, "name": os.path.basename(src), "duration": round(dur, 1),
-                    "thumb": thumb, "closeup": (person is False), "person": person, "transcoded": bool(note),
+                    "thumb": thumb, "strip": strip, "closeup": (person is False), "person": person, "transcoded": bool(note),
                 })
             except Exception as e:
                 out["clips"].append({"id": _file_key(fp), "path": fp, "name": os.path.basename(fp),
@@ -529,6 +549,7 @@ class Api:
                     r = engine.build_draft(spec, models, log=log, progress=prog)
                 except Exception as e:
                     r = {"ok": False, "error": f"{type(e).__name__}: {e}", "trace": traceback.format_exc()}
+                    self._report_error(f"產生草稿：{name}", r["error"], r["trace"])
                 r["job"] = ji
                 r["name"] = name
                 r["music"] = (spec.get("music") or {}).get("path")
@@ -678,6 +699,71 @@ class Api:
                 "history_names": [h.get("name") for h in self.history if h.get("ok")],
                 "history_skus": [h.get("sku") for h in self.history if h.get("ok") and h.get("sku")]}
 
+
+    # ---------- 匯出自動偵測：成品資料夾一出現對應檔案就自動勾「已匯出」 ----------
+    def _watch_exports(self):
+        seen_size = {}
+        while True:
+            try:
+                time.sleep(5)
+                folder = self.settings.get("export_folder")
+                if not folder or not os.path.isdir(folder):
+                    continue
+                latest = {}
+                for h in self.history:
+                    if h.get("ok") and not h.get("exported"):
+                        k = h.get("name")
+                        if k and (k not in latest or h.get("created", "") > latest[k].get("created", "")):
+                            latest[k] = h
+                for name, rec in latest.items():
+                    f = self._find_export(name)
+                    if not f:
+                        continue
+                    try:
+                        created = dt.datetime.fromisoformat(rec.get("created")).timestamp()
+                    except Exception:
+                        created = 0
+                    if os.path.getmtime(f) < created:
+                        continue                      # 更早以前匯出的舊檔，不算
+                    size = os.path.getsize(f)
+                    if seen_size.get(f) != size:      # CapCut 還在寫檔：等到大小連續兩次一樣
+                        seen_size[f] = size
+                        continue
+                    r = self.mark_exported(rec["id"], True)
+                    if r.get("ok"):
+                        print(f"[auto_exported] {name} ← {os.path.basename(f)}")
+                        self._emit("auto_exported", {"id": rec["id"], "name": name, "file": f})
+            except Exception:
+                traceback.print_exc()
+
+    # ---------- 錯誤自動回報到雲端（同事那邊出錯不用截圖） ----------
+    _err_sent = {}
+
+    def _report_error(self, context, err, trace=""):
+        try:
+            key = f"{context}|{str(err)[:80]}"
+            now = time.time()
+            if now - self._err_sent.get(key, 0) < 600:
+                return
+            self._err_sent[key] = now
+            if not (self.settings.get("tool_password") or "").strip():
+                return
+            try:
+                with open(LOG_FILE, encoding="utf-8", errors="replace") as f:
+                    tail = "\n".join(f.read().splitlines()[-80:])
+            except Exception:
+                tail = ""
+            payload = {"version": VERSION, "computer": os.environ.get("COMPUTERNAME", ""), "user": os.environ.get("USERNAME", ""),
+                       "context": context, "error": str(err)[:500], "trace": (trace or "")[-3000:], "log": tail[-6000:]}
+            threading.Thread(target=lambda: self._cloud("errorReport", payload, timeout=20), daemon=True).start()
+        except Exception:
+            pass
+
+    def error_list(self):
+        try:
+            return self._cloud("errorList", {}, timeout=20)
+        except Exception as e:
+            return {"ok": False, "error": str(e), "items": []}
 
     # ---------- 更新與錯誤回報 ----------
     def check_update(self):
@@ -1173,6 +1259,7 @@ class Api:
         except Exception as e:
             traceback.print_exc()
             self._emit("pub_done", {"id": hid, "ok": False, "error": str(e), "record": rec})
+            self._report_error(f"上傳：{rec.get('name', '')}", e, traceback.format_exc())
         finally:
             self._busy = False
 
@@ -1505,6 +1592,12 @@ def main():
 
     win.events.loaded += _hook_drop
     threading.Timer(3.0, api._warm_todo).start()
+    threading.Thread(target=api._watch_exports, daemon=True).start()
+
+    def _hook(args):
+        traceback.print_exception(args.exc_type, args.exc_value, args.exc_traceback)
+        api._report_error("背景執行緒", args.exc_value, "".join(traceback.format_exception(args.exc_type, args.exc_value, args.exc_traceback)))
+    threading.excepthook = _hook
     # 保險：介面 8 秒內沒回報就直接顯示
     threading.Timer(8.0, api._show_window).start()
     webview.start()
