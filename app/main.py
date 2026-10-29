@@ -542,6 +542,20 @@ class Api:
                             c["path"] = p2
                     except Exception as e:
                         self._emit("log", {"job": ji, "msg": f"轉檔檢查失敗：{e}"})
+                # 需要底圖的版型沒選底圖 → 自動用當期「形象擺拍」（從影片所在的 Dropbox 檔期資料夾找，找不到就最新檔期）
+                try:
+                    lay = layouts.LAYOUTS.get(spec.get("layout") or "") if layouts else None
+                    needs = bool(lay and any(r.get("role") == "P" for r in lay.get("regions", [])))
+                    if needs and not (spec.get("background") or "").strip():
+                        first = next((c.get("path") for c in spec.get("clips") or [] if c.get("path")), "")
+                        pool, period = self._period_bg_pool(os.path.dirname(first) if first else (self._bg_root() or ""))
+                        if pool:
+                            spec["background"] = pool[0]["path"]
+                            self._emit("log", {"job": ji, "msg": f"自動帶底圖：{os.path.basename(period)}／{pool[0]['name']}"})
+                        else:
+                            self._emit("log", {"job": ji, "msg": "這個版型需要底圖，但找不到當期的形象擺拍／空景"})
+                except Exception:
+                    traceback.print_exc()
                 spec.setdefault("options", {})
                 for k in ("max_total", "mid_closeup", "person_center", "stabilize", "beauty"):
                     spec["options"].setdefault(k, self.settings.get(k))
@@ -1337,6 +1351,21 @@ class Api:
         self._status_set(rec.get("sku") or rec["name"], {"youtube": "", "embedded": []})
         return {"ok": True, "msg": "；".join(msgs)}
 
+    @staticmethod
+    def _yt_description(rec, product_ids):
+        """YouTube 說明欄固定格式：品名、商品頁連結（帶 UTM）、品牌一句、官網、標籤"""
+        sku = (rec.get("sku") or "").strip()
+        pid = (product_ids or [None])[0]
+        link = f"https://www.vvdouble.com/products/{pid}" if pid else "https://www.vvdouble.com"
+        utm = f"?utm_source=youtube&utm_medium=shorts&utm_campaign={sku or 'reels'}"
+        lines = [rec.get("name", ""), "",
+                 f"商品頁 → {link}{utm}", "",
+                 "VV DOUBLE｜大尺碼不是特例，而是我的日常",
+                 "SM–5L6L 全尺碼實穿，棉花糖女孩的日常衣櫃。",
+                 "官網 https://www.vvdouble.com", "",
+                 "#VVDOUBLE #大尺碼不是特例 #肉肉女孩"]
+        return "\n".join(lines)[:4900]
+
     def _publish_worker(self, rec, path, title, product_ids, options=None):
         try:
             self._publish_one(rec, path, title, product_ids, options or {})
@@ -1357,7 +1386,7 @@ class Api:
                 meta = {
                     "snippet": {
                         "title": (title or rec["name"])[:100],
-                        "description": f"{rec['name']}\n\n{SITE_URL}",
+                        "description": self._yt_description(rec, product_ids),
                         "categoryId": "22",
                         "defaultLanguage": "zh-Hant",
                     },
