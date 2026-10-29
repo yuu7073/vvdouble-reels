@@ -176,15 +176,10 @@ def build_draft(spec, models, log=None, progress=None):
             nb //= 2
         return min(int(target_sec * SEC), avail)
 
-    # ---- 控制總長：每位模特平均、近拍約三成 ----
-    if beats:
-        clip_len = g.beats_for(g.CLIP_SEC, beat_len) * beat_len
-        close_len = g.beats_for(g.CLOSEUP_SEC, beat_len) * beat_len
-    else:
-        clip_len, close_len = g.CLIP_SEC, g.CLOSEUP_SEC
+    # ---- 排段落（planner）：長度模式 20／25／30／依片段，開頭結尾 8 拍、中段 4–6 拍、近拍 4 拍 ----
+    import planner as P
     pairs = [(c.get("path"), c) for c in model_clips]
     cl_pairs = [(c.get("path"), c) for c in closeups]
-    # select_clips 需要用 parse_clip 認模特分組；這裡改用介面給的 model 分組
     groups = []
     for path, c in pairs:
         key = (c.get("model") or "").upper()
@@ -192,33 +187,18 @@ def build_draft(spec, models, log=None, progress=None):
             groups[-1][1].append((path, c))
         else:
             groups.append((key, [(path, c)]))
-    n_close = min(len(cl_pairs), max(1, round(g.MAX_TOTAL_SEC * g.CLOSEUP_SHARE / close_len))) if cl_pairs else 0
-    budget = g.MAX_TOTAL_SEC - n_close * close_len
-    n_clip = max(len(groups), int(budget // clip_len)) if groups else 0
-    quota = [0] * len(groups)
-    left = n_clip
-    while left > 0:
-        moved = False
-        for i, (_, grp) in enumerate(groups):
-            if left > 0 and quota[i] < len(grp):
-                quota[i] += 1
-                left -= 1
-                moved = True
-        if not moved:
-            break
-    if cl_pairs and left > 0:
-        n_close = min(len(cl_pairs), n_close + int(left * clip_len // close_len))
-    picked_groups = [(k, g.pick_even(grp, q)) for (k, grp), q in zip(groups, quota)]
-    picked_close = g.pick_even(cl_pairs, n_close)
-    total_in = len(pairs) + len(cl_pairs)
-    skipped = total_in - sum(len(x[1]) for x in picked_groups) - len(picked_close)
-    if skipped:
-        _log(log, f"為控制在 {g.MAX_TOTAL_SEC:.0f} 秒內，略過 {skipped} 段")
+    # 同一位模特不連續放進來的也合併成一組（輪流時才不會重複）
+    merged = {}
+    order = []
+    for k, grp in groups:
+        if k not in merged:
+            merged[k] = []
+            order.append(k)
+        merged[k] += grp
+    groups = [(k, merged[k]) for k in order]
 
-    # ---- 版型：照版型的固定順序排（#＝版型段、M＝滿版模特、D＝滿版近拍） ----
     layout_id = (spec.get("layout") or "").strip()
     L = layouts.LAYOUTS.get(layout_id) if (layouts and layout_id) else None
-    clip_target = None      # 版型多放段時每段滿版的目標秒數（None＝照 CLIP_SEC）
     layout_meta = None
     if L:
         try:
@@ -226,63 +206,19 @@ def build_draft(spec, models, log=None, progress=None):
         except Exception as e:
             _log(log, f"版型「{L['name']}」準備失敗（{type(e).__name__}: {e}），改用標準排法")
             L = None
+    pattern = L["pattern"].split(",") if L else None
+    length_mode = str(opt.get("length_mode") or "").strip() or ("fit" if g.MAX_TOTAL_SEC >= 28 else str(int(g.MAX_TOTAL_SEC)))
+    plan = P.build_sequence(groups, cl_pairs, pattern, length_mode, beat_len if beats else 0.5, layout_id)
+    sequence = [(kind, item[0] if item else None, item[1] if item else None, nb) for kind, item, nb in plan["seq"]]
+    picked_groups = []
+    for k, grp in groups:
+        used = [it for it in grp if any(sq[1] == it[0] for sq in sequence if sq[0] == "clip")]
+        picked_groups.append((k, used or grp[:1]))
+    skipped = len(plan["skipped"])
+    mode_name = {"fit": "依片段"}.get(length_mode, f"{length_mode} 秒")
+    _log(log, f"長度「{mode_name}」：滿版 {plan['n_m']} 段、近拍 {plan['n_d']} 段，預計 {plan['total']} 秒" + (f"，略過 {skipped} 支" if skipped else ""))
     if L:
-        pattern = L["pattern"].split(",")
-        n_m, n_d = pattern.count("M"), pattern.count("D")
-        # 模特影片多的時候多放 1–2 段滿版（≥5 支 +1、≥7 支 +2），總長不變：每段滿版平均縮短一點，仍對拍
-        extra = 2 if len(pairs) >= 7 else (1 if len(pairs) >= 5 else 0)
-        extra = min(extra, max(0, len(pairs) - n_m))
-        clip_target = None
-        while extra and n_m:
-            clip_target = n_m * clip_len / (n_m + extra)
-            if clip_target >= 1.95:      # 每段滿版不短於 2 秒，不夠就少加一段
-                break
-            extra -= 1
-            clip_target = None
-        if extra:
-            m_pos = [i for i, t in enumerate(pattern) if t == "M"]
-            for k in range(extra):
-                at = m_pos[-1 - k] if k < len(m_pos) else len(pattern) - 1
-                pattern.insert(at + 1, "M")
-            n_m += extra
-            _log(log, f"模特影片 {len(pairs)} 支，多放 {extra} 段滿版，每段約 {clip_target:.1f} 秒")
-        quota = [0] * len(groups)
-        left = n_m
-        while left > 0 and groups:
-            moved = False
-            for i, (_, grp) in enumerate(groups):
-                if left > 0 and quota[i] < len(grp):
-                    quota[i] += 1
-                    left -= 1
-                    moved = True
-            if not moved:
-                break
-        picked_groups = [(k, g.pick_even(grp, q)) for (k, grp), q in zip(groups, quota)]
-        m_slots = [item for _, grp in picked_groups for item in grp]
-        d_slots = g.pick_even(cl_pairs, min(n_d, len(cl_pairs)))
-        used = set(p for p, _ in m_slots) | set(p for p, _ in d_slots)
-        skipped = total_in - len(used)
-        sequence = []
-        mi = di = 0
-        for tok in pattern:
-            if tok == "#":
-                sequence.append(("layout", None, None))
-            elif tok == "M" and m_slots:
-                sequence.append(("clip",) + m_slots[mi % len(m_slots)])
-                mi += 1
-            elif tok == "D" and d_slots:
-                sequence.append(("close",) + d_slots[di % len(d_slots)])
-                di += 1
-        _log(log, f"版型「{L['name']}」：{' → '.join('版型' if t == '#' else ('滿版' if t == 'M' else '近拍') for t in pattern)}")
-    else:
-        # ---- 排列：前面模特 → 近拍 → 最後一位模特 → 剩下近拍 ----
-        close_queue = list(picked_close)
-        sequence = []
-        for gi, (_, grp) in enumerate(picked_groups):
-            if gi == len(picked_groups) - 1 and gi > 0 and close_queue:
-                sequence.append(("close_mid",) + close_queue.pop(0))
-            sequence += [("clip", p, c) for p, c in grp]
-        sequence += [("close",) + c for c in close_queue]
+        _log(log, f"版型「{L['name']}」：{' → '.join('版型' if t[0] == 'layout' else ('滿版' if t[0] == 'clip' else '近拍') for t in sequence)}")
 
     used_starts = {}    # 同一支影片用第二次時，從上一段的結尾接著取
 
@@ -303,7 +239,7 @@ def build_draft(spec, models, log=None, progress=None):
         nonlocal beat_idx
         if not beats:
             return int(target_sec * SEC)
-        nb = g.beats_for(target_sec, beat_len)
+        nb = max(1, min(8, round(target_sec / beat_len)))     # 版型段 3.2 秒取最接近的拍數
         while nb >= 1:
             end_idx = beat_idx + nb
             if end_idx < len(beats):
@@ -485,8 +421,9 @@ def build_draft(spec, models, log=None, progress=None):
     card_runs, close_runs, out_segments = [], [], []
     total_steps = max(1, len(sequence))
 
-    for idx, (kind, full, c) in enumerate(sequence):
+    for idx, (kind, full, c, nb) in enumerate(sequence):
         fname = os.path.basename(full) if full else f"版型 {L['name']}"
+        target = (nb * beat_len) if (beats and nb) else (g.CLOSEUP_SEC if kind == "close" else g.CLIP_SEC)
         if progress:
             try:
                 progress(idx, total_steps, fname)
@@ -504,11 +441,11 @@ def build_draft(spec, models, log=None, progress=None):
             continue
         mat = cc.VideoMaterial(full)
         manual = c.get("start")
-        if manual is None and reuse_start(full, mat, int(g.CLIP_SEC * SEC)) is not None and kind != "close_mid":
-            manual = reuse_start(full, mat, int(g.CLIP_SEC * SEC)) / SEC
-        if kind in ("close", "close_mid"):
+        if manual is None and reuse_start(full, mat, int(target * SEC)) is not None:
+            manual = reuse_start(full, mat, int(target * SEC)) / SEC
+        if kind == "close":
             g.MODEL_BY_PATH[full] = ""
-            dur = length_for(mat, g.CLOSEUP_SEC, 0, g.MID_CLOSEUP_RANGE if kind == "close_mid" else None)
+            dur = length_for(mat, target, 0, exact=bool(beats and nb))
             info = g.analyze_clip(full) if g.AUTO_BEST_SEGMENT else None
             if manual is not None:
                 start = int(max(0.0, min(float(manual), mat.duration / SEC - dur / SEC)) * SEC)
@@ -543,11 +480,8 @@ def build_draft(spec, models, log=None, progress=None):
 
         model_name = (c.get("model") or "").strip()
         g.MODEL_BY_PATH[full] = model_name.upper() if (model_name and beauty_on) else ""
-        skip, _ = g.cut(mat, g.CLIP_SEC, g.CLIP_SKIP)
-        if clip_target:
-            dur = length_for(mat, clip_target, skip, exact=True)
-        else:
-            dur = length_for(mat, g.CLIP_SEC, skip)
+        skip, _ = g.cut(mat, target, g.CLIP_SKIP)
+        dur = length_for(mat, target, skip, exact=bool(beats and nb))
         info = g.analyze_clip(full) if g.AUTO_BEST_SEGMENT else None
         if manual is not None:
             skip = int(max(0.0, min(float(manual), mat.duration / SEC - dur / SEC)) * SEC)

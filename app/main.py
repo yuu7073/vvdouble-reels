@@ -142,6 +142,7 @@ DEFAULT_SETTINGS = {
     "last_model": "",
     "last_size": "",
     "todo_url": "",
+    "length_mode": "20",
     "theme": "light",
     "bg_root": "",
     "cloud_url": "https://asia-east1-vvdouble-shopline.cloudfunctions.net/reels",
@@ -507,6 +508,44 @@ class Api:
         self._emit("analyzing", {"i": total, "n": total, "name": ""})
         return out
 
+    # ---------- 節奏預覽（和產生時同一套 planner） ----------
+    def plan_preview(self, spec):
+        import planner as P
+        clips = [c for c in (spec.get("clips") or []) if c.get("path")]
+        models = [c for c in clips if not c.get("closeup")]
+        closes = [c for c in clips if c.get("closeup")]
+        groups, order = {}, []
+        for c in models:
+            k = (c.get("model") or "").upper()
+            if k not in groups:
+                groups[k] = []
+                order.append(k)
+            groups[k].append(c)
+        groups = [(k, groups[k]) for k in order]
+        lay = layouts.LAYOUTS.get(spec.get("layout") or "") if layouts else None
+        pattern = lay["pattern"].split(",") if lay else None
+        bpm = None
+        mp = (spec.get("music") or {}).get("path")
+        if mp:
+            meta = self._music_index().get(os.path.basename(mp), {})
+            bpm = meta.get("bpm")
+        beat_len = 60.0 / float(bpm) if bpm else 0.5
+        out = {"bpm": bpm, "modes": {}}
+        for mode in ("20", "25", "fit"):
+            try:
+                r = P.build_sequence(groups, closes, pattern, mode, beat_len, spec.get("layout") or "")
+            except Exception as e:
+                out["modes"][mode] = {"error": str(e)}
+                continue
+            seq = []
+            for kind, c, nb in r["seq"]:
+                sec = P.LAYOUT_SEC if kind == "layout" else round(nb * beat_len, 2)
+                seq.append({"kind": kind, "name": (c or {}).get("name") or os.path.basename((c or {}).get("path", "")) if c else "版型",
+                            "model": (c or {}).get("model", "") if c else "", "beats": nb, "sec": sec})
+            out["modes"][mode] = {"seq": seq, "n_m": r["n_m"], "n_d": r["n_d"], "total": r["total"],
+                                  "skipped": [x.get("name") or os.path.basename(x.get("path", "")) for x in r["skipped"]]}
+        return out
+
     # ---------- 產生 ----------
     def generate(self, jobs):
         """jobs = [spec, ...]；在背景執行，進度用事件回報"""
@@ -557,7 +596,7 @@ class Api:
                 except Exception:
                     traceback.print_exc()
                 spec.setdefault("options", {})
-                for k in ("max_total", "mid_closeup", "person_center", "stabilize", "beauty"):
+                for k in ("max_total", "mid_closeup", "person_center", "stabilize", "beauty", "length_mode"):
                     spec["options"].setdefault(k, self.settings.get(k))
                 self._emit("job_start", {"job": ji, "name": name})
 

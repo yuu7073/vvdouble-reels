@@ -23,6 +23,11 @@ a{color:var(--blue)}
 .nav button.on{background:var(--bg);color:var(--ink)}
 .sp{flex:1}
 .chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:13px;font-size:12px;font-weight:500;white-space:nowrap}
+.rb{border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;line-height:1.25;overflow:hidden;white-space:nowrap;min-width:0}
+.rb.l{background:#3b3f6e;color:#cfd2ff}.rb.m{background:var(--blue-bg);color:var(--blue)}.rb.d{background:var(--orange-bg);color:var(--orange)}
+.thumb .use{position:absolute;right:6px;top:6px;width:18px;height:18px;border-radius:4px;border:1px solid rgba(255,255,255,.7);background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;cursor:pointer;z-index:2}
+.thumb .use.on{background:var(--blue);border-color:var(--blue)}
+.clip.unused .thumb img{opacity:.35}.clip.unused{opacity:.75}
 .st3{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:11px;font-size:11.5px;font-weight:600;white-space:nowrap;border:1px solid var(--line);color:var(--faint);background:transparent}
 .st3.on.g{background:var(--green-bg);color:var(--green);border-color:transparent}.st3.on.b{background:var(--blue-bg);color:var(--blue);border-color:transparent}.st3.on.r{background:var(--red-bg);color:var(--red);border-color:transparent}
 .st3.click{cursor:pointer}
@@ -205,18 +210,21 @@ input.ipt::placeholder{color:var(--faint)}
       </div>
 
       <div style="display:flex;flex-direction:column;gap:8px">
-        <div class="h">輸出</div>
-        <div class="row"><span>總長上限</span><div class="ipt" style="width:120px;justify-content:space-between"><input id="optMax" style="border:0;width:60px;background:none" type="number" min="15" max="60" onchange="app.setOpt('max_total',+this.value)"><span style="color:var(--faint)">秒</span></div></div>
-        <div class="row"><span>中間近拍</span><div class="ipt" style="width:136px;justify-content:space-between"><input id="optMid1" style="border:0;width:34px;background:none;text-align:center" type="number" step="0.5" min="1" max="4" onchange="app.setMid()">–<input id="optMid2" style="border:0;width:34px;background:none;text-align:center" type="number" step="0.5" min="1" max="4" onchange="app.setMid()"><span style="color:var(--faint)">秒</span></div></div>
+        <div class="row"><span class="h">影片長度</span><span id="lenMeta" style="font-size:12px;color:var(--mute)"></span></div>
+        <div id="lenBtns" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px"></div>
+        <div class="h" style="margin-top:4px">輸出</div>
+        <div class="row" style="display:none"><span>總長上限</span><div class="ipt" style="width:120px;justify-content:space-between"><input id="optMax" style="border:0;width:60px;background:none" type="number" min="15" max="60" onchange="app.setOpt('max_total',+this.value)"><span style="color:var(--faint)">秒</span></div></div>
+        <div class="row" style="display:none"><span>中間近拍</span><div class="ipt" style="width:136px;justify-content:space-between"><input id="optMid1" style="border:0;width:34px;background:none;text-align:center" type="number" step="0.5" min="1" max="4" onchange="app.setMid()">–<input id="optMid2" style="border:0;width:34px;background:none;text-align:center" type="number" step="0.5" min="1" max="4" onchange="app.setMid()"><span style="color:var(--faint)">秒</span></div></div>
         <div class="row"><span>人物置中</span><div class="tog" id="optCenter" onclick="app.toggleOpt('person_center',this)"></div></div>
         <div class="row"><span>自動穩定</span><div class="tog" id="optStab" onclick="app.toggleOpt('stabilize',this)"></div></div>
         <div class="row"><span>自動潤飾</span><div class="tog" id="optBeauty" onclick="app.toggleOpt('beauty',this)"></div></div>
       </div>
 
       <div class="sp"></div>
-      <div class="card" style="padding:12px;background:var(--sub);display:flex;flex-direction:column;gap:6px">
-        <div class="row" style="min-height:22px"><span style="color:var(--mute)">預計</span><b id="estTotal">—</b></div>
-        <div class="row" style="min-height:22px"><span style="color:var(--mute)">會用到</span><span id="estUse">—</span></div>
+      <div class="card" style="padding:12px;background:var(--sub);display:flex;flex-direction:column;gap:8px">
+        <div class="row" style="min-height:20px"><span style="color:var(--mute);font-size:12px">節奏預覽</span><b id="estTotal" style="font-size:12.5px">—</b></div>
+        <div id="rhythm" style="display:flex;gap:2px;height:40px"></div>
+        <div id="estUse" style="font-size:11.5px;color:var(--mute);line-height:1.5">—</div>
       </div>
       <button class="btn k xl" id="btnGen" onclick="app.generate(false)">產生這支草稿</button>
       <button class="btn w" id="btnGenAll" onclick="app.generate(true)">產生全部</button>
@@ -686,7 +694,7 @@ const app = {
   },
   removeClip(i) { this.P().clips.splice(i,1); this.renderGrid(); },
   scrub(el,e){ const r=el.getBoundingClientRect(); const k=Math.max(0,Math.min(5,Math.floor((e.clientX-r.left)/r.width*6))); el.style.backgroundPosition=`${k*20}% 0`; const b=el.querySelector('b'); if(b) b.style.marginLeft=`${k*16.6}%`; },
-  setClip(i, k, v) { const c=this.P().clips[i]; c[k]=v; if(k==='closeup'){ if(v){c.model='';c.size='';} else {c.model=c.model||this.state.models[0]?.name||''; c.size=c.size||'大碼';} this.renderGrid(); } else { if(k==='model'){ this.state.settings.last_model=v; const sh=(this.P().modelSizes||{})[String(v).toUpperCase()]; if(sh&&sh.size){ c.size=sh.size; if(sh.fit) c.fit=sh.fit; this.renderGrid(); return; } } if(k==='size') this.state.settings.last_size=v; this.renderCounts(); } },
+  setClip(i, k, v) { const c=this.P().clips[i]; if(k==='use'){ c.use=(v===true||v==='true'); this.renderGrid(); return; } c[k]=v; if(k==='closeup'){ if(v){c.model='';c.size='';} else {c.model=c.model||this.state.models[0]?.name||''; c.size=c.size||'大碼';} this.renderGrid(); } else { if(k==='model'){ this.state.settings.last_model=v; const sh=(this.P().modelSizes||{})[String(v).toUpperCase()]; if(sh&&sh.size){ c.size=sh.size; if(sh.fit) c.fit=sh.fit; this.renderGrid(); return; } } if(k==='size') this.state.settings.last_size=v; this.renderCounts(); } },
   applyToRest(i) { const src=this.P().clips[i]; this.P().clips.forEach((c,j)=>{ if(j>i && !c.closeup){c.model=src.model;c.size=src.size;c.fit=src.fit;} }); this.renderGrid(); this.toast('已套用到後面的片段'); },
   move(from,to) { const a=this.P().clips; const [x]=a.splice(from,1); a.splice(to,0,x); this.renderGrid(); },
 
@@ -710,27 +718,34 @@ const app = {
   renderCounts() {
     const cl=this.P().clips; const byM={};
     cl.filter(c=>!c.closeup).forEach(c=>{byM[c.model||'未選']=(byM[c.model||'未選']||0)+1});
-    $('#cntAll').textContent=`全部 ${cl.length}`;
+    $('#cntAll').textContent=`選入 ${cl.filter(c=>c.use!==false).length} / ${cl.length}`;
     $('#cntModel').innerHTML=Object.entries(byM).map(([k,v])=>`${esc(k)} ${v}`).join('　')||'—';
     $('#cntClose').textContent=`近拍 ${cl.filter(c=>c.closeup).length}`;
     this.renderEstimate();
   },
   renderEstimate() {
-    const cl=this.P().clips, s=this.state.settings; const max=+s.max_total||28;
-    const models=cl.filter(c=>!c.closeup).length, close=cl.filter(c=>c.closeup).length;
-    if(!cl.length){$('#estTotal').textContent='—';$('#estUse').textContent='—';return;}
-    const lay=(this.state.layouts||[]).find(x=>x.id===(this.P().layout||''));
-    if(lay){ const t=lay.pattern.split(','); const nM=t.filter(x=>x==='M').length, nD=t.filter(x=>x==='D').length; $('#estTotal').textContent=`約 ${nM*3+nD*2+4} 秒`; $('#estUse').textContent=`1 段版型・${nM} 段滿版・${nD} 段近拍`; return; }
-    const nClose=Math.min(close, Math.max(1, Math.round(max*0.3/2))); const nModel=Math.min(models, Math.floor((max-nClose*2)/2));
-    $('#estTotal').textContent=`約 ${Math.min(max, nModel*2+nClose*2)} 秒`;
-    $('#estUse').textContent=`${nModel} 段實穿・${nClose} 段近拍`;
+    const P=this.P(); if(!P) return; const mode=P.lengthMode||this.state.settings.length_mode||'20';
+    const used=P.clips.filter(c=>c.use!==false); const nM=used.filter(c=>!c.closeup).length, nD=used.filter(c=>c.closeup).length;
+    $('#lenMeta').textContent=P.clips.length?`選入 ${used.length} 支（滿版 ${nM}・近拍 ${nD}）`:'';
+    const btn=(m,label,sub)=>`<button class="btn ${mode===m?'k':'w'}" style="height:50px;flex-direction:column;gap:2px;padding:0" onclick="app.setLength('${m}')"><span style="font-weight:700">${label}</span><span style="font-size:11px;font-weight:400;opacity:.8">${sub||'　'}</span></button>`;
+    if(!used.length){ $('#lenBtns').innerHTML=btn('20','20 秒','')+btn('25','25 秒','')+btn('fit','依片段',''); $('#estTotal').textContent='—'; $('#rhythm').innerHTML=''; $('#estUse').textContent='—'; return; }
+    clearTimeout(this._planT);
+    this._planT=setTimeout(async()=>{
+      const r=await this.call('plan_preview', this.spec(P)); if(!r||!r.modes) return;
+      const sub=m=>{ const x=r.modes[m]; if(!x||x.error) return ''; const sk=x.skipped.length; return m==='fit'?`${x.seq.length} 段 → ${x.total} 秒`:(sk?`略過 ${sk} 支`:`${x.seq.length} 段剛好`); };
+      $('#lenBtns').innerHTML=btn('20','20 秒',sub('20'))+btn('25','25 秒',sub('25'))+btn('fit','依片段',sub('fit'));
+      const x=r.modes[mode]; if(!x||x.error){ $('#estTotal').textContent='—'; return; }
+      $('#estTotal').textContent=`${x.total} 秒・${x.seq.length} 段${r.bpm?'・'+r.bpm+' BPM':''}`;
+      $('#rhythm').innerHTML=x.seq.map(sg=>`<div class="rb ${sg.kind==='layout'?'l':(sg.kind==='close'?'d':'m')}" style="flex:${Math.max(1,Math.round(sg.sec*10))}" title="${esc(sg.name)}"><span>${sg.kind==='layout'?'版型':(sg.kind==='close'?'近拍':esc(sg.model||'滿版'))}</span><span style="opacity:.75">${sg.kind==='layout'?sg.sec+'s':(sg.beats?sg.beats+' 拍':sg.sec+'s')}</span></div>`).join('');
+      $('#estUse').textContent=x.skipped.length?`這次沒放：${x.skipped.join('、')}`:'選入的全部放入';
+    }, 250);
   },
   renderGrid() {
     const P=this.P(); const g=$('#grid'); const ms=this.state.models;
     $('#emptyHint').style.display=P.clips.length?'none':'flex'; g.style.display=P.clips.length?'grid':'none';
     g.innerHTML=P.clips.map((c,i)=>`
-      <div class="card clip ${c.closeup?'closeup':''}" draggable="true" data-i="${i}">
-        <div class="thumb">${c.thumb?`<img src="${c.thumb}" alt="">`:''}${c.strip?`<div class="strip" style="background-image:url(${c.strip})" onmousemove="app.scrub(this,event)"><i><b></b></i></div>`:''}<div class="num">${i+1}</div><div class="dur">${c.duration}s</div><button class="del" onclick="app.removeClip(${i})" title="移除">✕</button></div>
+      <div class="card clip ${c.closeup?'closeup':''} ${c.use===false?'unused':''}" draggable="true" data-i="${i}">
+        <div class="thumb">${c.thumb?`<img src="${c.thumb}" alt="">`:''}<div class="use ${c.use===false?'':'on'}" title="選入／不選入" onclick="app.setClip(${i},'use',${c.use===false?'true':'false'})">${c.use===false?'':'✓'}</div>${c.strip?`<div class="strip" style="background-image:url(${c.strip})" onmousemove="app.scrub(this,event)"><i><b></b></i></div>`:''}<div class="num">${i+1}</div><div class="dur">${c.duration}s</div><button class="del" onclick="app.removeClip(${i})" title="移除">✕</button></div>
         ${c.closeup?`<div class="ipt" style="color:var(--faint)">CLOSE UP DETAIL</div>`:`
         <div class="two">
           <select class="sel" onchange="app.setClip(${i},'model',this.value)">${ms.map(m=>`<option ${m.name===c.model?'selected':''}>${esc(m.name)}</option>`).join('')}${ms.some(m=>m.name===c.model)?'':`<option selected>${esc(c.model||'選模特')}</option>`}</select>
@@ -771,7 +786,7 @@ const app = {
     $('#musicMeta').innerHTML=t?`${t.bpm?t.bpm+' BPM':'尚未分析'}・用過 ${t.uses} 次${t.last_use?'・上次 '+t.last_use.date.slice(5):''}`:(cur?'來自商品資料夾':'');
     if(!tracks.length) $('#musicMeta').innerHTML=`<a href="#" onclick="app.go('music');return false">還沒設定音樂庫</a>`;
   },
-  setMusic(path) { const P=this.P(); const t=(this.state.music.tracks||[]).find(x=>x.path===path); P.music=path?{path, name:t?t.name:path}:null; this.renderMusicSel(); this.renderList(); },
+  setMusic(path) { const P=this.P(); const t=(this.state.music.tracks||[]).find(x=>x.path===path); P.music=path?{path, name:t?t.name:path}:null; this.renderMusicSel(); this.renderList(); this.renderEstimate(); },
   setMusicStart(v) { this.P().musicStart=v; },
   async pickMusic(mode) { const t=await this.call('music_pick', mode, this.P().music?this.P().music.path:null); if(!t){this.toast('音樂庫是空的',true);return;} this.setMusic(t.path); },
   async reloadMusic() { this.state.music=await this.call('music_list')||this.state.music; this.renderMusic(); this.renderMusicSel(); },
@@ -827,7 +842,8 @@ const app = {
   async pickSetting(k){ const p=await this.call('choose_folder'); if(!p) return; this.state.settings[k]=p; await this.call('save_settings',{[k]:p}); this.renderSettings(); if(k==='music_folder'){ this.state.music=await this.call('music_set_folder',p); this.renderMusic(); this.renderMusicSel(); } },
 
   /* ---------- generate ---------- */
-  spec(P){ return { name:P.name||'未命名', clips:P.clips.map((c,i)=>({path:c.path, model:c.closeup?'':c.model, size_text:c.closeup?'':`著${c.size}${c.fit||''}`, closeup:!!c.closeup, start:c.start===''?null:+c.start, order:i})), music:P.music?{path:P.music.path, start:P.musicStart===''?null:+P.musicStart}:null, colors:P.colors||[], sku:P.sku||'', features:P.features||[], category:P.category||'', background:P.background||'', layout:P.layout||'', options:{} }; },
+  spec(P){ return { name:P.name||'未命名', clips:P.clips.filter(c=>c.use!==false).map((c,i)=>({path:c.path, name:c.name, model:c.closeup?'':c.model, size_text:c.closeup?'':('著'+c.size+(c.fit||'')), closeup:!!c.closeup, start:c.start===''?null:+c.start, order:i})), music:P.music?{path:P.music.path, start:P.musicStart===''?null:+P.musicStart}:null, colors:P.colors||[], sku:P.sku||'', features:P.features||[], category:P.category||'', background:P.background||'', layout:P.layout||'', options:{length_mode:P.lengthMode||this.state.settings.length_mode||'20'} }; },
+  setLength(m){ const P=this.P(); if(!P) return; P.lengthMode=m; this.state.settings.length_mode=m; this.call('save_settings',{length_mode:m}); this.renderEstimate(); },
   async generate(all){
     const list=all?this.products:[this.P()];
     const bad=list.filter(p=>!p.clips.length); if(bad.length){ this.toast('有商品還沒放影片',true); return; }
