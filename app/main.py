@@ -230,6 +230,14 @@ def _maybe_transcode(path, emit=None):
     return out, f"已轉檔（原檔 {mbps:.0f}Mbps/{fps:.0f}fps）"
 
 
+def _to_rfc3339(local_str):
+    """'2026-11-02T22:00'（本機／台灣時間）→ '2026-11-02T14:00:00Z'"""
+    d = dt.datetime.fromisoformat(local_str)
+    if d.tzinfo is None:
+        d = d.astimezone()          # 當成本機時區
+    return d.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def _file_key(path):
     st = os.stat(path)
     return hashlib.md5(f"{path}|{st.st_size}|{int(st.st_mtime)}".encode("utf-8")).hexdigest()
@@ -1221,7 +1229,7 @@ class Api:
         except Exception as e:
             return {"ok": False, "error": str(e)}
 
-    def publish(self, hist_id, title, product_ids):
+    def publish(self, hist_id, title, product_ids, options=None):
         rec = next((h for h in self.history if h.get("id") == hist_id), None)
         if not rec:
             return {"ok": False, "error": "找不到紀錄"}
@@ -1231,8 +1239,75 @@ class Api:
         if self._busy:
             return {"ok": False, "error": "正在處理中"}
         self._busy = True
-        threading.Thread(target=self._publish_worker, args=(rec, path, title, list(product_ids or [])), daemon=True).start()
+        threading.Thread(target=self._publish_worker, args=(rec, path, title, list(product_ids or []), options or {}), daemon=True).start()
         return {"ok": True}
+
+    def batch_publish(self, items, options=None):
+        """批次：items=[{id, title?, product_ids?}]；沒給標題就用 AI 第一句、沒給商品就用同名各色。一支一支做，失敗不中斷"""
+        if self._busy:
+            return {"ok": False, "error": "正在處理中"}
+        jobs = []
+        for it in items or []:
+            rec = next((h for h in self.history if h.get("id") == it.get("id")), None)
+            if rec:
+                jobs.append((rec, it))
+        if not jobs:
+            return {"ok": False, "error": "沒有可處理的項目"}
+        self._busy = True
+        threading.Thread(target=self._batch_worker, args=(jobs, options or {}), daemon=True).start()
+        return {"ok": True, "n": len(jobs)}
+
+    def _batch_worker(self, jobs, options):
+        n = len(jobs)
+        done = 0
+        try:
+            for i, (rec, it) in enumerate(jobs):
+                hid = rec["id"]
+                self._emit("batch_progress", {"i": i, "n": n, "id": hid, "name": rec.get("name")})
+                try:
+                    path = rec.get("export_file") or self._find_export(rec["name"])
+                    if not rec.get("youtube_id") and (not path or not os.path.exists(path)):
+                        raise RuntimeError("找不到成品檔")
+                    title = it.get("title") or rec.get("youtube_title") or ""
+                    if not title and not rec.get("youtube_id"):
+                        try:
+                            t = self.yt_titles(hid)
+                            title = (t.get("titles") or [""])[0]
+                        except Exception:
+                            title = ""
+                    ids = it.get("product_ids")
+                    if ids is None and options.get("embed", True):
+                        try:
+                            fp = self.find_products(rec["name"])
+                            ids = [x["id"] for x in fp.get("items", []) if x.get("exact")]
+                        except Exception:
+                            ids = []
+                    if not options.get("embed", True):
+                        ids = []
+                    ok = self._publish_one(rec, path, title, list(ids or []), options)
+                    done += 1 if ok else 0
+                except Exception as e:
+                    traceback.print_exc()
+                    self._emit("pub_done", {"id": hid, "ok": False, "error": str(e), "record": rec})
+        finally:
+            self._busy = False
+            self._emit("batch_done", {"n": n, "done": done})
+
+    def yt_set_status(self, hist_id, privacy="public", publish_at=""):
+        """改單支的公開狀態（立即公開／私人／定時公開）"""
+        rec = next((h for h in self.history if h.get("id") == hist_id), None)
+        if not rec or not rec.get("youtube_id"):
+            return {"ok": False, "error": "這支還沒上傳 YouTube"}
+        try:
+            r = self._cloud("ytStatus", {"videoId": rec["youtube_id"], "privacy": privacy,
+                                         "publishAt": _to_rfc3339(publish_at) if publish_at else ""}, timeout=30)
+            if r.get("ok"):
+                rec["privacy"] = "private" if publish_at else privacy
+                rec["publish_at"] = publish_at or ""
+                _save_json(HISTORY_FILE, self.history)
+            return {**r, "record": rec}
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
 
     def unpublish(self, hist_id):
         """撤下：從商品頁移除嵌入的影片，並刪除 YouTube 影片；成功後這筆紀錄回到「已匯出、未上傳」"""
@@ -1262,7 +1337,14 @@ class Api:
         self._status_set(rec.get("sku") or rec["name"], {"youtube": "", "embedded": []})
         return {"ok": True, "msg": "；".join(msgs)}
 
-    def _publish_worker(self, rec, path, title, product_ids):
+    def _publish_worker(self, rec, path, title, product_ids, options=None):
+        try:
+            self._publish_one(rec, path, title, product_ids, options or {})
+        finally:
+            self._busy = False
+
+    def _publish_one(self, rec, path, title, product_ids, options):
+        """上傳 YouTube（可選 公開／私人／定時公開）＋放到商品頁；回傳成功與否，事件照舊發 pub_progress／pub_done"""
         import urllib.request
         import urllib.error
         hid = rec["id"]
@@ -1281,6 +1363,16 @@ class Api:
                     },
                     "status": {"privacyStatus": "public", "selfDeclaredMadeForKids": False},
                 }
+                publish_at = (options.get("publish_at") or "").strip()
+                privacy = (options.get("privacy") or "public").strip()
+                if publish_at:
+                    # 定時公開：先設私人，YouTube 到時間自動切公開（要 RFC3339，介面給的是台灣時間）
+                    meta["status"]["privacyStatus"] = "private"
+                    meta["status"]["publishAt"] = _to_rfc3339(publish_at)
+                elif privacy in ("private", "unlisted"):
+                    meta["status"]["privacyStatus"] = privacy
+                rec["privacy"] = meta["status"]["privacyStatus"]
+                rec["publish_at"] = publish_at
                 emit("upload", "開始上傳 YouTube…", 0)
                 req = urllib.request.Request(
                     "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status&notifySubscribers=false",
@@ -1338,12 +1430,12 @@ class Api:
             self._status_set(rec.get("sku") or rec["name"], {"youtube": rec["youtube_url"], "embedded": rec.get("embedded", [])})
             self._emit("pub_done", {"id": hid, "ok": True, "youtube_url": rec["youtube_url"], "results": results, "record": rec})
             self._cloud_event("upload", rec.get("name", ""), rec.get("youtube_url", ""))
+            return True
         except Exception as e:
             traceback.print_exc()
             self._emit("pub_done", {"id": hid, "ok": False, "error": str(e), "record": rec})
             self._report_error(f"上傳：{rec.get('name', '')}", e, traceback.format_exc())
-        finally:
-            self._busy = False
+            return False
 
 
     # ---------- 底圖庫（官網部門\<拍攝日期>\空景 自動收集） ----------

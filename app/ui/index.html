@@ -23,6 +23,9 @@ a{color:var(--blue)}
 .nav button.on{background:var(--bg);color:var(--ink)}
 .sp{flex:1}
 .chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:13px;font-size:12px;font-weight:500;white-space:nowrap}
+.st3{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:11px;font-size:11.5px;font-weight:600;white-space:nowrap;border:1px solid var(--line);color:var(--faint);background:transparent}
+.st3.on.g{background:var(--green-bg);color:var(--green);border-color:transparent}.st3.on.b{background:var(--blue-bg);color:var(--blue);border-color:transparent}.st3.on.r{background:var(--red-bg);color:var(--red);border-color:transparent}
+.st3.click{cursor:pointer}
 .chip.g{background:var(--green-bg);color:var(--green)}.chip.o{background:var(--orange-bg);color:var(--orange)}.chip.b{background:var(--blue-bg);color:var(--blue)}.chip.r{background:var(--red-bg);color:var(--red)}
 .chip.w{background:var(--field);border:1px solid var(--line2);color:var(--mute)}.chip.k{background:var(--ink);color:var(--onink)}
 .dot{width:8px;height:8px;border-radius:4px;background:currentColor}
@@ -228,6 +231,7 @@ input.ipt::placeholder{color:var(--faint)}
         <div class="bar"><i id="progBar" style="width:0%"></i></div>
         <div class="log" id="progLog" style="display:none"></div>
       </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap" id="doneBar"></div>
       <div class="card" id="doneList" style="display:flex;flex-direction:column;overflow:hidden"></div>
       <div class="sp"></div>
       <button class="btn w" onclick="app.openCapCut()">打開 CapCut</button>
@@ -378,7 +382,9 @@ const app = {
     else if (ev==='all_done') { this.busy=false; this.updateCapcut(false); $('#progTitle').textContent='全部完成'; $('#progSub').textContent=''; $('#progBar').style.width='100%'; this.toast('草稿已產生，可以打開 CapCut'); }
     else if (ev==='update_progress') { const m=$('#updMsg'); if(m) m.textContent=p.msg; }
     else if (ev==='pub_progress') { const b=$('#pubBox'); if(b&&b.dataset.id===p.id){ $('#pubMsg').textContent=p.msg; if(p.pct!=null) $('#pubBar').style.width=Math.round(p.pct*100)+'%'; } }
-    else if (ev==='pub_done') { const rec=this.state.history.find(x=>x.id===p.id); if(rec&&p.record) Object.assign(rec,p.record); if(p.ok){ this.toast('已上傳 YouTube'+(p.results&&p.results.length?`，放到 ${p.results.filter(x=>x.ok).length} 個商品頁`:'')); } else this.toast(p.error,true); if(rec) this.showDetail(rec); }
+    else if (ev==='batch_progress') { $('#progTitle').textContent=`批次 ${p.i+1} / ${p.n}`; $('#progSub').textContent=p.name||''; $('#progBar').style.width=Math.round(p.i/Math.max(1,p.n)*100)+'%'; }
+    else if (ev==='batch_done') { $('#progTitle').textContent=`批次完成 ${p.done} / ${p.n}`; $('#progSub').textContent=''; $('#progBar').style.width='100%'; this.doneSel.clear(); this.renderHistory(); this.toast(`批次完成：成功 ${p.done} / ${p.n}`, p.done<p.n); }
+    else if (ev==='pub_done') { const rec=this.state.history.find(x=>x.id===p.id); if(rec&&p.record) Object.assign(rec,p.record); if(p.ok){ this.toast('已上傳 YouTube'+(p.results&&p.results.length?`，放到 ${p.results.filter(x=>x.ok).length} 個商品頁`:'')); } else this.toast(p.error,true); this.renderHistory(); if(rec&&$('#detail').dataset.id===rec.id) this.showDetail(rec); }
     else if (ev==='music_analyzing') { $('#mAnalyzing').textContent = p.i<p.n ? `分析 ${p.i+1}/${p.n}　${p.name}` : ''; if (p.i>=p.n) this.reloadMusic(); }
   },
   go(v) { this.view=v; document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='view-'+v)); document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on', b.dataset.view===v)); if(v==='todo'&&!this.todo) this.loadTodo(); if(v==='bg'&&!this.bg) this.reloadBg(); if(v==='settings'&&!this._errLoaded){ this._errLoaded=true; this.loadErrors(); this.lineStatus(); } },
@@ -469,13 +475,46 @@ const app = {
   publishBox(r){
     if(!r.exported) return '';
     if(r.youtube_id) return `<div id="pubBox" data-id="${r.id}" style="padding:12px 18px;border-top:1px solid var(--line3);background:var(--sub);display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;align-items:center;gap:10px"><span class="chip g">已上傳 YouTube</span><a href="#" onclick="app.call('open_url','${r.youtube_url}');return false" style="font-size:13px">${esc(r.youtube_title||r.youtube_url)}</a><div class="sp"></div><span class="chip w">已放到 ${(r.embedded||[]).length} 個商品頁</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span class="chip b">${esc(this.ytLabel(r))}</span><a href="#" onclick="app.call('open_url','${r.youtube_url}');return false" style="font-size:13px">${esc(r.youtube_title||r.youtube_url)}</a><div class="sp"></div>${r.privacy==='private'||r.publish_at?`<button class="btn w sm" onclick="app.setStatus('${r.id}','public','')">立即公開</button>`:`<button class="btn l sm" onclick="app.setStatus('${r.id}','private','')">改私人</button>`}<span class="chip ${(r.embedded||[]).length?'r':'w'}">Shopline ${(r.embedded||[]).length} 個商品頁</span></div>
         <div id="pubProducts" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--mute)">讀取商品…</div>
         <div style="display:flex;gap:8px;align-items:center"><div class="bar" style="flex:1"><i id="pubBar" style="width:0"></i></div><span id="pubMsg" style="font-size:12px;color:var(--mute);min-width:120px"></span><button class="btn w sm" onclick="app.doPublish('${r.id}')">再放到勾選的商品頁</button><button class="btn w sm" style="color:var(--red)" onclick="app.unpublish('${r.id}')">撤下</button></div></div>`;
     return `<div id="pubBox" data-id="${r.id}" style="padding:12px 18px;border-top:1px solid var(--line3);background:var(--sub);display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--mute);flex:none">YouTube 標題</span><input class="ipt" id="pubTitle" style="flex:1;height:32px" placeholder="產生中…"><button class="btn l sm" onclick="app.loadTitles('${r.id}')">換一句</button></div>
         <div id="pubProducts" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--mute)">讀取商品…</div>
+        <div style="display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mute)"><span style="flex:none">公開方式</span>${this.privacyPicker('pub')}</div>
         <div style="display:flex;gap:8px;align-items:center"><div class="bar" style="flex:1"><i id="pubBar" style="width:0"></i></div><span id="pubMsg" style="font-size:12px;color:var(--mute);min-width:120px"></span><button class="btn k" id="pubBtn" onclick="app.doPublish('${r.id}')">上傳 YouTube 並放到商品頁</button></div></div>`;
+  },
+  nextTen(){ const d=new Date(); if(d.getHours()>=22) d.setDate(d.getDate()+1); d.setHours(22,0,0,0); const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; },
+  privacyPicker(prefix){ return `<select class="sel" id="${prefix}Priv" style="height:30px;width:auto" onchange="$('#${prefix}At').style.display=this.value==='schedule'?'':'none'"><option value="public">立即公開</option><option value="schedule">定時公開</option><option value="private">私人（之後手動公開）</option></select><input class="ipt" type="datetime-local" id="${prefix}At" value="${this.nextTen()}" style="height:30px;width:200px;display:none">`; },
+  pubOptions(prefix){ const v=($('#'+prefix+'Priv')||{}).value||'public'; return v==='schedule'?{privacy:'private',publish_at:($('#'+prefix+'At')||{}).value||''}:{privacy:v,publish_at:''}; },
+  async setStatus(id,privacy,at){ const r=await this.call('yt_set_status',id,privacy,at||''); if(!r||!r.ok){ this.toast(r?r.error:'失敗',true); return; } const rec=this.state.history.find(x=>x.id===id); if(rec&&r.record) Object.assign(rec,r.record); this.renderHistory(); if(rec) this.showDetail(rec); this.toast(at?'已設定時公開':(privacy==='public'?'已公開':'已改為私人')); },
+  doneCheck(id,on){ on?this.doneSel.add(id):this.doneSel.delete(id); this.renderHistory(); },
+  doneSelectReady(){ (this.state.history||[]).filter(r=>r.ok&&r.exported&&!r.youtube_id).forEach(r=>this.doneSel.add(r.id)); this.renderHistory(); },
+  batchUploadOpen(){
+    const sel=(this.state.history||[]).filter(r=>this.doneSel.has(r.id)&&r.exported&&!r.youtube_id);
+    $('#modalBox').innerHTML=`<div style="padding:18px;border-bottom:1px solid var(--line3);font-weight:700">批次上傳 YouTube（${sel.length} 支）</div>
+      <div style="padding:18px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:8px;align-items:center;font-size:13px"><span style="flex:none;width:72px">公開方式</span>${this.privacyPicker('bt')}</div>
+        <label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer"><input type="checkbox" id="btEmbed" checked style="width:16px;height:16px;margin:0">同時放到商品頁（同名各色全部）</label>
+        <div style="font-size:12px;color:var(--mute)">標題用 AI 產生的第一句；要改的那支之後點進去單獨改。</div>
+        <div style="max-height:200px;overflow:auto;font-size:12px;color:var(--mute);line-height:1.7">${sel.map(r=>'・'+esc(r.name)).join('<br>')}</div>
+      </div>
+      <div style="padding:14px 18px;border-top:1px solid var(--line3);display:flex;gap:10px;justify-content:flex-end"><button class="btn w" onclick="$('#modal').classList.remove('show')">取消</button><button class="btn k" onclick="app.batchUploadGo()">開始</button></div>`;
+    $('#modal').classList.add('show'); setTimeout(()=>{ const s=$('#btPriv'); if(s){ s.value='schedule'; $('#btAt').style.display=''; } },0);
+  },
+  async batchUploadGo(){
+    const sel=(this.state.history||[]).filter(r=>this.doneSel.has(r.id)&&r.exported&&!r.youtube_id);
+    const opt={...this.pubOptions('bt'), embed:$('#btEmbed').checked};
+    if(opt.publish_at===''&&($('#btPriv')||{}).value==='schedule'){ this.toast('請選定時公開的時間',true); return; }
+    $('#modal').classList.remove('show');
+    const r=await this.call('batch_publish', sel.map(x=>({id:x.id})), opt); if(!r||!r.ok){ this.toast(r?r.error:'失敗',true); return; }
+    $('#progTitle').textContent=`批次上傳 0 / ${r.n}`; $('#progSub').textContent=''; $('#progBar').style.width='0%'; this.go('done');
+  },
+  async batchSync(){
+    const sel=(this.state.history||[]).filter(r=>this.doneSel.has(r.id)&&r.youtube_id&&!(r.embedded||[]).length);
+    if(!sel.length) return;
+    const r=await this.call('batch_publish', sel.map(x=>({id:x.id})), {embed:true}); if(!r||!r.ok){ this.toast(r?r.error:'失敗',true); return; }
+    $('#progTitle').textContent=`批次同步 0 / ${r.n}`; $('#progSub').textContent=''; $('#progBar').style.width='0%';
   },
   async unpublish(id){
     if(!confirm('撤下：會從商品頁移除這支影片，並刪除 YouTube 上的影片。確定？')) return;
@@ -508,7 +547,7 @@ const app = {
     if(!rec.youtube_id && !title.trim()){ this.toast('請先填 YouTube 標題',true); return; }
     if(rec.youtube_id && !ids.length){ this.toast('請勾選要放的商品',true); return; }
     const btn=$('#pubBtn'); if(btn) btn.disabled=true;
-    const r=await this.call('publish', id, title, ids);
+    const r=await this.call('publish', id, title, ids, this.pubOptions('pub'));
     if(!r||!r.ok){ this.toast(r?r.error:'失敗',true); if(btn) btn.disabled=false; return; }
     $('#pubMsg').textContent='開始…';
   },
@@ -801,12 +840,28 @@ const app = {
   },
   progress(job,i,n,name){ $('#progTitle').textContent=`產生中 ${job+1} / ${this._jobsN||job+1}`; $('#progSub').textContent=name||''; $('#progBar').style.width=Math.round(i/Math.max(1,n)*100)+'%'; },
   fmtTime(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return iso; const p=n=>String(n).padStart(2,'0'); const now=new Date(); const sameDay=d.toDateString()===now.toDateString(); return (sameDay?'今天 ':`${d.getMonth()+1}/${d.getDate()} `)+`${p(d.getHours())}:${p(d.getMinutes())}`; },
+  doneSel:new Set(),
+  ytLabel(r){ if(!r.youtube_id) return 'YouTube'; if(r.publish_at) return 'YouTube 定時 '+this.fmtTime(r.publish_at); if(r.privacy==='private') return 'YouTube 私人'; if(r.privacy==='unlisted') return 'YouTube 不公開'; return 'YouTube ✓'; },
   renderHistory(){
-    const h=[...(this.state.history||[])].reverse().slice(0,30);
-    $('#doneList').innerHTML=h.map(r=>`<div class="li" style="cursor:pointer" onclick="app.showDetailId('${r.id}')">
-      ${r.ok?'<div class="ok">✓</div>':'<div class="chip r">✕</div>'}<div style="flex:1;min-width:0"><div style="font-weight:500;line-height:1.3">${esc(r.name)}</div><div style="font-size:12px;color:var(--mute);margin-top:2px">${this.fmtTime(r.created)}${r.layout_name?'・'+esc(r.layout_name):''}${r.total_sec?'・'+r.total_sec+' 秒':''}${r.youtube_id?'・<span style="color:var(--green)">YouTube ✓</span>':''}${r.draft_name&&r.draft_name!==r.name?'・草稿「'+esc(r.draft_name)+'」':''}</div></div>
-      <label onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" ${r.exported?'checked':''} onchange="app.markExported('${r.id}',this.checked,this)" style="width:16px;height:16px;margin:0;accent-color:var(--green)">已匯出</label>
+    const all=(this.state.history||[]).filter(r=>r.ok);
+    const h=[...(this.state.history||[])].reverse().slice(0,40);
+    const ids=new Set(all.map(r=>r.id)); [...this.doneSel].forEach(id=>{ if(!ids.has(id)) this.doneSel.delete(id); });
+    $('#doneList').innerHTML=h.map(r=>`<div class="li" style="cursor:pointer;gap:10px" onclick="app.showDetailId('${r.id}')">
+      ${r.ok?`<input type="checkbox" ${this.doneSel.has(r.id)?'checked':''} onclick="event.stopPropagation()" onchange="app.doneCheck('${r.id}',this.checked)" style="width:16px;height:16px;margin:0;flex:none">`:'<div class="chip r">✕</div>'}
+      <div style="flex:1;min-width:0"><div style="font-weight:500;line-height:1.3">${esc(r.name)}</div>
+        <div style="font-size:12px;color:var(--mute);margin-top:2px">${this.fmtTime(r.created)}${r.layout_name?'・'+esc(r.layout_name):''}${r.total_sec?'・'+r.total_sec+' 秒':''}${r.draft_name&&r.draft_name!==r.name?'・草稿「'+esc(r.draft_name)+'」':''}</div>
+        ${r.ok?`<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+          <span class="st3 click ${r.exported?'on g':''}" onclick="event.stopPropagation();app.markExported('${r.id}',${!r.exported},null)" title="點一下切換">已匯出</span>
+          <span class="st3 ${r.youtube_id?'on b':''}">${this.ytLabel(r)}</span>
+          <span class="st3 ${(r.embedded||[]).length?'on r':''}">Shopline${(r.embedded||[]).length?' ✓ '+(r.embedded||[]).length:''}</span></div>`:''}
+      </div>
       <a href="#" title="刪除這筆紀錄" onclick="event.stopPropagation();app.deleteHistory('${r.id}');return false" style="color:var(--faint);text-decoration:none;padding:0 4px;font-size:14px">✕</a></div>`).join('')||`<div style="padding:24px;text-align:center;color:var(--mute)">還沒有產生過草稿</div>`;
+    const sel=all.filter(r=>this.doneSel.has(r.id));
+    const canUp=sel.filter(r=>r.exported&&!r.youtube_id).length, canSync=sel.filter(r=>r.youtube_id&&!(r.embedded||[]).length).length;
+    const ready=all.filter(r=>r.exported&&!r.youtube_id).length;
+    $('#doneBar').innerHTML=`<a href="#" onclick="app.doneSelectReady();return false" style="font-size:12px;color:var(--mute)">全選可上傳（${ready}）</a>${sel.length?`<a href="#" onclick="app.doneSel.clear();app.renderHistory();return false" style="font-size:12px;color:var(--mute)">取消選取</a>`:''}<div class="sp"></div>
+      <button class="btn k sm" ${canUp?'':'disabled'} onclick="app.batchUploadOpen()">批次上傳 YouTube（${canUp}）</button>
+      <button class="btn w sm" ${canSync?'':'disabled'} onclick="app.batchSync()">批次同步 Shopline（${canSync}）</button>`;
     const stale=(this.state.history||[]).filter(r=>!r.exported&&!r.youtube_id).length;
     if(stale>1) $('#doneList').insertAdjacentHTML('beforeend',`<div style="padding:10px 14px;text-align:right"><a href="#" onclick="app.clearHistory();return false" style="font-size:12px;color:var(--mute)">清除未匯出的 ${stale} 筆紀錄</a></div>`);
   },
@@ -825,7 +880,7 @@ const app = {
     const r=await this.call('history_delete',ids); if(!r||!r.ok){ this.toast('清除失敗',true); return; }
     this.state.history=this.state.history.filter(x=>!ids.includes(x.id)); $('#detail').innerHTML=''; this.renderHistory(); this.toast(`已清除 ${ids.length} 筆`);
   },
-  async markExported(id,checked,el){ const r=await this.call('mark_exported',id,checked); if(!r||!r.ok){ el.checked=!checked; this.toast(r?r.error+(r.export_folder?'':'（請到設定指定成品資料夾）'):'失敗',true); return; } const rec=this.state.history.find(x=>x.id===id); if(rec){ rec.exported=checked; if(r.export_file) rec.export_file=r.export_file; } this.toast(checked?`已記錄匯出${r.music_uses!=null?'・這首歌用過 '+r.music_uses+' 次':''}`:'已取消'); this.reloadMusic(); const open=$('#pubBox')?$('#pubBox').dataset.id:null; const detailOpen=$('#detail')&&$('#detail').dataset.id===id; if(rec&&(detailOpen||checked)) this.showDetail(rec); },
+  async markExported(id,checked,el){ const r=await this.call('mark_exported',id,checked); if(!r||!r.ok){ if(el) el.checked=!checked; this.toast(r?r.error+(r.export_folder?'':'（請到設定指定成品資料夾）'):'失敗',true); return; } const rec=this.state.history.find(x=>x.id===id); if(rec){ rec.exported=checked; if(r.export_file) rec.export_file=r.export_file; } this.toast(checked?`已記錄匯出${r.music_uses!=null?'・這首歌用過 '+r.music_uses+' 次':''}`:'已取消'); this.reloadMusic(); const open=$('#pubBox')?$('#pubBox').dataset.id:null; const detailOpen=$('#detail')&&$('#detail').dataset.id===id; if(rec&&(detailOpen||checked)) this.showDetail(rec); },
   showDetailId(id){ const r=(this.state.history||[]).find(x=>x.id===id)||(this.results||[]).find(x=>x.id===id); if(r) this.showDetail(r); },
   showDetail(r){
     const d=$('#detail');
