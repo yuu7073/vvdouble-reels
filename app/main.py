@@ -508,6 +508,28 @@ class Api:
         self._emit("analyzing", {"i": total, "n": total, "name": ""})
         return out
 
+    # ---------- 音樂試聽：能量曲線、拍點、建議起點 ----------
+    def music_info(self, path):
+        if not path or not os.path.exists(path):
+            return {"ok": False, "error": "找不到音樂檔"}
+        key = os.path.basename(path)
+        meta = dict(self._music_index().get(key, {}))
+        if not meta.get("wave") or not meta.get("bpm"):
+            try:
+                beats, bpm = g.detect_beats(path)
+                if beats:
+                    si, _ = g.music_start_index(beats, path, 20)
+                    wave, dur = g.energy_curve(path)
+                    meta.update({"bpm": round(bpm), "start": round(beats[si], 1), "wave": wave, "duration": dur, "beat0": round(beats[0], 3)})
+                    idx = self._music_index()
+                    idx.setdefault(key, {}).update({k: meta[k] for k in ("bpm", "start", "wave", "duration", "beat0")})
+                    self._music_save(idx)
+            except Exception as e:
+                return {"ok": False, "error": str(e)}
+        from urllib.parse import quote
+        return {"ok": True, "bpm": meta.get("bpm"), "start": meta.get("start"), "wave": meta.get("wave") or [],
+                "duration": meta.get("duration") or 0, "beat0": meta.get("beat0") or 0, "url": "/media?p=" + quote(path)}
+
     # ---------- 節奏預覽（和產生時同一套 planner） ----------
     def plan_preview(self, spec):
         import planner as P
@@ -1686,9 +1708,14 @@ class Api:
                 meta = idx.setdefault(f, {})
                 meta["duration"] = round(_probe_duration(fp), 1)
                 if beats:
-                    si, _ = g.music_start_index(beats, fp, self.settings.get("max_total", 28))
+                    si, _ = g.music_start_index(beats, fp, 20)
                     meta["bpm"] = round(bpm)
                     meta["start"] = round(beats[si], 1)
+                    wave, dur = g.energy_curve(fp)
+                    if wave:
+                        meta["wave"] = wave
+                        meta["duration"] = dur
+                    meta["beat0"] = round(beats[0], 3)
                 else:
                     meta["bpm"] = None
             except Exception:
@@ -1773,6 +1800,39 @@ def _serve(api):
 
         def do_GET(self):
             path = self.path.split("?")[0]
+            if path == "/media":
+                from urllib.parse import urlparse, parse_qs
+                q = parse_qs(urlparse(self.path).query)
+                fp = (q.get("p") or [""])[0]
+                if not fp or not os.path.isfile(fp) or not fp.lower().endswith(AUDIO_EXT + VIDEO_EXT):
+                    return self._send(404, b"not found", "text/plain")
+                size = os.path.getsize(fp)
+                rng = self.headers.get("Range")
+                start, end = 0, size - 1
+                if rng and rng.startswith("bytes="):
+                    a, _, b = rng[6:].partition("-")
+                    start = int(a) if a else max(0, size - int(b))
+                    end = int(b) if (b and a) else size - 1
+                    end = min(end, size - 1)
+                ext = os.path.splitext(fp)[1].lower()
+                ctype = {".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".aac": "audio/aac", ".wav": "audio/wav", ".flac": "audio/flac", ".ogg": "audio/ogg", ".mp4": "video/mp4", ".mov": "video/quicktime"}.get(ext, "application/octet-stream")
+                self.send_response(206 if rng else 200)
+                self.send_header("Content-Type", ctype)
+                self.send_header("Accept-Ranges", "bytes")
+                self.send_header("Content-Length", str(end - start + 1))
+                if rng:
+                    self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+                self.end_headers()
+                with open(fp, "rb") as f:
+                    f.seek(start)
+                    left = end - start + 1
+                    while left > 0:
+                        chunk = f.read(min(1 << 20, left))
+                        if not chunk:
+                            break
+                        self.wfile.write(chunk)
+                        left -= len(chunk)
+                return
             name = "index.html" if path in ("/", "") else os.path.basename(path)
             fp = os.path.join(ui_dir, name)
             if not os.path.isfile(fp):

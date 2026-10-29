@@ -280,16 +280,35 @@ def music_start_index(beats, bgm_path, length_sec):
         return 0, "開頭"
     rms, fps = LAST_ENERGY
     song_len = len(rms) / fps
+    ref = float(rms.max()) or 1.0
     best, best_score = 0, -1.0
-    for i in range(0, len(beats), 4):          # 每 4 拍（一小節）找一次
+    bar = 4
+    for i in range(0, len(beats), bar):        # 每小節找一次
         st = beats[i]
         if st + length_sec > song_len - 3:      # 留到結尾前 3 秒
             break
         a, b = int(st * fps), int((st + length_sec) * fps)
-        score = float(rms[a:b].mean())
+        energy = float(rms[a:b].mean()) / ref
+        # 爆點：這一小節起的兩小節，比前兩小節明顯變大（副歌進點），加分
+        pre_a = int(max(0.0, st - 2 * (beats[min(i + bar, len(beats) - 1)] - st)) * fps)
+        post_b = int(min(song_len, st + 2 * (beats[min(i + bar, len(beats) - 1)] - st)) * fps)
+        jump = (float(rms[a:post_b].mean()) - float(rms[pre_a:a].mean())) / ref if a > pre_a and post_b > a else 0.0
+        score = energy + 0.6 * max(0.0, jump)
         if score > best_score:
             best, best_score = i, score
     return best, "自動挑段"
+
+
+def energy_curve(path, n=240):
+    """整首歌的能量曲線（0–1，n 個點）＋長度，畫音軌用；detect_beats 之後 LAST_ENERGY 才有值"""
+    if LAST_ENERGY is None:
+        return None, 0.0
+    rms, fps = LAST_ENERGY
+    song_len = len(rms) / fps
+    step = max(1, len(rms) // n)
+    pts = [float(rms[i:i + step].mean()) for i in range(0, len(rms), step)][:n]
+    mx = max(pts) or 1.0
+    return [round(p / mx, 3) for p in pts], round(song_len, 2)
 
 
 def detect_beats(path):

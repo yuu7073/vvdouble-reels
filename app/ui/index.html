@@ -23,6 +23,16 @@ a{color:var(--blue)}
 .nav button.on{background:var(--bg);color:var(--ink)}
 .sp{flex:1}
 .chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:13px;font-size:12px;font-weight:500;white-space:nowrap}
+.wv{position:absolute;bottom:0;width:1px;background:var(--line2,#3a4150)}
+.wv.in{background:var(--blue)}
+.wvsel{position:absolute;top:0;bottom:0;background:rgba(79,140,255,.18);border-left:2px solid var(--blue);border-right:2px solid var(--blue);pointer-events:none}
+.wvpos{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.8;pointer-events:none}
+.mgrp{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:4px 2px 0;font-size:12.5px}
+.mgrp b{font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:14px;background:var(--sub);border:1px solid var(--line);font-size:12.5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill.warn{border-color:var(--orange);color:var(--orange)}
+.pill.bad{border-color:var(--red);color:var(--red)}
+.clip .warnchip{position:absolute;left:6px;bottom:6px;z-index:2;font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.55);color:var(--orange)}
 .rb{border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;line-height:1.25;overflow:hidden;white-space:nowrap;min-width:0}
 .rb.l{background:#3b3f6e;color:#cfd2ff}.rb.m{background:var(--blue-bg);color:var(--blue)}.rb.d{background:var(--orange-bg);color:var(--orange)}
 .thumb .use{position:absolute;right:6px;top:6px;width:18px;height:18px;border-radius:4px;border:1px solid rgba(255,255,255,.7);background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;cursor:pointer;z-index:2}
@@ -190,7 +200,12 @@ input.ipt::placeholder{color:var(--faint)}
           <button class="btn l sm" style="flex:1" onclick="app.pickMusic('least_used')">最久沒用的一首</button>
           <button class="btn l sm" style="flex:1" onclick="app.pickMusic('random')">隨機</button>
         </div>
-        <div class="row"><span>開始位置</span><input class="ipt" id="musicStart" style="width:120px" placeholder="自動挑段" oninput="app.setMusicStart(this.value)"></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn k sm" id="musicPlay" style="width:36px;height:36px;border-radius:18px;padding:0;flex:none" onclick="app.musicToggle()" aria-label="試聽"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+          <div id="musicWave" style="flex:1;height:36px;border-radius:8px;background:var(--sub);border:1px solid var(--line);position:relative;overflow:hidden;cursor:pointer"></div>
+        </div>
+        <div class="row"><span>從第幾秒</span><div style="display:flex;gap:6px;align-items:center"><input class="ipt" id="musicStart" style="width:80px" placeholder="自動" oninput="app.setMusicStart(this.value)"><span id="musicHint" style="font-size:12px;color:var(--faint)"></span></div></div>
+        <audio id="musicAudio" preload="none"></audio>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:10px">
@@ -675,7 +690,7 @@ const app = {
       // 先從檔名讀：模特_著大碼舒適 (1).MP4 / 近拍 (1).mov / 名字@12
       const stem=c.name.replace(/\.[^.]+$/,'').replace(/\s*@\d+(\.\d+)?\s*$/,'').replace(/\s*[\(（]\d+[\)）]\s*$/,'').replace(/^\d+[_\-\s]+/,'');
       const parts=stem.split(/[_\-]/).map(x=>x.trim()).filter(Boolean);
-      const byName=this.state.models.find(m=>parts[0]&&parts[0].toUpperCase()===m.name.toUpperCase());
+      const up=c.name.toUpperCase(); const byName=this.state.models.find(m=>parts[0]&&parts[0].toUpperCase()===m.name.toUpperCase())||this.state.models.filter(m=>m.name&&up.includes(m.name.toUpperCase())).sort((a,b)=>b.name.length-a.name.length)[0];
       const isClose=c.closeup||/近拍/.test(c.name);
       let size='', fit='';
       const wear=parts.find(x=>x.startsWith('著'));
@@ -736,6 +751,7 @@ const app = {
       $('#lenBtns').innerHTML=btn('20','20 秒',sub('20'))+btn('25','25 秒',sub('25'))+btn('fit','依片段',sub('fit'));
       const x=r.modes[mode]; if(!x||x.error){ $('#estTotal').textContent='—'; return; }
       $('#estTotal').textContent=`${x.total} 秒・${x.seq.length} 段${r.bpm?'・'+r.bpm+' BPM':''}`;
+      this._planTotal=x.total; this.musicDraw();
       $('#rhythm').innerHTML=x.seq.map(sg=>`<div class="rb ${sg.kind==='layout'?'l':(sg.kind==='close'?'d':'m')}" style="flex:${Math.max(1,Math.round(sg.sec*10))}" title="${esc(sg.name)}"><span>${sg.kind==='layout'?'版型':(sg.kind==='close'?'近拍':esc(sg.model||'滿版'))}</span><span style="opacity:.75">${sg.kind==='layout'?sg.sec+'s':(sg.beats?sg.beats+' 拍':sg.sec+'s')}</span></div>`).join('');
       $('#estUse').textContent=x.skipped.length?`這次沒放：${x.skipped.join('、')}`:'選入的全部放入';
     }, 250);
@@ -743,18 +759,30 @@ const app = {
   renderGrid() {
     const P=this.P(); const g=$('#grid'); const ms=this.state.models;
     $('#emptyHint').style.display=P.clips.length?'none':'flex'; g.style.display=P.clips.length?'grid':'none';
-    g.innerHTML=P.clips.map((c,i)=>`
-      <div class="card clip ${c.closeup?'closeup':''} ${c.use===false?'unused':''}" draggable="true" data-i="${i}">
-        <div class="thumb">${c.thumb?`<img src="${c.thumb}" alt="">`:''}<div class="use ${c.use===false?'':'on'}" title="選入／不選入" onclick="app.setClip(${i},'use',${c.use===false?'true':'false'})">${c.use===false?'':'✓'}</div>${c.strip?`<div class="strip" style="background-image:url(${c.strip})" onmousemove="app.scrub(this,event)"><i><b></b></i></div>`:''}<div class="num">${i+1}</div><div class="dur">${c.duration}s</div><button class="del" onclick="app.removeClip(${i})" title="移除">✕</button></div>
-        ${c.closeup?`<div class="ipt" style="color:var(--faint)">CLOSE UP DETAIL</div>`:`
+    const seen={}; P.clips.forEach(c=>{ seen[c.path]=(seen[c.path]||0)+1; });
+    const groups=[]; const idxOf={};
+    P.clips.forEach((c,i)=>{ const k=c.closeup?'__close':(c.model||'__none'); if(!(k in idxOf)){ idxOf[k]=groups.length; groups.push({k,items:[]}); } groups[idxOf[k]].items.push(i); });
+    groups.sort((a,b)=>(a.k==='__close')-(b.k==='__close'));
+    const card=(c,i)=>{
+      const sh=(P.modelSizes||{})[(c.model||'').toUpperCase()]; const noModel=!c.closeup&&!c.model; const noSize=!c.closeup&&c.model&&!(sh&&sh.size);
+      const warn=(c.duration&&c.duration<2.5)?'太短':(seen[c.path]>1?'重複':'');
+      const edit=c._edit;
+      return `<div class="card clip ${c.closeup?'closeup':''} ${c.use===false?'unused':''}" draggable="true" data-i="${i}">
+        <div class="thumb">${c.thumb?`<img src="${c.thumb}" alt="">`:''}<div class="use ${c.use===false?'':'on'}" title="選入／不選入" onclick="app.setClip(${i},'use',${c.use===false?'true':'false'})">${c.use===false?'':'✓'}</div>${c.strip?`<div class="strip" style="background-image:url(${c.strip})" onmousemove="app.scrub(this,event)"><i><b></b></i></div>`:''}<div class="num">${i+1}</div><div class="dur">${c.duration}s</div>${warn?`<span class="warnchip">${warn}</span>`:''}<button class="del" onclick="app.removeClip(${i})" title="移除">✕</button></div>
+        ${c.closeup?`<div class="pill" style="color:var(--faint)" onclick="app.setClip(${i},'closeup',false)">近拍・點一下改成滿版</div>`:(edit?`
         <div class="two">
           <select class="sel" onchange="app.setClip(${i},'model',this.value)">${ms.map(m=>`<option ${m.name===c.model?'selected':''}>${esc(m.name)}</option>`).join('')}${ms.some(m=>m.name===c.model)?'':`<option selected>${esc(c.model||'選模特')}</option>`}</select>
           <select class="sel" onchange="app.setClip(${i},'size',this.value)">${SIZES.map(s=>`<option ${s===c.size?'selected':''}>${s}</option>`).join('')}</select>
         </div>
-        <div class="two"><input class="ipt" value="${esc(c.fit)}" placeholder="舒適" oninput="app.setClip(${i},'fit',this.value)" title="MODEL 卡第三行：著＋尺碼＋這個字"><button class="btn l sm" onclick="app.applyToRest(${i})" title="套用到後面">↓</button></div>`}
-        <div class="row" style="min-height:24px"><span style="color:var(--mute)">近拍</span><div class="tog ${c.closeup?'on':''}" onclick="app.setClip(${i},'closeup',${!c.closeup})"></div></div>
-        <div class="row" style="min-height:24px"><span style="color:var(--mute)">從第幾秒</span><input class="ipt" style="width:70px;height:24px" placeholder="自動" value="${esc(c.start)}" oninput="app.setClip(${i},'start',this.value)"></div>
-      </div>`).join('');
+        <div class="two"><input class="ipt" value="${esc(c.fit)}" placeholder="舒適" oninput="app.setClip(${i},'fit',this.value)"><button class="btn l sm" onclick="app.editDone(${i})">完成</button></div>
+        <div style="display:flex;gap:8px;font-size:12px"><a href="#" onclick="app.applySame(${i});return false">套用到其他 ${P.clips.filter((x,j)=>j!==i&&!x.closeup&&x.model===c.model).length} 支${esc(c.model||'')}</a><div class="sp"></div><a href="#" style="color:var(--mute)" onclick="app.setClip(${i},'closeup',true);return false">改成近拍</a></div>`:`
+        <div class="pill ${noModel?'bad':(noSize?'warn':'')}" onclick="app.editOpen(${i})" title="點一下編輯">${noModel?'選模特':esc(c.model)+'・'+esc(c.size||'?')+'・'+esc(c.fit||'')}</div>`)}
+        <div class="row" style="min-height:22px"><span style="color:var(--mute);font-size:12px">從第幾秒</span><input class="ipt" style="width:64px;height:22px;font-size:12px" placeholder="自動" value="${esc(c.start)}" oninput="app.setClip(${i},'start',this.value)"></div>
+      </div>`;
+    };
+    g.innerHTML=groups.map(gr=>{ const items=gr.items; const first=P.clips[items[0]]; const sh=gr.k!=='__close'&&gr.k!=='__none'?(P.modelSizes||{})[gr.k.toUpperCase()]:null;
+      const head=gr.k==='__close'?`<b>近拍</b><span style="color:var(--mute)">${items.length} 支</span>`:(gr.k==='__none'?`<b style="color:var(--red)">未指定模特</b><span style="color:var(--mute)">${items.length} 支</span>`:`<b>${esc(gr.k)}</b><span style="color:var(--mute)">${items.length} 支${sh&&sh.size?'・商品表 '+esc(sh.size)+' '+esc(sh.fit||''):''}</span><div class="sp"></div><a href="#" style="font-size:12px" onclick="app.groupSize('${esc(gr.k)}');return false">整組改尺寸</a>`);
+      return `<div class="mgrp">${head}</div>`+items.map(i=>card(P.clips[i],i)).join(''); }).join('');
     g.querySelectorAll('.clip').forEach(el=>{
       el.addEventListener('dragstart',e=>{ if(e.target.closest('input,select')) {e.preventDefault();return;} e.dataTransfer.setData('text/plain',el.dataset.i); el.classList.add('ghost'); e.dataTransfer.effectAllowed='move'; });
       el.addEventListener('dragend',()=>el.classList.remove('ghost'));
@@ -764,6 +792,53 @@ const app = {
     });
     this.renderCounts();
   },
+  editOpen(i){ this.P().clips.forEach(c=>c._edit=false); this.P().clips[i]._edit=true; this.renderGrid(); },
+  editDone(i){ this.P().clips[i]._edit=false; this.renderGrid(); },
+  applySame(i){ const src=this.P().clips[i]; let n=0; this.P().clips.forEach((c,j)=>{ if(j!==i&&!c.closeup&&c.model===src.model){ c.size=src.size; c.fit=src.fit; n++; } }); src._edit=false; this.renderGrid(); this.toast(`已套用到 ${n} 支 ${src.model}`); },
+  groupSize(model){ const P=this.P(); const cur=P.clips.find(c=>!c.closeup&&c.model===model); if(!cur) return; const size=prompt(`${model} 整組尺寸（${SIZES.join('／')}）`, cur.size||''); if(size==null) return; const fit=prompt('感受（舒適／寬鬆／合身…）', cur.fit||'舒適'); if(fit==null) return; P.clips.forEach(c=>{ if(!c.closeup&&c.model===model){ c.size=size.trim()||c.size; c.fit=fit.trim(); } }); this.renderGrid(); },
+
+  /* ---------- music player ---------- */
+  _mi:null,
+  async musicLoad(path){
+    const a=$('#musicAudio'); const w=$('#musicWave'); if(!w) return;
+    if(this._mi&&this._mi.path!==path){ a.pause(); }
+    if(!path){ this._mi=null; w.innerHTML=''; $('#musicHint').textContent=''; return; }
+    if(this._mi&&this._mi.path===path){ this.musicDraw(); return; }
+    w.innerHTML=`<span style="position:absolute;left:10px;top:9px;font-size:12px;color:var(--faint)">分析中…</span>`;
+    const r=await this.call('music_info',path); if(!r||!r.ok){ w.innerHTML=`<span style="position:absolute;left:10px;top:9px;font-size:12px;color:var(--red)">${esc(r?r.error:'無法讀取')}</span>`; return; }
+    this._mi={path,...r}; a.src=r.url; a.load();
+    if(this.P().musicStart===''||this.P().musicStart==null) $('#musicStart').placeholder=`自動 ${this.fmtSec(r.start)}`;
+    this.musicDraw();
+  },
+  fmtSec(x){ x=+x||0; const m=Math.floor(x/60), s=Math.round(x%60); return `${m}:${String(s).padStart(2,'0')}`; },
+  musicWindow(){ const P=this.P(); const mi=this._mi; if(!mi) return [0,0]; const st=(P.musicStart!==''&&P.musicStart!=null)?+P.musicStart:(mi.start||0); const len=this._planTotal||20; return [st, Math.min(mi.duration||st+len, st+len)]; },
+  musicDraw(){
+    const mi=this._mi, w=$('#musicWave'); if(!mi||!w) return; const n=(mi.wave||[]).length; if(!n){ w.innerHTML=''; return; }
+    const [s0,s1]=this.musicWindow(); const W=w.clientWidth||300; const dur=mi.duration||1;
+    let html='';
+    for(let i=0;i<n;i++){ const t=i/n*dur; const h=Math.max(2,Math.round(mi.wave[i]*30)); html+=`<div class="wv ${t>=s0&&t<=s1?'in':''}" style="left:${(i/n*100).toFixed(2)}%;height:${h}px"></div>`; }
+    html+=`<div class="wvsel" style="left:${(s0/dur*100).toFixed(2)}%;width:${((s1-s0)/dur*100).toFixed(2)}%"></div><div class="wvpos" id="wvpos" style="left:${(s0/dur*100).toFixed(2)}%;display:none"></div>`;
+    w.innerHTML=html;
+    $('#musicHint').textContent=`${this.fmtSec(s0)} – ${this.fmtSec(s1)}${mi.bpm?'・'+mi.bpm+' BPM':''}`;
+    if(!w._bound){ w._bound=true;
+      const pick=e=>{ const r=w.getBoundingClientRect(); const t=Math.max(0,Math.min(dur,(e.clientX-r.left)/r.width*(this._mi.duration||1))); this.musicSetStart(t); };
+      w.addEventListener('mousedown',e=>{ pick(e); const mv=ev=>pick(ev); const up=()=>{ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); }; document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up); });
+    }
+  },
+  musicSetStart(t){
+    const mi=this._mi; if(!mi) return; const beat=mi.bpm?60/mi.bpm:0; let st=t; if(beat){ const k=Math.round((t-(mi.beat0||0))/beat); st=Math.max(0,(mi.beat0||0)+k*beat); }   // 貼齊拍點
+    st=Math.round(st*10)/10; this.P().musicStart=String(st); $('#musicStart').value=st; this.musicDraw(); this.renderEstimate();
+    const a=$('#musicAudio'); if(!a.paused){ a.currentTime=st; }
+  },
+  musicToggle(){
+    const a=$('#musicAudio'); const mi=this._mi; if(!mi) { this.toast('先選一首音樂',true); return; }
+    const [s0,s1]=this.musicWindow();
+    if(!a.paused){ a.pause(); this.musicBtn(false); return; }
+    a.currentTime=s0; a.play().then(()=>this.musicBtn(true)).catch(e=>this.toast('無法播放：'+e.message,true));
+    a.ontimeupdate=()=>{ const p=$('#wvpos'); if(p){ p.style.display='block'; p.style.left=(a.currentTime/(mi.duration||1)*100).toFixed(2)+'%'; } if(a.currentTime>=s1){ a.pause(); this.musicBtn(false); } };
+    a.onended=()=>this.musicBtn(false);
+  },
+  musicBtn(playing){ const b=$('#musicPlay'); if(!b) return; b.innerHTML=playing?'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>':'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>'; },
 
   /* ---------- layout ---------- */
   renderLayoutSel() {
@@ -785,9 +860,10 @@ const app = {
     const t=tracks.find(x=>x.path===cur);
     $('#musicMeta').innerHTML=t?`${t.bpm?t.bpm+' BPM':'尚未分析'}・用過 ${t.uses} 次${t.last_use?'・上次 '+t.last_use.date.slice(5):''}`:(cur?'來自商品資料夾':'');
     if(!tracks.length) $('#musicMeta').innerHTML=`<a href="#" onclick="app.go('music');return false">還沒設定音樂庫</a>`;
+    this.musicLoad(cur);
   },
   setMusic(path) { const P=this.P(); const t=(this.state.music.tracks||[]).find(x=>x.path===path); P.music=path?{path, name:t?t.name:path}:null; this.renderMusicSel(); this.renderList(); this.renderEstimate(); },
-  setMusicStart(v) { this.P().musicStart=v; },
+  setMusicStart(v) { this.P().musicStart=v; this.musicDraw(); this.renderEstimate(); },
   async pickMusic(mode) { const t=await this.call('music_pick', mode, this.P().music?this.P().music.path:null); if(!t){this.toast('音樂庫是空的',true);return;} this.setMusic(t.path); },
   async reloadMusic() { this.state.music=await this.call('music_list')||this.state.music; this.renderMusic(); this.renderMusicSel(); },
   async musicFolder() { const p=await this.call('choose_folder'); if(!p) return; this.state.music=await this.call('music_set_folder',p); this.state.settings.music_folder=p; this.renderMusic(); this.renderSettings(); this.musicAnalyze(); },
