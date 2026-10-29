@@ -591,6 +591,53 @@ class Api:
         _save_json(HISTORY_FILE, self.history)
         return {"ok": True, "removed": before - len(self.history)}
 
+    def rebind_product(self, hist_id, item):
+        """完成頁：草稿選錯商品、影片已剪好 → 把這筆紀錄改綁到另一個商品（名稱／貨號／顏色換掉，成品檔沿用）"""
+        rec = next((h for h in self.history if h.get("id") == hist_id), None)
+        if not rec:
+            return {"ok": False, "error": "找不到紀錄"}
+        if rec.get("youtube_id"):
+            return {"ok": False, "error": "這支已經上傳 YouTube，請先「撤下」再改綁"}
+        new_name = (item or {}).get("name", "").strip()
+        if not new_name:
+            return {"ok": False, "error": "沒有選商品"}
+        old_key = rec.get("sku") or rec.get("name")
+        rec["rebound_from"] = rec.get("name")
+        rec["name"] = new_name
+        rec["sku"] = (item.get("sku") or "").strip()
+        rec["colors"] = item.get("colors") or []
+        rec["features"] = item.get("features") or []
+        rec["category"] = item.get("category") or ""
+        _save_json(HISTORY_FILE, self.history)
+        # 製作狀態：舊商品的「已產草稿」拿掉（若沒有別筆），新商品記上
+        try:
+            idx = self._status_index()
+            if old_key in idx and not any(h is not rec and (h.get("sku") or h.get("name")) == old_key and h.get("ok") for h in self.history):
+                idx.pop(old_key, None)
+                _save_json(self._status_path(), idx)
+        except Exception:
+            traceback.print_exc()
+        self._status_set(rec.get("sku") or new_name, {"name": new_name, "draft_at": rec.get("created"),
+                                                      "exported_at": rec.get("exported_at"), "export_file": rec.get("export_file")})
+        return {"ok": True, "record": rec}
+
+    def pick_export_file(self, hist_id):
+        """手動指定這筆的成品檔（改綁商品後檔名對不上時用）"""
+        import webview
+        rec = next((h for h in self.history if h.get("id") == hist_id), None)
+        if not rec:
+            return {"ok": False, "error": "找不到紀錄"}
+        r = self._window.create_file_dialog(webview.FileDialog.OPEN, allow_multiple=False,
+                                            directory=self.settings.get("export_folder") or "", file_types=("影片 (*.mp4;*.mov)",))
+        if not r:
+            return {"ok": False, "error": "取消"}
+        rec["export_file"] = r[0]
+        rec["exported"] = True
+        rec["exported_at"] = rec.get("exported_at") or dt.datetime.now().isoformat(timespec="seconds")
+        _save_json(HISTORY_FILE, self.history)
+        self._status_set(rec.get("sku") or rec["name"], {"name": rec["name"], "exported_at": rec["exported_at"], "export_file": r[0]})
+        return {"ok": True, "file": r[0], "record": rec}
+
     def mark_exported(self, hist_id, exported):
         rec = next((h for h in self.history if h.get("id") == hist_id), None)
         if not rec:

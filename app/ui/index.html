@@ -321,7 +321,7 @@ const app = {
   state: null, products: [], cur: 0, view: 'work', busy: false, results: [],
   api() { return window.pywebview && window.pywebview.api; },
   async call(name, ...args) {
-    if (name==='choose_folder' || name==='choose_videos') {
+    if (name==='choose_folder' || name==='choose_videos' || name==='pick_export_file') {
       const a = this.api(); if (!a) { this.toast('視窗尚未就緒，請再試一次', true); return null; }
       try { return await a[name](...args); } catch (e) { this.toast(String(e), true); return null; }
     }
@@ -832,12 +832,40 @@ const app = {
     if(!r.ok){ d.innerHTML=`<div style="padding:24px"><div class="chip r" style="margin-bottom:10px">失敗</div><div style="font-weight:700;margin-bottom:8px">${esc(r.name)}</div><div class="log">${esc(r.error)}\n${esc(r.trace||'')}</div></div>`; return; }
     const rows=(r.segments||[]).map((s,i)=>`<div class="li"><span style="width:18px;color:var(--faint)">${i+1}</span><span style="flex:1">${esc(s.name)}</span><span style="color:var(--mute)">${s.start}s 起・${s.dur}s</span>${s.closeup?'<span class="chip b">CLOSE UP</span>':''}${s.stabilized?'<span class="chip o">穩定</span>':''}${s.scale&&s.scale>1?`<span class="chip w">置中 ×${s.scale}</span>`:''}</div>`).join('');
     d.dataset.id=r.id||'';
-    d.innerHTML=`<div style="padding:16px 18px;border-bottom:1px solid var(--line3);display:flex;align-items:center;gap:10px"><div class="ok">✓</div><div style="font-weight:700">${esc(r.name)}</div><div class="sp"></div><span class="chip b">${r.total_sec} 秒</span>${r.bpm?`<span class="chip b">${r.bpm} BPM</span>`:''}${(r.notes||[]).map(n=>`<span class="chip w">${esc(n)}</span>`).join('')}</div>
+    d.innerHTML=`<div style="padding:16px 18px;border-bottom:1px solid var(--line3);display:flex;align-items:center;gap:10px"><div class="ok">✓</div><div style="font-weight:700">${esc(r.name)}</div>${r.youtube_id?'':`<button class="btn l sm" onclick="app.rebindOpen('${r.id}')" title="草稿選錯商品時改綁">改綁商品</button>`}${r.exported?'':`<button class="btn l sm" onclick="app.pickExportFile('${r.id}')" title="成品檔名對不上時手動指定">指定成品檔</button>`}<div class="sp"></div><span class="chip b">${r.total_sec} 秒</span>${r.bpm?`<span class="chip b">${r.bpm} BPM</span>`:''}${(r.notes||[]).map(n=>`<span class="chip w">${esc(n)}</span>`).join('')}</div>
       <div style="padding:10px 18px 0;font-size:12px;color:var(--mute)">草稿裡的順序</div><div style="overflow:auto;flex:1">${rows}</div>
       ${this.publishBox(r)}
       <div style="padding:12px 18px;border-top:1px solid var(--line3);display:flex;gap:10px;align-items:center"><span style="font-size:12px;color:var(--mute);flex:1">${r.skipped?`略過 ${r.skipped} 段以控制長度`:''}</span><button class="btn w" onclick="app.go('work')">回去調整</button><button class="btn k" onclick="app.openCapCut()">打開 CapCut</button></div>`;
     if(r.exported && !r.youtube_id) this.loadPublish(r);
     else if(r.youtube_id) this.loadProducts(r);
+  },
+  rebindOpen(id){
+    this._rebindId=id;
+    $('#modalBox').innerHTML=`<div style="padding:18px;border-bottom:1px solid var(--line3);font-weight:700">改綁商品</div>
+      <div style="padding:18px;display:flex;flex-direction:column;gap:10px">
+        <input class="ipt" id="rbQ" placeholder="輸入正確的商品名稱關鍵字" oninput="app.rebindSearch(this.value)" autofocus>
+        <div id="rbList" style="max-height:320px;overflow:auto"></div>
+      </div>
+      <div style="padding:14px 18px;border-top:1px solid var(--line3);display:flex;gap:10px;justify-content:flex-end"><button class="btn w" onclick="$('#modal').classList.remove('show')">取消</button></div>`;
+    $('#modal').classList.add('show'); setTimeout(()=>$('#rbQ').focus(),50);
+  },
+  rebindSearch(q){
+    clearTimeout(this._rbT); q=(q||'').trim(); const box=$('#rbList'); if(q.length<2){ box.innerHTML=''; return; }
+    this._rbT=setTimeout(async()=>{ box.innerHTML=`<div style="padding:10px;font-size:12px;color:var(--mute)">查找中…</div>`; const r=await this.call('product_lookup',q); if(!r||($('#rbQ').value||'').trim()!==q) return; this._rbItems=r.items||[];
+      box.innerHTML=this._rbItems.map((it,i)=>`<div class="li" style="cursor:pointer;gap:10px" onclick="app.rebindPick(${i})"><span class="chip ${it.source==='sheet'?'b':'w'}" style="flex:none">${it.source==='sheet'?esc(it.tab||'排程表'):'Shopline'}</span><div style="flex:1;min-width:0"><div style="font-weight:500">${esc(it.name)}</div><div style="font-size:12px;color:var(--mute)">${esc(it.sku||'')}${it.colors&&it.colors.length?'・'+esc(it.colors.join('・')):''}</div></div></div>`).join('')||`<div style="padding:10px;font-size:12px;color:var(--mute)">沒有找到</div>`; },350);
+  },
+  async rebindPick(i){
+    const it=this._rbItems[i]; if(!it) return;
+    const r=await this.call('rebind_product',this._rebindId,{name:it.name,sku:it.sku||'',colors:it.colors||[],features:it.features||[],category:it.category||''});
+    if(!r||!r.ok){ this.toast(r?r.error:'失敗',true); return; }
+    $('#modal').classList.remove('show');
+    const k=this.state.history.findIndex(x=>x.id===this._rebindId); if(k>=0) this.state.history[k]=r.record;
+    this._titles={}; this.renderHistory(); this.showDetail(r.record); this.toast('已改綁，YouTube 標題與商品頁會用新商品');
+  },
+  async pickExportFile(id){
+    const r=await this.call('pick_export_file',id); if(!r||!r.ok){ if(r&&r.error!=='取消') this.toast(r.error,true); return; }
+    const k=this.state.history.findIndex(x=>x.id===id); if(k>=0) this.state.history[k]=r.record;
+    this.renderHistory(); this.showDetail(r.record); this.toast('已指定成品檔');
   },
   async openCapCut(){ const ok=await this.call('open_capcut'); if(!ok) this.toast('找不到 CapCut，請手動開啟',true); },
 
