@@ -226,10 +226,15 @@ input.ipt::placeholder{color:var(--faint)}
 
       <div style="display:flex;flex-direction:column;gap:10px">
         <div class="row"><span class="h">開頭</span><span id="opMeta" style="font-size:12px;color:var(--mute)"></span></div>
-        <div id="opPick"></div>
-        <div class="two" id="opBtns">
-          <button class="btn l sm" style="flex:1" onclick="app.setOpening('random')">隨機</button>
-          <button class="btn l sm" style="flex:1" onclick="app.setOpening('')">不用</button>
+        <div style="display:flex;gap:10px;align-items:stretch">
+          <canvas id="opPrev" width="270" height="480" style="width:108px;height:192px;border-radius:8px;background:#1c1c1c;flex:none" title="套在首支影片上的預覽"></canvas>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px">
+            <div id="opPick"></div>
+            <div class="two" id="opBtns">
+              <button class="btn l sm" style="flex:1" onclick="app.setOpening('random')">隨機</button>
+              <button class="btn l sm" style="flex:1" onclick="app.setOpening('')">不用</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -480,17 +485,39 @@ const app = {
   setBg(path){ const P=this.P(); if(!P) return; P.background=path||''; this.renderBgPick(); this.toast(path?'已選底圖':'這支不用底圖'); },
   async pickBg(mode){ const p=await this.call('bg_pick',mode); if(!p){ this.toast('底圖庫是空的',true); return; } this.setBg(p); },
   setOpening(v){ const P=this.P(); if(!P) return; P.opening=v===undefined?'random':v; this.renderOpening(); },
+  pickOpening(){ // 隨機挑一支：避開清單裡其他商品用的，也避開這支現在這個
+    const P=this.P(); const lib=(this.state.openings&&this.state.openings.items)||[]; if(!lib.length) return '';
+    const used=new Set(this.products.filter(x=>x!==P).map(x=>x.opening).concat([P.opening]));
+    const pool=lib.filter(i=>!used.has(i.path)); const src=pool.length?pool:lib;
+    return src[Math.floor(Math.random()*src.length)].path;
+  },
+  drawOpeningPreview(P, lib){
+    const cv=$('#opPrev'); if(!cv) return; const ctx=cv.getContext('2d'); ctx.clearRect(0,0,cv.width,cv.height);
+    ctx.fillStyle='#1c1c1c'; ctx.fillRect(0,0,cv.width,cv.height);
+    const clip=(P.clips||[]).find(c=>c.use!==false&&!c.closeup)||(P.clips||[]).find(c=>c.use!==false);
+    const it=lib.find(i=>i.path===P.opening);
+    const token=(this._opPrevToken=(this._opPrevToken||0)+1);
+    const cover=(img)=>{ const r=Math.max(cv.width/img.width, cv.height/img.height); const w=img.width*r, h=img.height*r; ctx.drawImage(img,(cv.width-w)/2,(cv.height-h)/2,w,h); };
+    const load=src=>new Promise(res=>{ if(!src) return res(null); const im=new Image(); im.onload=()=>res(im); im.onerror=()=>res(null); im.src=src; });
+    Promise.all([load(clip&&clip.thumb), load(it&&it.frame)]).then(([a,b])=>{
+      if(token!==this._opPrevToken) return;
+      if(a) cover(a); if(b) ctx.drawImage(b,0,0,cv.width,cv.height);
+      if(!a&&!b){ ctx.fillStyle='#666'; ctx.font='28px sans-serif'; ctx.textAlign='center'; ctx.fillText(P.opening?'放入影片後預覽':'不疊開頭',cv.width/2,cv.height/2); }
+    });
+  },
   renderOpening(){
     const el=$('#opPick'), meta=$('#opMeta'), bb=$('#opBtns'); if(!el) return; const P=this.P(); if(!P) return;
     const lay=(this.state.layouts||[]).find(x=>x.id===(P.layout||'')); const cardFirst=!!(lay&&lay.pattern.split(',')[0]==='#');
     const lib=(this.state.openings&&this.state.openings.items)||[];
     if(P.opening===undefined) P.opening='random';
+    if(P.opening==='random'&&lib.length) P.opening=this.pickOpening();   // 隨機＝現在就挑一支，看得到預覽；再按一次換一支
     if(cardFirst){ el.innerHTML=`<span style="font-size:12px;color:var(--faint)">此版型第一段是版型卡，不疊開頭</span>`; meta.textContent=''; bb.style.display='none'; return; }
     bb.style.display='';
     const sy=(this.state.openings&&this.state.openings.sync)||{};
     if(!lib.length){ el.innerHTML=`<span style="font-size:12px;color:var(--faint)">${sy.running?`開頭動畫庫下載中 ${sy.done||0}/${sy.total||'…'}`:'找不到開頭動畫庫（官網部門\\開頭動畫）'}</span>`; meta.textContent=''; return; }
     if(sy.running) meta.textContent=`下載中 ${sy.done||0}/${sy.total||'…'}`;
     meta.textContent=P.opening==='random'?'自動挑選':(P.opening?lib.find(i=>i.path===P.opening)?.name||'':'不用');
+    this.drawOpeningPreview(P, lib);
     el.innerHTML=`<div class="oprow">${lib.map(i=>`<div class="opit ${i.path===P.opening?'on':''}" title="${esc(i.name)}" onclick="app.setOpening(${JSON.stringify(i.path).replace(/"/g,'&quot;')})">${i.thumb?`<img src="${i.thumb}" alt="">`:''}<div class="nm">${esc(i.name.replace(/^開頭/,''))}</div></div>`).join('')}</div>`;
   },
   renderBgPick(){
@@ -805,6 +832,7 @@ const app = {
     }, 250);
   },
   renderGrid() {
+    if(this.renderOpening&&$('#opPrev')) setTimeout(()=>this.renderOpening(),0);
     const P=this.P(); const g=$('#grid'); const ms=this.state.models;
     $('#emptyHint').style.display=P.clips.length?'none':'flex'; g.style.display=P.clips.length?'grid':'none';
     const seen={}; P.clips.forEach(c=>{ seen[c.path]=(seen[c.path]||0)+1; });
