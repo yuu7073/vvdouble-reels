@@ -22,6 +22,17 @@ sys.path.insert(0, CORE)
 sys.path.insert(0, HERE)
 from version import VERSION, REPO  # noqa: E402
 
+# HTTPS 憑證：用 Windows 自己的憑證庫（公司防毒／代理會換憑證，Python 內建的憑證包認不得）
+try:
+    import truststore  # noqa: E402
+    truststore.inject_into_ssl()
+except Exception:
+    try:
+        import ssl, certifi  # noqa: E402
+        ssl._create_default_https_context = lambda: ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        pass
+
 import numpy as np  # noqa: E402
 
 import generator as g  # noqa: E402

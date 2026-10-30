@@ -30,7 +30,7 @@ for pkg in ("onnxruntime", "pycapcut", "imageio_ffmpeg", "pymediainfo", "webview
         datas += d; binaries += b; hiddenimports += h
     except Exception as e:
         print("collect_all skip", pkg, e)
-hiddenimports += ["webview.platforms.winforms", "webview.platforms.edgechromium", "clr", "PIL.Image", "numpy", "generator", "engine", "vision", "layouts", "camera_overlay", "torn_overlay", "stamp_overlay", "planner", "version"]
+hiddenimports += ["webview.platforms.winforms", "webview.platforms.edgechromium", "clr", "PIL.Image", "numpy", "generator", "engine", "vision", "layouts", "camera_overlay", "torn_overlay", "stamp_overlay", "planner", "truststore", "certifi", "version"]
 
 a = Analysis(
     [os.path.join(root, "main.py")],
