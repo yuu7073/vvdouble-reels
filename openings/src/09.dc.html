@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening J Color Block</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F0A79A}a:hover{color:#fff}
+.j-block{animation:jBlock 5s cubic-bezier(.7,0,.2,1) infinite}
+.j-vid{position:absolute;left:0;bottom:0;width:100%;height:390px;object-fit:cover;animation:jVid 5s ease infinite}
+.j-roll{animation:jRoll 5s cubic-bezier(.7,0,.2,1) infinite}
+.j-small{animation:jSmall 5s ease infinite}
+@keyframes jBlock{0%{transform:translateY(-100%)}10%,100%{transform:none}}
+@keyframes jVid{0%,4%{opacity:0;transform:scale(1.08)}14%,100%{opacity:1;transform:scale(1)}}
+@keyframes jRoll{0%,22%{transform:translateY(0)}26%,46%{transform:translateY(-52px)}50%,70%{transform:translateY(-104px)}74%,100%{transform:translateY(-156px)}}
+@keyframes jSmall{0%,8%{opacity:0}16%,100%{opacity:1}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #1a1614; font-family: 'Inter', sans-serif; color: #F0A79A">
+<video class="j-vid" src="/_blob/67af9a38693961d15cfdd0114a2c3ae1" poster="/_blob/a80f8dfb9613e5bd32596d1292885125" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}"></video>
+<div class="j-block" style="position: absolute; left: 0; right: 0; top: 0; height: 330px; background: #6E1E1A">
+<div class="j-small" style="position: absolute; left: 0; right: 0; top: 64px; text-align: center; font-size: 14px; font-weight: 500; letter-spacing: 0.02em">VV DOUBLE</div>
+<div style="position: absolute; left: 0; right: 0; top: 139px; height: 52px; overflow: hidden">
+<div class="j-roll" style="display: flex; flex-direction: column; align-items: center">
+<div style="height: 52px; font-size: 42px; font-weight: 500; line-height: 52px; letter-spacing: -0.01em">NEW IN</div>
+<div style="height: 52px; font-size: 42px; font-weight: 500; line-height: 52px; letter-spacing: -0.01em">LOOKBOOK</div>
+<div style="height: 52px; font-size: 42px; font-weight: 500; line-height: 52px; letter-spacing: -0.01em">STYLEGUIDE</div>
+<div style="height: 52px; font-size: 42px; font-weight: 500; line-height: 52px; letter-spacing: -0.01em">A/W EDIT</div>
+</div>
+</div>
+<div class="j-small" style="position: absolute; left: 0; right: 0; bottom: 34px; text-align: center; font-size: 14px; font-weight: 400">on-body, up close</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -514,6 +514,39 @@ def build_draft(spec, models, log=None, progress=None):
         next_start(full, skip, dur)
         cursor += dur
 
+    # 開頭動畫：帶 alpha 的 .mov 疊在第一段滿版上（最上層），長度跟著第一段調速；文字（MODEL 卡／商品名稱／網址）等開頭結束再出現
+    opening_window = None
+    opening_path = (spec.get("opening") or "").strip()
+    if opening_path and os.path.exists(opening_path) and out_segments and out_segments[0].get("how") != "版型":
+        try:
+            omat = cc.VideoMaterial(opening_path)
+            odur = int(omat.duration)
+            first_dur = int(round(out_segments[0]["dur"] * SEC))
+            speed = max(0.75, min(1.6, odur / max(first_dur, 1)))
+            tdur = min(int(odur / speed), cursor)
+            src = min(odur, int(tdur * speed))
+            script.add_segment(cc.VideoSegment(omat, cc.Timerange(0, tdur), source_timerange=cc.Timerange(0, src),
+                                               speed=speed, volume=0.0),
+                               layout_track(cc.TrackType.video, "開頭動畫", 30))
+            opening_window = (0, tdur)
+            _log(log, f"疊開頭動畫「{os.path.splitext(os.path.basename(opening_path))[0]}」{tdur / SEC:.1f} 秒（速度 {speed:.2f}x）")
+        except Exception as e:
+            _log(log, f"開頭動畫加不上去（{type(e).__name__}: {e}），這支先不疊")
+            opening_window = None
+    elif opening_path and out_segments and out_segments[0].get("how") == "版型":
+        _log(log, "這個版型第一段是版型卡，不疊開頭動畫")
+    if opening_window:
+        o_end = opening_window[1]
+        trimmed = []
+        for text, start, dur in card_runs:
+            if start + dur <= o_end:
+                continue
+            if start < o_end:
+                dur -= (o_end - start)
+                start = o_end
+            trimmed.append([text, start, dur])
+        card_runs = trimmed
+
     _log(log, "加入字卡…")
     for text, start, dur in card_runs:
         script.add_segment(cc.TextSegment(text, cc.Timerange(start, dur), style=card_style, background=card_bg,
@@ -537,7 +570,9 @@ def build_draft(spec, models, log=None, progress=None):
             pieces.append((t, total - t))
         return pieces
 
-    title_windows = layout_windows if (layout_meta and layout_meta.get("hide_title")) else []
+    title_windows = list(layout_windows) if (layout_meta and layout_meta.get("hide_title")) else []
+    if opening_window:
+        title_windows.append(opening_window)
     for st, du in outside_windows(cursor, title_windows):
         script.add_segment(cc.TextSegment(base_name, cc.Timerange(st, du),
                                           style=TextStyle(size=title_size, color=(0.0, 0.0, 0.0), align=1),
@@ -546,8 +581,8 @@ def build_draft(spec, models, log=None, progress=None):
     site_style = TextStyle(size=4.0, bold=True, align=1, letter_spacing=2)
     site_pos = layout_meta.get("site_pos") if layout_meta else None
     hide_site = bool(layout_meta and layout_meta.get("hide_site"))
-    site_windows = layout_windows if (site_pos or hide_site) else []
-    for st, du in outside_windows(cursor, site_windows):
+    site_windows = list(layout_windows) if (site_pos or hide_site) else []
+    for st, du in outside_windows(cursor, site_windows + ([opening_window] if opening_window else [])):
         script.add_segment(cc.TextSegment(g.SITE_TEXT, cc.Timerange(st, du), style=site_style,
                                           clip_settings=ClipSettings(transform_y=g.SITE_Y)), "網址")
     if site_windows and site_pos:
@@ -587,4 +622,5 @@ def build_draft(spec, models, log=None, progress=None):
     return {"ok": True, "name": base_name, "draft_name": name, "layout": layout_id if L else "", "total_sec": round(cursor / SEC, 1), "segments": out_segments,
             "notes": [str(x) for x in post], "skipped": skipped,
             "bpm": round(bpm) if bpm else None, "music_start": round(music_start, 1) if bgm else None,
+            "opening": opening_path if opening_window else "",
             "draft_path": os.path.join(g.DRAFT_FOLDER, name)}

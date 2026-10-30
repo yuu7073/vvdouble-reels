@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening K Big Words Chips</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;800&amp;family=Instrument+Serif:ital@1&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F7E58B}a:hover{color:#fff}
+.k-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.k-w1{animation:kW1 4.8s cubic-bezier(.2,.9,.3,1.3) infinite}
+.k-w2{animation:kW2 4.8s cubic-bezier(.2,.9,.3,1.3) infinite}
+.k-fade{animation:kFade 4.8s ease infinite}
+.k-quote{animation:kQuote 4.8s ease infinite}
+.k-swash path{stroke-dasharray:320;stroke-dashoffset:320;animation:kSwash 4.8s ease infinite}
+.k-chip{position:absolute;padding:7px 14px;border-radius:999px;background:#ffffff;color:#1d1d1d;font-size:13px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,.18);white-space:nowrap}
+.k-c1{animation:kC1 4.8s cubic-bezier(.2,.9,.3,1.4) infinite}
+.k-c2{animation:kC2 4.8s cubic-bezier(.2,.9,.3,1.4) infinite}
+.k-c3{animation:kC3 4.8s cubic-bezier(.2,.9,.3,1.4) infinite}
+.k-c4{animation:kC4 4.8s cubic-bezier(.2,.9,.3,1.4) infinite}
+.k-spark{animation:kSpark 4.8s ease infinite}
+@keyframes kW1{0%,4%{opacity:0;transform:scale(.6)}14%,92%{opacity:1;transform:scale(1)}98%,100%{opacity:0;transform:scale(1)}}
+@keyframes kW2{0%,12%{opacity:0;transform:scale(.6)}22%,92%{opacity:1;transform:scale(1)}98%,100%{opacity:0;transform:scale(1)}}
+@keyframes kFade{0%,2%{opacity:0}10%,92%{opacity:1}98%,100%{opacity:0}}
+@keyframes kQuote{0%,40%{opacity:0;transform:translateY(8px)}52%,92%{opacity:1;transform:none}98%,100%{opacity:0;transform:none}}
+@keyframes kSwash{0%,24%{stroke-dashoffset:320}38%,92%{stroke-dashoffset:0;opacity:1}98%,100%{stroke-dashoffset:0;opacity:0}}
+@keyframes kC1{0%,30%{opacity:0;transform:scale(.4)}36%,92%{opacity:1;transform:scale(1)}98%,100%{opacity:0;transform:scale(1)}}
+@keyframes kC2{0%,36%{opacity:0;transform:scale(.4)}42%,92%{opacity:1;transform:scale(1)}98%,100%{opacity:0;transform:scale(1)}}
+@keyframes kC3{0%,42%{opacity:0;transform:scale(.4)}48%,92%{opacity:1;transform:scale(1)}98%,100%{opacity:0;transform:scale(1)}}
+@keyframes kC4{0%,48%{opacity:0;transform:scale(.4)}54%,92%{opacity:1;transform:scale(1)}98%,100%{opacity:0;transform:scale(1)}}
+@keyframes kSpark{0%,50%{opacity:0;transform:scale(0) rotate(-30deg)}58%{opacity:1;transform:scale(1.2) rotate(0)}64%,92%{opacity:1;transform:scale(1)}98%,100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #d6d3cd; font-family: 'Inter', sans-serif; color: #ffffff">
+<video class="k-vid" src="/_blob/699cfc130329fe26818955bbae775cbf" poster="/_blob/e84390028712e2d7ca767c38b7b7adcc" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}"></video>
+<div style="position: absolute; inset: 0; background: rgba(20, 18, 16, 0.22)"></div>
+<div class="k-fade" style="position: absolute; left: 28px; right: 28px; top: 84px; display: flex; justify-content: space-between; font-size: 11px; font-weight: 500; letter-spacing: 0.18em">
+<span>VV DOUBLE</span>
+<span>NO. 01</span>
+<span>A/W EDIT</span>
+</div>
+<div class="k-fade" style="position: absolute; left: 0; right: 0; top: 214px; text-align: center; font-family: 'Instrument Serif', serif; font-style: italic; font-size: 22px">a little something</div>
+<div style="position: absolute; left: 0; right: 0; top: 258px; display: flex; flex-direction: column; align-items: center; font-weight: 800; font-size: 86px; line-height: 0.88; letter-spacing: -0.055em; color: #F7E58B">
+<div class="k-w1">new</div>
+<div class="k-w2">arrivals</div>
+</div>
+<svg class="k-swash" aria-hidden="true" viewBox="0 0 300 30" style="position: absolute; left: 52px; top: 412px; width: 300px; height: 30px"><path d="M6 20 C80 6 200 4 294 16" fill="none" stroke="#F7E58B" stroke-width="3" stroke-linecap="round"></path></svg>
+<div class="k-quote" style="position: absolute; left: 0; right: 0; top: 452px; text-align: center; font-family: 'Instrument Serif', serif; font-style: italic; font-size: 26px; line-height: 1.1">made for the way you move</div>
+<div class="k-chip k-c1" style="left: 40px; top: 170px">lookbook</div>
+<div class="k-chip k-c2" style="left: 262px; top: 172px; background: #F6C9DB">new in</div>
+<div class="k-chip k-c3" style="left: 46px; top: 520px">on-body</div>
+<div class="k-chip k-c4" style="left: 232px; top: 522px">a/w styleguide</div>
+<svg class="k-spark" aria-hidden="true" viewBox="0 0 100 100" style="position: absolute; left: 330px; top: 250px; width: 26px; height: 26px"><path d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0Z" fill="#F7E58B"></path></svg>
+<svg class="k-spark" aria-hidden="true" viewBox="0 0 100 100" style="position: absolute; left: 50px; top: 392px; width: 18px; height: 18px"><path d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0Z" fill="#ffffff"></path></svg>
+<div class="k-fade" style="position: absolute; left: 0; right: 0; bottom: 104px; text-align: center; font-size: 11px; font-weight: 500; letter-spacing: 0.18em">WWW.VVDOUBLE.COM</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

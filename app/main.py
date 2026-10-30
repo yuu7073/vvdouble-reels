@@ -12,6 +12,7 @@ import subprocess
 import sys
 import threading
 import time
+import shutil
 import traceback
 
 FROZEN = getattr(sys, "frozen", False)
@@ -133,6 +134,7 @@ os.makedirs(THUMB_DIR, exist_ok=True)
 MUSIC_INDEX_NAME = "音樂庫索引.json"
 BG_INDEX_NAME = "底圖庫索引.json"
 BG_SUBDIR = "空景"
+OPENING_SUBDIR = "開頭動畫"      # 官網部門\開頭動畫\*.mov（帶透明的開頭動畫）
 IMAGE_EXT = (".jpg", ".jpeg", ".png", ".webp")
 VIDEO_EXT = (".mp4", ".mov", ".m4v")
 AUDIO_EXT = (".mp3", ".m4a", ".wav", ".aac")
@@ -401,6 +403,7 @@ class Api:
             "vision_error": VISION_ERROR or ("" if (vision and vision.available()) else getattr(vision, "LOAD_ERROR", "模型或套件缺少")),
             "version": VERSION,
             "layouts": layouts.list_layouts() if layouts else [],
+            "openings": self.opening_list(),
             "frozen": FROZEN,
             "log_file": LOG_FILE,
         }
@@ -641,6 +644,22 @@ class Api:
                             self._emit("log", {"job": ji, "msg": "這個版型需要底圖，但找不到當期的形象擺拍／空景"})
                 except Exception:
                     traceback.print_exc()
+                # 開頭動畫：random → 從開頭動畫庫挑一支（這批不重複、最近用過的往後排）
+                try:
+                    op = (spec.get("opening") or "").strip()
+                    if op == "random":
+                        used = [j.get("opening") for j in jobs if j.get("opening") and j.get("opening") != "random"]
+                        pick = self.opening_pick(exclude=used)
+                        spec["opening"] = pick or ""
+                        if pick:
+                            self._emit("log", {"job": ji, "msg": f"自動挑開頭動畫：{os.path.splitext(os.path.basename(pick))[0]}"})
+                        else:
+                            self._emit("log", {"job": ji, "msg": "找不到開頭動畫庫（官網部門\\開頭動畫），這支不疊開頭"})
+                    elif op and not os.path.exists(op):
+                        self._emit("log", {"job": ji, "msg": f"開頭動畫檔不在了：{os.path.basename(op)}，這支不疊開頭"})
+                        spec["opening"] = ""
+                except Exception:
+                    traceback.print_exc()
                 spec.setdefault("options", {})
                 for k in ("max_total", "mid_closeup", "person_center", "stabilize", "beauty", "length_mode"):
                     spec["options"].setdefault(k, self.settings.get(k))
@@ -664,6 +683,8 @@ class Api:
                 r["sku"] = spec.get("sku") or ""
                 r["features"] = spec.get("features") or []
                 r["background"] = spec.get("background") or ""
+                r["opening"] = r.get("opening") or ""
+                r["opening_name"] = os.path.splitext(os.path.basename(r["opening"]))[0] if r["opening"] else ""
                 r["layout"] = spec.get("layout") or ""
                 r["layout_name"] = (layouts.LAYOUTS.get(r["layout"], {}).get("name") if (layouts and r["layout"]) else "") or ""
                 r["category"] = spec.get("category") or ""
@@ -1654,6 +1675,94 @@ class Api:
                 groups.append({"label": label, "folder": folder, "items": items})
         return {"root": root, "groups": groups, "total": total}
 
+    # ---------- 開頭動畫庫（官網部門\開頭動畫\*.mov） ----------
+    def _opening_root(self):
+        r = (self.settings.get("opening_folder") or "").strip()
+        if r and os.path.isdir(r):
+            return r
+        root = self._bg_root()
+        p = os.path.join(root, OPENING_SUBDIR) if root else ""
+        return p if p and os.path.isdir(p) else ""
+
+    def _opening_thumb(self, fp):
+        """開頭動畫縮圖：取 60% 處一格，疊在深灰底上（透明看得到字）"""
+        try:
+            key = hashlib.md5(f"op|{fp}|{os.path.getmtime(fp)}".encode("utf-8")).hexdigest()[:16]
+            out = os.path.join(THUMB_DIR, key + ".jpg")
+            if not os.path.exists(out):
+                d = _probe_duration(fp) or 5.0
+                _run([_ffmpeg(), "-y", "-loglevel", "error", "-f", "lavfi", "-i", "color=c=0x55524e:s=180x320",
+                      "-ss", f"{d * 0.6:.2f}", "-i", fp, "-filter_complex", "[1]scale=180:320[o];[0][o]overlay=shortest=1",
+                      "-frames:v", "1", "-q:v", "4", out], timeout=60)
+            with open(out, "rb") as f:
+                return "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("ascii")
+        except Exception:
+            return ""
+
+    def opening_list(self):
+        root = self._opening_root()
+        if not root:
+            return {"root": "", "items": []}
+        items = []
+        try:
+            files = sorted(os.listdir(root))
+        except Exception:
+            files = []
+        for f in files:
+            if not f.lower().endswith((".mov", ".webm")) or f.startswith("."):
+                continue
+            fp = os.path.join(root, f)
+            items.append({"path": fp, "name": os.path.splitext(f)[0], "thumb": self._opening_thumb(fp)})
+        return {"root": root, "items": items}
+
+    def _opening_sync(self):
+        """開頭動畫庫同步：GitHub Release（tag=openings）裡有、Dropbox 開頭動畫資料夾沒有的 .mov 就下載進去
+        （資料夾放 官網部門\開頭動畫，一台電腦載過全公司都有）"""
+        import urllib.request
+        try:
+            root = self._opening_root()
+            if not root:
+                base = self._bg_root()
+                if not base:
+                    return
+                root = os.path.join(base, OPENING_SUBDIR)
+                os.makedirs(root, exist_ok=True)
+            req = urllib.request.Request(f"https://api.github.com/repos/{REPO}/releases/tags/openings",
+                                         headers={"User-Agent": "VVReels", "Accept": "application/vnd.github+json"})
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                j = json.loads(resp.read().decode("utf-8"))
+            got = 0
+            for a in j.get("assets", []):
+                name = a.get("name") or ""
+                if not name.lower().endswith(".mov"):
+                    continue
+                dst = os.path.join(root, name)
+                if os.path.exists(dst) and os.path.getsize(dst) == int(a.get("size") or -1):
+                    continue
+                tmp = dst + ".part"
+                if os.path.exists(tmp) and time.time() - os.path.getmtime(tmp) < 600:
+                    continue        # 別台電腦正在載
+                r2 = urllib.request.Request(a["browser_download_url"], headers={"User-Agent": "VVReels"})
+                with urllib.request.urlopen(r2, timeout=300) as resp, open(tmp, "wb") as f:
+                    shutil.copyfileobj(resp, f, 1024 * 256)
+                os.replace(tmp, dst)
+                got += 1
+            if got:
+                self._emit("openings_changed", {"root": root, "added": got})
+        except Exception:
+            traceback.print_exc()
+
+    def opening_pick(self, exclude=None):
+        items = self.opening_list()["items"]
+        if not items:
+            return None
+        import random
+        ex = set(exclude or [])
+        recent = [h.get("opening") for h in self.history[-12:] if h.get("opening")]
+        pool = [i["path"] for i in items if i["path"] not in ex] or [i["path"] for i in items]
+        fresh = [p for p in pool if p not in recent] or pool
+        return random.choice(fresh)
+
     def bg_set_root(self, path):
         self.settings["bg_root"] = path
         _save_json(SETTINGS_FILE, self.settings)
@@ -1926,6 +2035,7 @@ def main():
     win.events.loaded += _hook_drop
     threading.Timer(3.0, api._warm_todo).start()
     threading.Thread(target=api._watch_exports, daemon=True).start()
+    threading.Thread(target=api._opening_sync, daemon=True).start()
 
     def _hook(args):
         traceback.print_exception(args.exc_type, args.exc_value, args.exc_traceback)

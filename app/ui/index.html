@@ -120,6 +120,10 @@ input.ipt::placeholder{color:var(--faint)}
 .bgit img{width:100%;height:100%;object-fit:cover;display:block}
 .bgit.on{border-color:var(--blue)}
 .bgit .cap{position:absolute;left:0;right:0;bottom:0;padding:16px 8px 6px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:11px;display:flex;justify-content:space-between;align-items:center}
+.oprow{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.opit{flex:none;width:54px;aspect-ratio:9/16;border-radius:6px;overflow:hidden;background:#333;cursor:pointer;border:2px solid transparent;position:relative}
+.opit img{width:100%;height:100%;object-fit:cover;display:block}.opit.on{border-color:var(--blue)}
+.opit .nm{position:absolute;left:0;right:0;bottom:0;font-size:10px;text-align:center;color:#fff;background:rgba(0,0,0,.55);padding:2px 0}
 .bgit .use{position:absolute;top:6px;right:6px;height:20px;padding:0 7px;border-radius:10px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;display:flex;align-items:center}
 .mrow{display:flex;align-items:center;gap:10px;height:34px;padding:0 12px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;user-select:none}
 .mrow.sub{padding-left:34px;font-weight:400;height:30px;font-size:12.5px}
@@ -218,6 +222,15 @@ input.ipt::placeholder{color:var(--faint)}
         <div class="row"><span class="h">版型</span></div>
         <select class="sel" id="layoutSel" style="height:36px;font-weight:500" onchange="app.setLayout(this.value)"></select>
         <div id="layoutMeta" style="font-size:12px;color:var(--mute);padding:0 2px"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="row"><span class="h">開頭</span><span id="opMeta" style="font-size:12px;color:var(--mute)"></span></div>
+        <div id="opPick"></div>
+        <div class="two" id="opBtns">
+          <button class="btn l sm" style="flex:1" onclick="app.setOpening('random')">隨機</button>
+          <button class="btn l sm" style="flex:1" onclick="app.setOpening('')">不用</button>
+        </div>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:10px">
@@ -402,6 +415,7 @@ const app = {
     if (ev==='analyzing') { $('#analyzing').textContent = p.i<p.n ? `分析中 ${p.i+1}/${p.n}　${p.name}` : ''; }
     else if (ev==='drop_start') { $('#analyzing').textContent = `讀取 ${p.n} 個檔案…`; document.body.classList.remove('dragging'); }
     else if (ev==='dropped') { clearTimeout(this._dropWait); this.ingest(p); }
+    else if (ev==='openings_changed') { this.call('opening_list').then(r=>{ this.state.openings=r; this.renderOpening(); this.toast(`開頭動畫庫更新了 ${p.added} 支`); }); }
     else if (ev==='auto_exported') { const rec=this.state.history.find(x=>x.id===p.id); if(rec){ rec.exported=true; rec.export_file=p.file; } this.renderHistory(); this.toast(`偵測到成品，已自動勾匯出：${p.name}`); this.reloadMusic&&this.reloadMusic(); const detailOpen=$('#detail')&&$('#detail').dataset.id===p.id; if(rec&&detailOpen) this.showDetail(rec); }
     else if (ev==='drop_nopath') { clearTimeout(this._dropWait); $('#analyzing').textContent=''; this.toast('拖曳拿不到檔案路徑（WebView2 太舊），請用「＋ 加入影片」或「＋ 加入資料夾」', true); }
     else if (ev==='job_start') { this.progress(p.job, 0, 1, '準備中'); $('#progLog').style.display='block'; $('#progLog').textContent=''; this.go('done'); }
@@ -464,6 +478,18 @@ const app = {
   },
   setBg(path){ const P=this.P(); if(!P) return; P.background=path||''; this.renderBgPick(); this.toast(path?'已選底圖':'這支不用底圖'); },
   async pickBg(mode){ const p=await this.call('bg_pick',mode); if(!p){ this.toast('底圖庫是空的',true); return; } this.setBg(p); },
+  setOpening(v){ const P=this.P(); if(!P) return; P.opening=v===undefined?'random':v; this.renderOpening(); },
+  renderOpening(){
+    const el=$('#opPick'), meta=$('#opMeta'), bb=$('#opBtns'); if(!el) return; const P=this.P(); if(!P) return;
+    const lay=(this.state.layouts||[]).find(x=>x.id===(P.layout||'')); const cardFirst=!!(lay&&lay.pattern.split(',')[0]==='#');
+    const lib=(this.state.openings&&this.state.openings.items)||[];
+    if(P.opening===undefined) P.opening='random';
+    if(cardFirst){ el.innerHTML=`<span style="font-size:12px;color:var(--faint)">此版型第一段是版型卡，不疊開頭</span>`; meta.textContent=''; bb.style.display='none'; return; }
+    bb.style.display='';
+    if(!lib.length){ el.innerHTML=`<span style="font-size:12px;color:var(--faint)">找不到開頭動畫庫（官網部門\\開頭動畫）</span>`; meta.textContent=''; return; }
+    meta.textContent=P.opening==='random'?'自動挑選':(P.opening?lib.find(i=>i.path===P.opening)?.name||'':'不用');
+    el.innerHTML=`<div class="oprow">${lib.map(i=>`<div class="opit ${i.path===P.opening?'on':''}" title="${esc(i.name)}" onclick="app.setOpening(${JSON.stringify(i.path).replace(/"/g,'&quot;')})">${i.thumb?`<img src="${i.thumb}" alt="">`:''}<div class="nm">${esc(i.name.replace(/^開頭/,''))}</div></div>`).join('')}</div>`;
+  },
   renderBgPick(){
     const el=$('#bgPick'); if(!el) return; const P=this.P(); const cur=P&&P.background;
     const lay=(this.state.layouts||[]).find(x=>x.id===(P&&P.layout||'')); const needs=!!(lay&&lay.needs_photo);
@@ -732,7 +758,7 @@ const app = {
   applyToRest(i) { const src=this.P().clips[i]; this.P().clips.forEach((c,j)=>{ if(j>i && !c.closeup){c.model=src.model;c.size=src.size;c.fit=src.fit;} }); this.renderGrid(); this.toast('已套用到後面的片段'); },
   move(from,to) { const a=this.P().clips; const [x]=a.splice(from,1); a.splice(to,0,x); this.renderGrid(); },
 
-  renderAll() { this.renderList(); $('#prodName').value=this.P().name; this.renderGrid(); this.renderMusicSel(); this.renderLayoutSel(); this.renderBgPick(); },
+  renderAll() { this.renderList(); $('#prodName').value=this.P().name; this.renderGrid(); this.renderMusicSel(); this.renderLayoutSel(); this.renderBgPick(); this.renderOpening(); },
   /* 製作頁內容本機暫存：每 3 秒比對一次，有變才存；關閉視窗時也存一次 */
   sessionSave(force) {
     if (!this._sessionReady) return;
@@ -871,7 +897,7 @@ const app = {
     const l=list.find(x=>x.id===cur);
     $('#layoutMeta').textContent=l?l.pattern.split(',').map(t=>t==='#'?'版型':(t==='M'?'滿版':'近拍')).join(' → ')+(l.needs_photo?'　需要底圖':''):'';
   },
-  setLayout(v){ const P=this.P(); if(!P) return; P.layout=v||''; this.renderLayoutSel(); this.renderBgPick(); this.renderEstimate(); },
+  setLayout(v){ const P=this.P(); if(!P) return; P.layout=v||''; this.renderLayoutSel(); this.renderBgPick(); this.renderOpening(); this.renderEstimate(); },
 
   /* ---------- music ---------- */
   renderMusicSel() {
@@ -941,7 +967,7 @@ const app = {
   async pickSetting(k){ const p=await this.call('choose_folder'); if(!p) return; this.state.settings[k]=p; await this.call('save_settings',{[k]:p}); this.renderSettings(); if(k==='music_folder'){ this.state.music=await this.call('music_set_folder',p); this.renderMusic(); this.renderMusicSel(); } },
 
   /* ---------- generate ---------- */
-  spec(P){ return { name:P.name||'未命名', clips:P.clips.filter(c=>c.use!==false).map((c,i)=>({path:c.path, name:c.name, model:c.closeup?'':c.model, size_text:c.closeup?'':('著'+c.size+(c.fit||'')), closeup:!!c.closeup, start:c.start===''?null:+c.start, order:i})), music:P.music?{path:P.music.path, start:P.musicStart===''?null:+P.musicStart}:null, colors:P.colors||[], sku:P.sku||'', features:P.features||[], category:P.category||'', background:P.background||'', layout:P.layout||'', options:{length_mode:P.lengthMode||this.state.settings.length_mode||'20'} }; },
+  spec(P){ return { name:P.name||'未命名', clips:P.clips.filter(c=>c.use!==false).map((c,i)=>({path:c.path, name:c.name, model:c.closeup?'':c.model, size_text:c.closeup?'':('著'+c.size+(c.fit||'')), closeup:!!c.closeup, start:c.start===''?null:+c.start, order:i})), music:P.music?{path:P.music.path, start:P.musicStart===''?null:+P.musicStart}:null, colors:P.colors||[], sku:P.sku||'', features:P.features||[], category:P.category||'', background:P.background||'', layout:P.layout||'', opening:(P.opening===undefined?'random':P.opening), options:{length_mode:P.lengthMode||this.state.settings.length_mode||'20'} }; },
   setLength(m){ const P=this.P(); if(!P) return; P.lengthMode=m; this.state.settings.length_mode=m; this.call('save_settings',{length_mode:m}); this.renderEstimate(); },
   async generate(all){
     const list=all?this.products:[this.P()];

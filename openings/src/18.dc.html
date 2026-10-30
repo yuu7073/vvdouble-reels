@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening W Quote</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&amp;family=Inter:wght@500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F4EBD6}a:hover{color:#fff}
+.w-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:wZoom 4.8s linear infinite}
+.w-mark{animation:wMark 4.8s cubic-bezier(.2,.9,.3,1.2) infinite}
+.w-1{animation:w1 4.8s ease infinite}.w-2{animation:w2 4.8s ease infinite}.w-3{animation:w3 4.8s ease infinite}
+.w-by{animation:wBy 4.8s ease infinite}
+@keyframes wZoom{from{transform:scale(1.08)}to{transform:scale(1)}}
+@keyframes wMark{0%,2%{opacity:0;transform:scale(.6)}12%,94%{opacity:1;transform:none}100%{opacity:0}}
+@keyframes w1{0%,12%{opacity:0;filter:blur(8px)}22%,94%{opacity:1;filter:blur(0)}100%{opacity:0}}
+@keyframes w2{0%,20%{opacity:0;filter:blur(8px)}30%,94%{opacity:1;filter:blur(0)}100%{opacity:0}}
+@keyframes w3{0%,28%{opacity:0;filter:blur(8px)}38%,94%{opacity:1;filter:blur(0)}100%{opacity:0}}
+@keyframes wBy{0%,40%{opacity:0}50%,94%{opacity:1}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a241d; font-family: 'Playfair Display', serif; color: #F4EBD6">
+<video class="w-vid" src="/_blob/4bc803b4d6f0557ad64a3dddae46e458" poster="/_blob/2bb37e47113ddc26398c62c7715fc5c0" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}"></video>
+<div style="position: absolute; inset: 0; background: rgba(30, 24, 18, 0.45)"></div>
+<div style="position: absolute; left: 0; right: 0; top: 196px; display: flex; flex-direction: column; align-items: center; text-align: center">
+<div class="w-mark" style="font-size: 120px; line-height: 0.6; height: 64px">“</div>
+<div class="w-1" style="font-size: 54px; line-height: 1.02">Comfort</div>
+<div class="w-2" style="font-size: 54px; line-height: 1.02">is the new</div>
+<div class="w-3" style="font-size: 62px; line-height: 1.02; font-style: italic">classic.</div>
+<div class="w-by" style="margin-top: 26px; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.24em">VV DOUBLE  A/W STYLEGUIDE</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening A New Arrivals</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&amp;family=Pinyon+Script&amp;family=Inter:wght@400;500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F4EBC9}a:hover{color:#fff}
+.a-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:aZoom 5s linear infinite}
+.a-new{animation:aNew 5s cubic-bezier(.2,.7,.2,1) infinite}
+.a-script{animation:aScript 5s cubic-bezier(.3,.6,.2,1) infinite}
+.a-small{animation:aSmall 5s ease infinite}
+.a-line{animation:aLine 5s ease infinite}
+@keyframes aZoom{0%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes aNew{0%,4%{opacity:0;filter:blur(14px);transform:translateY(18px) scale(1.04)}22%{opacity:1;filter:blur(0);transform:none}84%{opacity:1;filter:blur(0);transform:none}94%,100%{opacity:0;filter:blur(8px);transform:none}}
+@keyframes aScript{0%,14%{opacity:1;clip-path:inset(0 100% 0 0)}36%{clip-path:inset(0 0 0 0)}84%{opacity:1;clip-path:inset(0 0 0 0)}94%,100%{opacity:0;clip-path:inset(0 0 0 0)}}
+@keyframes aSmall{0%,26%{opacity:0}40%,84%{opacity:1}94%,100%{opacity:0}}
+@keyframes aLine{0%,30%{opacity:0;transform:scaleX(0)}46%,84%{opacity:1;transform:scaleX(1)}94%,100%{opacity:0;transform:scaleX(1)}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2b2722; font-family: 'Inter', sans-serif; color: #F4EBC9">
+<video class="a-vid" src="/_blob/7dd3d73530218c2fe48d8e16d1121437" poster="/_blob/3a85844a82ad34b5af889d1e07897b55" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}"></video>
+<div style="position: absolute; inset: 0; background: rgba(24, 20, 16, 0.22)"></div>
+<div class="a-small" style="position: absolute; top: 92px; left: 34px; right: 34px; display: flex; justify-content: space-between; font-family: 'Playfair Display', serif; font-style: italic; font-size: 15px; letter-spacing: 0.01em">
+<span>the new edit</span>
+<span>VV DOUBLE</span>
+</div>
+<div style="position: absolute; left: 0; right: 0; top: 261px; display: flex; flex-direction: column; align-items: center">
+<div class="a-new" style="font-family: 'Playfair Display', serif; font-weight: 400; font-size: 112px; line-height: 0.9; letter-spacing: -0.03em; text-align: center">New</div>
+<div class="a-script" style="font-family: 'Pinyon Script', cursive; font-size: 92px; line-height: 1; margin-top: -10px; padding: 0 16px; text-align: center">Arrivals</div>
+<div class="a-small" style="margin-top: 18px; font-size: 13px; letter-spacing: 0.04em; text-align: center">made for the everyday</div>
+</div>
+<div style="position: absolute; left: 34px; right: 34px; bottom: 112px; display: flex; flex-direction: column; gap: 14px; align-items: center">
+<div class="a-line" style="width: 100%; height: 1px; background: rgba(244, 235, 201, 0.6)"></div>
+<div class="a-small" style="width: 100%; display: flex; justify-content: space-between; font-family: 'Playfair Display', serif; font-style: italic; font-size: 14px">
+<span>lookbook</span>
+<span>styleguide</span>
+<span>www.vvdouble.com</span>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

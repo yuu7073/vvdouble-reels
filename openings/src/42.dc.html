@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening AY How To</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F6EDCF}a:hover{color:#F6EDCF}
+.ay-0{animation:ay-0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ay-0{0%,2%{opacity:0;}10%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ay-l0{animation:ay-l0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ay-l0{0%,8%{opacity:0;transform:translateX(30px)}14%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ay-l1{animation:ay-l1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ay-l1{0%,14%{opacity:0;transform:translateX(30px)}20%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ay-l2{animation:ay-l2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ay-l2{0%,20%{opacity:0;transform:translateX(30px)}26%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ay-s0{animation:ay-s0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ay-s0{0%,30%{opacity:0;transform:translateY(6px)}36%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ay-s1{animation:ay-s1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ay-s1{0%,35%{opacity:0;transform:translateY(6px)}41%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ay-s2{animation:ay-s2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ay-s2{0%,40%{opacity:0;transform:translateY(6px)}46%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.tw{animation:tw 1.6s ease-in-out infinite alternate}@keyframes tw{from{opacity:.35;transform:scale(.7) rotate(-10deg)}to{opacity:1;transform:scale(1) rotate(8deg)}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Playfair Display', serif; color: #F6EDCF">
+<video src="/_blob/699cfc130329fe26818955bbae775cbf" poster="/_blob/266163afc39ae7d1c2a4172e74e14b84" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.35)"></div>
+<div style="position: absolute; right: 24px; top: 190px; text-align: right; line-height: .92">
+<div class="ay-0" style="font-size: 44px">( how to )</div>
+<div class="ay-l0" style="font-size: 66px; font-style: italic; letter-spacing: -0.03em">dress for</div>
+<div class="ay-l1" style="font-size: 66px; letter-spacing: -0.03em">your own</div>
+<div class="ay-l2" style="font-size: 66px; font-style: italic; letter-spacing: -0.03em">everyday</div>
+</div>
+<div style="position: absolute; left: 24px; top: 470px; display: flex; flex-direction: column; gap: 16px; font-size: 16px; line-height: 1.05">
+<div class="ay-s0">layers that just work</div>
+<div class="ay-s1">pieces you'll repeat<br><i>(and love repeating)</i></div>
+<div class="ay-s2">a fit that feels easy</div>
+</div>
+<svg class="tw" aria-hidden="true" viewBox="-10 -10 20 20" style="position: absolute; left: 212px; top: 196px; width: 26px; height: 26px; animation-delay: 0s"><path d="M0-9V9M-8-4.5 8 4.5M-8 4.5 8-4.5" stroke="#F4B6C2" stroke-width="3.2" stroke-linecap="round"></path></svg><svg class="tw" aria-hidden="true" viewBox="-10 -10 20 20" style="position: absolute; left: 98px; top: 272px; width: 26px; height: 26px; animation-delay: 0.4s"><path d="M0-9V9M-8-4.5 8 4.5M-8 4.5 8-4.5" stroke="#8CC08A" stroke-width="3.2" stroke-linecap="round"></path></svg><svg class="tw" aria-hidden="true" viewBox="-10 -10 20 20" style="position: absolute; left: 120px; top: 380px; width: 26px; height: 26px; animation-delay: 0.8s"><path d="M0-9V9M-8-4.5 8 4.5M-8 4.5 8-4.5" stroke="#6DB3E8" stroke-width="3.2" stroke-linecap="round"></path></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
