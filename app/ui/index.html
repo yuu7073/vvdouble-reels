@@ -96,7 +96,9 @@ input.ipt::placeholder{color:var(--faint)}
 .empty{flex:1;display:flex;align-items:center;justify-content:center;border:2px dashed var(--dash);border-radius:14px;color:var(--mute);font-size:14px;text-align:center;line-height:1.8}
 /* progress / result */
 .bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--blue);transition:width .2s}
-.li{display:flex;align-items:center;gap:12px;min-height:44px;padding:4px 14px;border-bottom:1px solid var(--line3)}
+.li{display:flex;align-items:center;gap:12px;min-height:44px;padding:8px 14px;border-bottom:1px solid var(--line3)}
+#doneList .li{align-items:flex-start;padding:10px 14px}
+#doneList .li>input[type=checkbox]{margin-top:4px}
 .li img{width:26px;height:46px;object-fit:cover;border-radius:4px;flex:none;background:#222}
 .ok{width:18px;height:18px;border-radius:9px;background:#2fa85d;color:var(--field);font-size:11px;display:flex;align-items:center;justify-content:center;flex:none}
 .spin{width:18px;height:18px;border-radius:9px;border:2px solid var(--blue);border-top-color:transparent;flex:none;animation:sp .8s linear infinite}
@@ -558,7 +560,7 @@ const app = {
   async loadTitles(id){
     const box=this._titles[id]||{list:[],i:-1};
     if(box.i+1<box.list.length){ box.i++; $('#pubTitle').value=box.list[box.i]; this._titles[id]=box; return; }
-    const r=await this.call('yt_titles', id); if(!r||!r.ok){ $('#pubTitle').placeholder=r?r.error:'無法產生'; return; }
+    const r=await this.call('yt_titles', id, '', box.list); if(!r||!r.ok){ $('#pubTitle').placeholder=r?r.error:'無法產生'; return; }
     box.list=box.list.concat(r.titles||[]); box.i=Math.min(box.i+1, box.list.length-1); this._titles[id]=box; if(box.list.length) $('#pubTitle').value=box.list[box.i];
     if(r.ai_error){ const msg=/credit balance/i.test(r.ai_error)?'AI 標題暫停：Anthropic API 餘額不足，目前是備用句':'AI 標題失敗（備用句）：'+r.ai_error; this.toast(msg,true); }
   },

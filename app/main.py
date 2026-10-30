@@ -1098,14 +1098,15 @@ class Api:
         webbrowser.open(url)
         return True
 
-    def yt_titles(self, hist_id, extra=""):
+    def yt_titles(self, hist_id, extra="", avoid=None):
         rec = next((h for h in self.history if h.get("id") == hist_id), None)
         if not rec:
             return {"ok": False, "error": "找不到紀錄"}
         models = sorted({(s.get("model") or "") for s in rec.get("segments", []) if s.get("model")})
         try:
             r = self._cloud("aiTitle", {"name": rec.get("name", ""), "category": rec.get("category", ""), "features": rec.get("features", []),
-                                        "colors": rec.get("colors", []), "models": "、".join(models), "extra": extra, "n": 3})
+                                        "colors": rec.get("colors", []), "models": "、".join(models), "extra": extra, "n": 3,
+                                        "avoid": [a.split("｜")[0] for a in (avoid or [])][-12:]})
             return {"ok": True, "titles": r.get("titles", []), "ai_error": r.get("ai_error") or ""}
         except Exception as e:
             return {"ok": False, "error": str(e)}
