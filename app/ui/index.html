@@ -88,9 +88,9 @@ input.ipt::placeholder{color:var(--faint)}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
 .num{position:absolute;top:8px;left:8px;width:26px;height:26px;border-radius:13px;background:var(--ink);color:var(--onink);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .clip.closeup .num{background:var(--blue)}
-.dur{position:absolute;bottom:8px;right:8px;height:20px;padding:0 7px;border-radius:6px;background:rgba(0,0,0,.65);color:var(--field);font-size:11px;display:flex;align-items:center}
+.dur{position:absolute;bottom:8px;right:8px;height:20px;padding:0 7px;border-radius:6px;background:rgba(0,0,0,.72);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;border:1px solid rgba(255,255,255,.35);text-shadow:0 1px 2px rgba(0,0,0,.8);transition:right .12s}
 .del{position:absolute;bottom:8px;right:8px;width:24px;height:24px;border-radius:12px;background:rgba(200,60,60,.85);color:#fff;display:none;align-items:center;justify-content:center;font-size:14px;z-index:3}
-.clip:hover .dur{display:none}
+.clip:hover .dur{right:38px}
 .clip:hover .del{display:flex}
 .two{display:flex;gap:6px}
 .empty{flex:1;display:flex;align-items:center;justify-content:center;border:2px dashed var(--dash);border-radius:14px;color:var(--mute);font-size:14px;text-align:center;line-height:1.8}
@@ -713,10 +713,20 @@ const app = {
         fit: fit||(sheet&&sheet.fit)||(last?last.fit:'舒適'), start: startM?startM[1]:''});
     }
     if (res.music && res.music.length && !P.music) { P.music={path:res.music[0].path, name:res.music[0].name, external:true}; }
+    if (!P.music && (res.clips||[]).length) this.autoMusic(P);
     if (!P.name && res.clips && res.clips.length) { const d=res.clips[0].path.replace(/[\\/][^\\/]*$/,'').split(/[\\/]/).pop(); if (d && !/^(downloads|desktop|桌面|videos|影片)$/i.test(d)) P.name=d; }
     this.renderAll();
   },
   removeClip(i) { this.P().clips.splice(i,1); this.renderGrid(); },
+  async autoMusic(P){
+    // 沒選音樂就隨機帶一首：同一批（本次製作清單）不重複，用完才重複
+    const used=new Set(this.products.filter(x=>x!==P&&x.music).map(x=>x.music.path));
+    const tracks=((this.state.music&&this.state.music.tracks)||[]).filter(t=>!used.has(t.path));
+    const pool=tracks.length?tracks:((this.state.music&&this.state.music.tracks)||[]);
+    if(!pool.length) return;
+    const t=pool[Math.floor(Math.random()*pool.length)];
+    P.music={path:t.path, name:t.name, auto:true}; if(this.P()===P){ this.renderMusicSel(); this.renderList(); this.renderEstimate(); }
+  },
   scrub(el,e){ const r=el.getBoundingClientRect(); const k=Math.max(0,Math.min(5,Math.floor((e.clientX-r.left)/r.width*6))); el.style.backgroundPosition=`${k*20}% 0`; const b=el.querySelector('b'); if(b) b.style.marginLeft=`${k*16.6}%`; },
   setClip(i, k, v) { const c=this.P().clips[i]; if(k==='use'){ c.use=(v===true||v==='true'); this.renderGrid(); return; } c[k]=v; if(k==='closeup'){ if(v){c.model='';c.size='';} else {c.model=c.model||this.state.models[0]?.name||''; c.size=c.size||'大碼';} this.renderGrid(); } else { if(k==='model'){ this.state.settings.last_model=v; const sh=(this.P().modelSizes||{})[String(v).toUpperCase()]; if(sh&&sh.size){ c.size=sh.size; if(sh.fit) c.fit=sh.fit; this.renderGrid(); return; } } if(k==='size') this.state.settings.last_size=v; this.renderCounts(); } },
   applyToRest(i) { const src=this.P().clips[i]; this.P().clips.forEach((c,j)=>{ if(j>i && !c.closeup){c.model=src.model;c.size=src.size;c.fit=src.fit;} }); this.renderGrid(); this.toast('已套用到後面的片段'); },
@@ -871,11 +881,11 @@ const app = {
     if (cur && !tracks.some(t=>t.path===cur)) opts+=`<option value="${esc(cur)}" selected>${esc(P.music.name)}（資料夾內）</option>`;
     sel.innerHTML=opts; $('#musicStart').value=P?P.musicStart:'';
     const t=tracks.find(x=>x.path===cur);
-    $('#musicMeta').innerHTML=t?`${t.bpm?t.bpm+' BPM':'尚未分析'}・用過 ${t.uses} 次${t.last_use?'・上次 '+t.last_use.date.slice(5):''}`:(cur?'來自商品資料夾':'');
+    $('#musicMeta').innerHTML=t?`${P&&P.music&&P.music.auto?'<span class="chip b" style="height:20px;margin-right:6px">自動挑選</span>':''}${t.bpm?t.bpm+' BPM':'尚未分析'}・用過 ${t.uses} 次${t.last_use?'・上次 '+t.last_use.date.slice(5):''}`:(cur?'來自商品資料夾':'');
     if(!tracks.length) $('#musicMeta').innerHTML=`<a href="#" onclick="app.go('music');return false">還沒設定音樂庫</a>`;
     this.musicLoad(cur);
   },
-  setMusic(path) { const P=this.P(); const t=(this.state.music.tracks||[]).find(x=>x.path===path); P.music=path?{path, name:t?t.name:path}:null; this.renderMusicSel(); this.renderList(); this.renderEstimate(); },
+  setMusic(path) { const P=this.P(); const t=(this.state.music.tracks||[]).find(x=>x.path===path); P.music=path?{path, name:t?t.name:path, auto:false}:null; this.renderMusicSel(); this.renderList(); this.renderEstimate(); },
   setMusicStart(v) { this.P().musicStart=v; this.musicDraw(); this.renderEstimate(); },
   async pickMusic(mode) { const t=await this.call('music_pick', mode, this.P().music?this.P().music.path:null); if(!t){this.toast('音樂庫是空的',true);return;} this.setMusic(t.path); },
   async reloadMusic() { this.state.music=await this.call('music_list')||this.state.music; this.renderMusic(); this.renderMusicSel(); },
