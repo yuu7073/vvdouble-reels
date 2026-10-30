@@ -936,7 +936,8 @@ const app = {
   renderMusicSel() {
     const P=this.P?this.P():null; const tracks=(this.state.music&&this.state.music.tracks)||[];
     const sel=$('#musicSel'); const cur=P&&P.music?P.music.path:'';
-    let opts=`<option value="">— 不放音樂 —</option>`+tracks.map(t=>`<option value="${esc(t.path)}" ${t.path===cur?'selected':''}>${esc(t.name)}</option>`).join('');
+    if(P&&!P.music&&(P.clips||[]).length&&tracks.length){ this.autoMusic(P); return; }   // 一定要有音樂：沒選就隨機帶一首
+    let opts=`<option value="">— 產生時隨機 —</option>`+tracks.map(t=>`<option value="${esc(t.path)}" ${t.path===cur?'selected':''}>${esc(t.name)}</option>`).join('');
     if (cur && !tracks.some(t=>t.path===cur)) opts+=`<option value="${esc(cur)}" selected>${esc(P.music.name)}（資料夾內）</option>`;
     sel.innerHTML=opts; $('#musicStart').value=P?P.musicStart:'';
     const t=tracks.find(x=>x.path===cur);

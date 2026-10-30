@@ -645,6 +645,19 @@ class Api:
                             self._emit("log", {"job": ji, "msg": "這個版型需要底圖，但找不到當期的形象擺拍／空景"})
                 except Exception:
                     traceback.print_exc()
+                # 一定要有音樂：沒選就從音樂庫隨機帶一首（這批不重複）
+                try:
+                    mp = (spec.get("music") or {}).get("path") if spec.get("music") else None
+                    if not mp or not os.path.exists(mp):
+                        used = [(j.get("music") or {}).get("path") for j in jobs if j is not spec and j.get("music")]
+                        pick = self.music_pick("random", exclude=[u for u in used if u])
+                        if pick:
+                            spec["music"] = {"path": pick["path"], "start": None}
+                            self._emit("log", {"job": ji, "msg": f"沒選音樂，自動帶：{pick.get('name') or os.path.basename(pick['path'])}"})
+                        else:
+                            self._emit("log", {"job": ji, "msg": "沒選音樂，音樂庫也是空的，這支沒配樂"})
+                except Exception:
+                    traceback.print_exc()
                 # 開頭動畫：random → 從開頭動畫庫挑一支（這批不重複、最近用過的往後排）
                 try:
                     op = (spec.get("opening") or "").strip()
@@ -1929,7 +1942,8 @@ class Api:
 
     def music_pick(self, mode="least_used", exclude=None):
         lst = self.music_list()["tracks"]
-        lst = [t for t in lst if t["path"] != exclude] or lst
+        ex = set(exclude) if isinstance(exclude, (list, tuple, set)) else ({exclude} if exclude else set())
+        lst = [t for t in lst if t["path"] not in ex] or lst
         if not lst:
             return None
         if mode == "random":
