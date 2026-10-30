@@ -1,0 +1,26 @@
+name: Render openings
+on:
+  push:
+    branches: [main]
+    paths: ["openings/**", ".github/workflows/openings.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-noto-cjk
+      - run: cd openings && npm i --no-audit --no-fund && npx playwright install --with-deps chromium
+      - run: bash openings/build.sh
+      - name: Upload to release "openings"
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: openings
+          name: 開頭動畫庫
+          prerelease: true
+          body: "工具啟動時自動下載到 官網部門\\開頭動畫。帶透明的 ProRes 4444 .mov，1080x1920 30fps。"
+          files: openings/mov/*.mov
