@@ -81,6 +81,9 @@ def audio_material(path):
     return amat
 
 
+OPENING_MIN_US = int(3.0 * 1_000_000)   # 開頭動畫至少撐 3 秒（第一段不夠長就延到下一個切點）
+
+
 def build_draft(spec, models, log=None, progress=None):
     """
     spec = {
@@ -419,7 +422,8 @@ def build_draft(spec, models, log=None, progress=None):
     layout_windows = []     # [(t0, dur)] 版型段的時間，網址／商品名稱要避開或改位置
     cursor = 0
     card_runs, close_runs, out_segments = [], [], []
-    first_clip_us = None    # 第一段實拍的精確長度（微秒），開頭動畫要跟它切齊
+    first_clip_us = None    # 第一段實拍的精確長度（微秒）
+    seg_ends = []           # 每段實拍結束的時間點（微秒），開頭動畫要結束在其中一個切點上
     total_steps = max(1, len(sequence))
 
     for idx, (kind, full, c, nb) in enumerate(sequence):
@@ -479,6 +483,7 @@ def build_draft(spec, models, log=None, progress=None):
             if first_clip_us is None:
                 first_clip_us = dur
             cursor += dur
+            seg_ends.append(cursor)
             continue
 
         model_name = (c.get("model") or "").strip()
@@ -518,6 +523,7 @@ def build_draft(spec, models, log=None, progress=None):
         if first_clip_us is None:
             first_clip_us = dur
         cursor += dur
+        seg_ends.append(cursor)
 
     # 開頭動畫：帶 alpha 的 .mov 疊在第一段滿版上（最上層），長度跟著第一段調速；文字（MODEL 卡／商品名稱／網址）等開頭結束再出現
     opening_window = None
@@ -526,7 +532,9 @@ def build_draft(spec, models, log=None, progress=None):
         try:
             omat = cc.VideoMaterial(opening_path)
             odur = int(omat.duration)
-            tdur = int(first_clip_us or out_segments[0]["dur"] * SEC)   # 跟第一段一樣長，整支動畫調速塞進去
+            # 結束在切點上：第一段夠長（≥3 秒）就跟第一段切齊，太短就延到下一個切點，整支動畫調速塞進去
+            tdur = next((e for e in seg_ends if e >= OPENING_MIN_US), seg_ends[-1] if seg_ends else int(first_clip_us or 0))
+            tdur = min(tdur, cursor)
             speed = odur / max(tdur, 1)
             script.add_segment(cc.VideoSegment(omat, cc.Timerange(0, tdur), source_timerange=cc.Timerange(0, odur),
                                                speed=speed, volume=0.0),

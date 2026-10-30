@@ -2063,7 +2063,11 @@ def main():
     win.events.loaded += _hook_drop
     threading.Timer(3.0, api._warm_todo).start()
     threading.Thread(target=api._watch_exports, daemon=True).start()
-    threading.Thread(target=api._opening_sync, daemon=True).start()
+    def _opening_sync_loop():
+        while True:
+            api._opening_sync()
+            time.sleep(30 * 60)      # 之後每 30 分鐘再看一次有沒有新的開頭動畫
+    threading.Thread(target=_opening_sync_loop, daemon=True).start()
 
     def _hook(args):
         traceback.print_exception(args.exc_type, args.exc_value, args.exc_traceback)
