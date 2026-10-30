@@ -107,6 +107,7 @@ input.ipt::placeholder{color:var(--faint)}
 /* tables */
 .tr{display:grid;gap:12px;align-items:center;min-height:48px;padding:0 16px;border-bottom:1px solid var(--line3)}
 .tr.head{min-height:38px;font-size:12px;font-weight:700;color:var(--mute);background:var(--sub)}
+.tr:not(.head):hover,#doneList .li:hover{background:var(--sub)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--onink);padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
 .toast.show{opacity:1}
 .toast.err{background:var(--red)}
