@@ -786,7 +786,11 @@ const app = {
       </div>`;
     };
     g.innerHTML=groups.map(gr=>{ const items=gr.items; const first=P.clips[items[0]]; const sh=gr.k!=='__close'&&gr.k!=='__none'?(P.modelSizes||{})[gr.k.toUpperCase()]:null;
-      const head=gr.k==='__close'?`<b>近拍</b><span style="color:var(--mute)">${items.length} 支</span>`:(gr.k==='__none'?`<b style="color:var(--red)">未指定模特</b><span style="color:var(--mute)">${items.length} 支</span>`:`<b>${esc(gr.k)}</b><span style="color:var(--mute)">${items.length} 支${sh&&sh.size?'・商品表 '+esc(sh.size)+' '+esc(sh.fit||''):''}</span><div class="sp"></div><a href="#" style="font-size:12px" onclick="app.groupSize('${esc(gr.k)}');return false">整組改尺寸</a>`);
+      const gk=gr.k, ge=this._groupEdit===gk;
+      const head=gk==='__close'?`<b>近拍</b><span style="color:var(--mute)">${items.length} 支</span>`:(gk==='__none'?`<b style="color:var(--red)">未指定模特</b><span style="color:var(--mute)">${items.length} 支</span>`:
+        `<b>${esc(gk)}</b><span style="color:var(--mute)">${items.length} 支</span>`+(ge?
+        `<select class="sel" style="height:28px;width:auto" id="ge-size">${SIZES.map(x=>`<option ${x===first.size?'selected':''}>${x}</option>`).join('')}</select><input class="ipt" id="ge-fit" style="width:80px;height:28px" value="${esc(first.fit||'')}" placeholder="舒適"><button class="btn k sm" onclick="app.groupApply('${esc(gk)}')">套用到 ${items.length} 支</button><button class="btn l sm" onclick="app._groupEdit=null;app.renderGrid()">取消</button>`:
+        `<span class="pill" style="height:26px" title="點一下改這位模特全部的尺寸" onclick="app._groupEdit='${esc(gk)}';app.renderGrid()">${esc(first.size||'?')}・${esc(first.fit||'')}${sh&&sh.size&&sh.size!==first.size?`<span style="color:var(--orange)">（商品表 ${esc(sh.size)}）</span>`:''}</span>`));
       return `<div class="mgrp">${head}</div>`+items.map(i=>card(P.clips[i],i)).join(''); }).join('');
     g.querySelectorAll('.clip').forEach(el=>{
       el.addEventListener('dragstart',e=>{ if(e.target.closest('input,select')) {e.preventDefault();return;} e.dataTransfer.setData('text/plain',el.dataset.i); el.classList.add('ghost'); e.dataTransfer.effectAllowed='move'; });
@@ -800,7 +804,7 @@ const app = {
   editOpen(i){ this.P().clips.forEach(c=>c._edit=false); this.P().clips[i]._edit=true; this.renderGrid(); },
   editDone(i){ this.P().clips[i]._edit=false; this.renderGrid(); },
   applySame(i){ const src=this.P().clips[i]; let n=0; this.P().clips.forEach((c,j)=>{ if(j!==i&&!c.closeup&&c.model===src.model){ c.size=src.size; c.fit=src.fit; n++; } }); src._edit=false; this.renderGrid(); this.toast(`已套用到 ${n} 支 ${src.model}`); },
-  groupSize(model){ const P=this.P(); const cur=P.clips.find(c=>!c.closeup&&c.model===model); if(!cur) return; const size=prompt(`${model} 整組尺寸（${SIZES.join('／')}）`, cur.size||''); if(size==null) return; const fit=prompt('感受（舒適／寬鬆／合身…）', cur.fit||'舒適'); if(fit==null) return; P.clips.forEach(c=>{ if(!c.closeup&&c.model===model){ c.size=size.trim()||c.size; c.fit=fit.trim(); } }); this.renderGrid(); },
+  groupApply(model){ const P=this.P(); const size=($('#ge-size')||{}).value, fit=(($('#ge-fit')||{}).value||'').trim(); let n=0; P.clips.forEach(c=>{ if(!c.closeup&&c.model===model){ if(size) c.size=size; c.fit=fit; n++; } }); this._groupEdit=null; this.renderGrid(); this.toast(`${model} ${n} 支已改為 ${size}・${fit}`); },
 
   /* ---------- music player ---------- */
   _mi:null,
