@@ -64,7 +64,7 @@ input.ipt::placeholder{color:var(--faint)}
 .main{flex:1;min-height:0;display:flex}
 .left{width:250px;flex:none;background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column}
 .center{flex:1;min-width:0;padding:18px 22px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
-.right{width:380px;flex:none;background:var(--card);border-left:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:16px;overflow:auto}
+.right{width:540px;flex:none;background:var(--card);border-left:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:16px;overflow:auto}
 .plist{display:flex;flex-direction:column;gap:4px;padding:0 10px;overflow:auto}
 .pitem{padding:10px 12px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;gap:3px;border:1px solid transparent}
 .pitem:hover{background:var(--sub)}.pitem.on{background:var(--blue-bg);border-color:var(--selb)}
@@ -120,10 +120,15 @@ input.ipt::placeholder{color:var(--faint)}
 .bgit img{width:100%;height:100%;object-fit:cover;display:block}
 .bgit.on{border-color:var(--blue)}
 .bgit .cap{position:absolute;left:0;right:0;bottom:0;padding:16px 8px 6px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:11px;display:flex;justify-content:space-between;align-items:center}
-.oprow{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
-.opit{flex:none;width:54px;aspect-ratio:9/16;border-radius:6px;overflow:hidden;background:#333;cursor:pointer;border:2px solid transparent;position:relative}
+.opgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-content:start}
+.opbox{flex:1;min-width:0;height:500px;overflow-y:auto;overflow-x:hidden;background:var(--sub);border:1px solid var(--line);border-radius:10px;padding:8px;scrollbar-width:thin}
+.opit{aspect-ratio:9/16;border-radius:8px;overflow:hidden;background:#3a3836;cursor:pointer;border:2px solid transparent;position:relative}
 .opit img{width:100%;height:100%;object-fit:cover;display:block}.opit.on{border-color:var(--blue)}
-.opit .nm{position:absolute;left:0;right:0;bottom:0;font-size:10px;text-align:center;color:#fff;background:rgba(0,0,0,.55);padding:2px 0}
+.opit .nm{position:absolute;left:0;right:0;bottom:0;font-size:11px;text-align:center;color:#fff;background:rgba(0,0,0,.55);padding:3px 0}
+.oplib{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.oplib .opit .nm{display:flex;justify-content:space-between;padding:4px 8px;font-size:11px}.oplib .opit .nm b{font-size:13px}
+.modal .box.wide{width:1100px;max-height:86vh}
+#doneList{flex:none}#doneList .li{flex:none}
 .bgit .use{position:absolute;top:6px;right:6px;height:20px;padding:0 7px;border-radius:10px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;display:flex;align-items:center}
 .mrow{display:flex;align-items:center;gap:10px;height:34px;padding:0 12px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;user-select:none}
 .mrow.sub{padding-left:34px;font-weight:400;height:30px;font-size:12.5px}
@@ -225,16 +230,16 @@ input.ipt::placeholder{color:var(--faint)}
       </div>
 
       <div style="display:flex;flex-direction:column;gap:10px">
-        <div class="row"><span class="h">開頭</span><span id="opMeta" style="font-size:12px;color:var(--mute)"></span></div>
-        <div style="display:flex;gap:10px;align-items:stretch">
-          <canvas id="opPrev" width="270" height="480" style="width:108px;height:192px;border-radius:8px;background:#1c1c1c;flex:none" title="套在首支影片上的預覽"></canvas>
-          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px">
-            <div id="opPick"></div>
+        <div class="row"><span class="h">開頭</span><span id="opMeta" style="font-size:12px;color:var(--mute);flex:1;margin-left:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span><button class="btn l sm" onclick="app.openingLib()">版型庫</button></div>
+        <div style="display:flex;gap:14px;align-items:stretch">
+          <div style="width:220px;flex:none;display:flex;flex-direction:column;gap:8px">
+            <canvas id="opPrev" width="270" height="480" style="width:220px;height:391px;border-radius:10px;background:#1c1c1c;display:block" title="套在首支影片上的預覽"></canvas>
             <div class="two" id="opBtns">
               <button class="btn l sm" style="flex:1" onclick="app.setOpening('random')">隨機</button>
-              <button class="btn l sm" style="flex:1" onclick="app.setOpening('')">不用</button>
+              <button class="btn l sm" style="flex:1" onclick="app.setOpening('')">不使用版型</button>
             </div>
           </div>
+          <div id="opPick" class="opbox"></div>
         </div>
       </div>
 
@@ -518,7 +523,23 @@ const app = {
     if(sy.running) meta.textContent=`下載中 ${sy.done||0}/${sy.total||'…'}`;
     meta.textContent=P.opening==='random'?'自動挑選':(P.opening?lib.find(i=>i.path===P.opening)?.name||'':'不用');
     this.drawOpeningPreview(P, lib);
-    el.innerHTML=`<div class="oprow">${lib.map(i=>`<div class="opit ${i.path===P.opening?'on':''}" title="${esc(i.name)}" onclick="app.setOpening(${JSON.stringify(i.path).replace(/"/g,'&quot;')})">${i.thumb?`<img src="${i.thumb}" alt="">`:''}<div class="nm">${esc(i.name.replace(/^開頭/,''))}</div></div>`).join('')}</div>`;
+    el.innerHTML=`<div class="opgrid">${lib.map(i=>`<div class="opit ${i.path===P.opening?'on':''}" title="${esc(i.name)}" onclick="app.setOpening(${JSON.stringify(i.path).replace(/"/g,'&quot;')})">${i.thumb?`<img src="${i.thumb}" alt="">`:''}<div class="nm">${esc(i.name.replace(/^開頭/,''))}</div></div>`).join('')}</div>`;
+    const on=el.querySelector('.opit.on'); if(on&&on.scrollIntoView) on.scrollIntoView({block:'nearest'});
+  },
+  openingLib(){
+    const P=this.P(); if(!P) return; const lib=(this.state.openings&&this.state.openings.items)||[];
+    const box=$('#modalBox');
+    const draw=(q)=>{ q=(q||'').trim().toLowerCase(); const list=lib.filter(i=>!q||i.name.toLowerCase().includes(q)||(i.title||'').toLowerCase().includes(q));
+      $('#opLibN').textContent=q?`符合「${q}」的 ${list.length} 支`:`${lib.length} 支`;
+      $('#opLibGrid').innerHTML=list.map(i=>`<div class="opit ${i.path===P.opening?'on':''}" onclick="app.setOpening(${JSON.stringify(i.path).replace(/"/g,'&quot;')});$('#modal').classList.remove('show');$('#modalBox').classList.remove('wide')">${i.thumb?`<img src="${i.thumb}" alt="">`:''}<div class="nm"><b>${esc(i.name.replace(/^開頭/,''))}</b><span>${esc(i.title||'')}</span></div></div>`).join('')||`<div style="grid-column:1/-1;padding:30px;text-align:center;color:var(--mute)">沒有符合的版型</div>`; };
+    box.innerHTML=`<div style="padding:14px 18px;border-bottom:1px solid var(--line3);display:flex;align-items:center;gap:12px">
+        <b>開頭版型庫</b><span id="opLibN" style="font-size:12px;color:var(--mute)"></span>
+        <input class="ipt" id="opLibQ" placeholder="搜尋編號或文字" style="width:320px;height:34px;margin-left:8px" oninput="app._opLibDraw(this.value)">
+        <div class="sp"></div>
+        <button class="btn w sm" onclick="app.setOpening('random');$('#modal').classList.remove('show');$('#modalBox').classList.remove('wide')">隨機一支</button>
+        <button class="btn w sm" onclick="$('#modal').classList.remove('show');$('#modalBox').classList.remove('wide')">關閉</button></div>
+      <div style="padding:16px 18px;overflow:auto"><div class="oplib" id="opLibGrid"></div></div>`;
+    this._opLibDraw=draw; draw(''); $('#modal').classList.add('show'); box.classList.add('wide'); setTimeout(()=>{ const q=$('#opLibQ'); if(q) q.focus(); },0);
   },
   renderBgPick(){
     const el=$('#bgPick'); if(!el) return; const P=this.P(); const cur=P&&P.background;
@@ -551,7 +572,7 @@ const app = {
         <div style="font-size:12px;color:var(--mute)">Webhook URL：<span style="user-select:all">https://asia-east1-vvdouble-shopline.cloudfunctions.net/reels?op=line</span></div>
       </div>
       <div style="padding:14px 18px;border-top:1px solid var(--line3);display:flex;gap:10px;justify-content:flex-end"><button class="btn w" onclick="$('#modal').classList.remove('show')">取消</button><button class="btn k" onclick="app.lineSave()">儲存到雲端</button></div>`;
-    $('#modal').classList.add('show');
+    $('#modalBox').classList.remove('wide');$('#modal').classList.add('show');
   },
   async lineSave(){ const t=$('#lnTok').value.trim(), sct=$('#lnSec').value.trim(); if(!t){ this.toast('請貼 Channel access token',true); return; } const r=await this.call('line_setup',t,sct); if(!r||!r.ok){ this.toast(r?r.error:'失敗',true); return; } $('#modal').classList.remove('show'); this.toast('已存到雲端'); this.lineStatus(); },
   async lineTest(){ const r=await this.call('line_ping',true); if(!r||!r.ok){ this.toast(r?(r.error||(r.errors||[]).join('；')||'失敗'):'失敗',true); return; } this.toast(`已送出到 ${r.sent} 個群組／好友`); },
@@ -573,8 +594,10 @@ const app = {
         <div style="display:flex;gap:8px;align-items:center"><div class="bar" style="flex:1"><i id="pubBar" style="width:0"></i></div><span id="pubMsg" style="font-size:12px;color:var(--mute);min-width:120px"></span><button class="btn k" id="pubBtn" onclick="app.doPublish('${r.id}')">上傳 YouTube 並放到商品頁</button></div></div>`;
   },
   nextTen(){ const d=new Date(); if(d.getHours()>=22) d.setDate(d.getDate()+1); d.setHours(22,0,0,0); const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; },
-  privacyPicker(prefix){ return `<select class="sel" id="${prefix}Priv" style="height:30px;width:auto" onchange="$('#${prefix}At').style.display=this.value==='schedule'?'':'none'"><option value="public">立即公開</option><option value="schedule">定時公開</option><option value="private">私人（之後手動公開）</option></select><input class="ipt" type="datetime-local" id="${prefix}At" value="${this.nextTen()}" style="height:30px;width:200px;display:none">`; },
-  pubOptions(prefix){ const v=($('#'+prefix+'Priv')||{}).value||'public'; return v==='schedule'?{privacy:'private',publish_at:($('#'+prefix+'At')||{}).value||''}:{privacy:v,publish_at:''}; },
+  privacyPicker(prefix){ return `<select class="sel" id="${prefix}Priv" style="height:30px;width:auto" onchange="$('#${prefix}At').style.display=this.value==='schedule'?'':'none'"><option value="public">立即公開</option><option value="schedule">定時公開</option><option value="private">私人（之後手動公開）</option></select><input class="ipt" type="datetime-local" id="${prefix}At" value="${this.state.settings.last_publish_at||this.nextTen()}" style="height:30px;width:200px;display:none">`; },
+  pubOptions(prefix){ const v=($('#'+prefix+'Priv')||{}).value||'public'; const at=($('#'+prefix+'At')||{}).value||'';
+    if(v==='schedule'&&at&&at!==this.state.settings.last_publish_at){ this.state.settings.last_publish_at=at; this.call('save_settings',{last_publish_at:at}); }   // 記住這檔的排程時間，下次直接帶入
+    return v==='schedule'?{privacy:'private',publish_at:at}:{privacy:v,publish_at:''}; },
   async setStatus(id,privacy,at){ const r=await this.call('yt_set_status',id,privacy,at||''); if(!r||!r.ok){ this.toast(r?r.error:'失敗',true); return; } const rec=this.state.history.find(x=>x.id===id); if(rec&&r.record) Object.assign(rec,r.record); this.renderHistory(); if(rec) this.showDetail(rec); this.toast(at?'已設定時公開':(privacy==='public'?'已公開':'已改為私人')); },
   doneCheck(id,on){ on?this.doneSel.add(id):this.doneSel.delete(id); this.renderHistory(); },
   doneSelectReady(){ (this.state.history||[]).filter(r=>r.ok&&r.exported&&!r.youtube_id).forEach(r=>this.doneSel.add(r.id)); this.renderHistory(); },
@@ -588,7 +611,7 @@ const app = {
         <div style="max-height:200px;overflow:auto;font-size:12px;color:var(--mute);line-height:1.7">${sel.map(r=>'・'+esc(r.name)).join('<br>')}</div>
       </div>
       <div style="padding:14px 18px;border-top:1px solid var(--line3);display:flex;gap:10px;justify-content:flex-end"><button class="btn w" onclick="$('#modal').classList.remove('show')">取消</button><button class="btn k" onclick="app.batchUploadGo()">開始</button></div>`;
-    $('#modal').classList.add('show'); setTimeout(()=>{ const s=$('#btPriv'); if(s){ s.value='schedule'; $('#btAt').style.display=''; } },0);
+    $('#modalBox').classList.remove('wide');$('#modal').classList.add('show'); setTimeout(()=>{ const s=$('#btPriv'); if(s){ s.value='schedule'; $('#btAt').style.display=''; } },0);
   },
   async batchUploadGo(){
     const sel=(this.state.history||[]).filter(r=>this.doneSel.has(r.id)&&r.exported&&!r.youtube_id);
@@ -988,7 +1011,7 @@ const app = {
         <div style="font-size:12px;color:var(--mute)">按「儲存並授權」後會開瀏覽器，用 vvdoubleservice@gmail.com 登入並允許。</div>
       </div>
       <div style="padding:14px 18px;border-top:1px solid var(--line3);display:flex;gap:10px;justify-content:flex-end"><button class="btn w" onclick="$('#modal').classList.remove('show')">取消</button><button class="btn k" onclick="app.ytSetupSave()">儲存並授權</button></div>`;
-    $('#modal').classList.add('show');
+    $('#modalBox').classList.remove('wide');$('#modal').classList.add('show');
   },
   async ytSetupSave(){
     let cid=$('#ytCid').value.trim(); if(cid.startsWith('（')) cid=''; const sec=$('#ytSec').value.trim(); const ai=$('#ytAi').value.trim();
@@ -1077,7 +1100,7 @@ const app = {
         <div id="rbList" style="max-height:320px;overflow:auto"></div>
       </div>
       <div style="padding:14px 18px;border-top:1px solid var(--line3);display:flex;gap:10px;justify-content:flex-end"><button class="btn w" onclick="$('#modal').classList.remove('show')">取消</button></div>`;
-    $('#modal').classList.add('show'); setTimeout(()=>$('#rbQ').focus(),50);
+    $('#modalBox').classList.remove('wide');$('#modal').classList.add('show'); setTimeout(()=>$('#rbQ').focus(),50);
   },
   rebindSearch(q){
     clearTimeout(this._rbT); q=(q||'').trim(); const box=$('#rbList'); if(q.length<2){ box.innerHTML=''; return; }

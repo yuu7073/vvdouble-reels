@@ -1699,30 +1699,35 @@ class Api:
         return p if p and os.path.isdir(p) else ""
 
     def _opening_thumb(self, fp):
-        """開頭動畫縮圖：取 60% 處一格，疊在深灰底上（透明看得到字）"""
+        """開頭動畫縮圖：60% 處那一格疊在深灰底上（用 PIL 合成，透明一定看得到字）"""
         try:
-            key = hashlib.md5(f"op2|{fp}|{os.path.getmtime(fp)}".encode("utf-8")).hexdigest()[:16]
+            key = hashlib.md5(f"op3|{fp}|{os.path.getmtime(fp)}".encode("utf-8")).hexdigest()[:16]
             out = os.path.join(THUMB_DIR, key + ".jpg")
             if not os.path.exists(out):
-                d = _probe_duration(fp) or 5.0
-                _run([_ffmpeg(), "-y", "-loglevel", "error", "-f", "lavfi", "-i", "color=c=0x55524e:s=180x320:r=30",
-                      "-ss", f"{d * 0.6:.2f}", "-i", fp, "-filter_complex", "[1]format=rgba,scale=180:320[o];[0][o]overlay=shortest=1",
-                      "-frames:v", "1", "-q:v", "4", out], timeout=60)
+                from PIL import Image
+                png = self._opening_frame_file(fp)
+                fr = Image.open(png).convert("RGBA")
+                bg = Image.new("RGBA", fr.size, (85, 82, 78, 255))
+                bg.alpha_composite(fr)
+                bg.convert("RGB").save(out, "JPEG", quality=82)
             with open(out, "rb") as f:
                 return "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("ascii")
         except Exception:
             return ""
 
+    def _opening_frame_file(self, fp):
+        key = hashlib.md5(f"opf|{fp}|{os.path.getmtime(fp)}".encode("utf-8")).hexdigest()[:16]
+        out = os.path.join(THUMB_DIR, key + ".png")
+        if not os.path.exists(out):
+            d = _probe_duration(fp) or 5.0
+            _run([_ffmpeg(), "-y", "-loglevel", "error", "-ss", f"{d * 0.6:.2f}", "-i", fp,
+                  "-vf", "format=rgba,scale=270:480", "-frames:v", "1", out], timeout=60)
+        return out
+
     def _opening_frame(self, fp):
         """開頭動畫 60% 處的透明 PNG（270x480），介面拿來疊在首支影片縮圖上做預覽"""
         try:
-            key = hashlib.md5(f"opf|{fp}|{os.path.getmtime(fp)}".encode("utf-8")).hexdigest()[:16]
-            out = os.path.join(THUMB_DIR, key + ".png")
-            if not os.path.exists(out):
-                d = _probe_duration(fp) or 5.0
-                _run([_ffmpeg(), "-y", "-loglevel", "error", "-ss", f"{d * 0.6:.2f}", "-i", fp,
-                      "-vf", "format=rgba,scale=270:480", "-frames:v", "1", out], timeout=60)
-            with open(out, "rb") as f:
+            with open(self._opening_frame_file(fp), "rb") as f:
                 return "data:image/png;base64," + base64.b64encode(f.read()).decode("ascii")
         except Exception:
             return ""
@@ -1733,15 +1738,17 @@ class Api:
         if not root:
             return {"root": "", "items": [], "sync": sync}
         items = []
+        titles = _load_json(os.path.join(CORE, "開頭標題.json"), {}) or {}
         try:
             files = sorted(os.listdir(root))
         except Exception:
             files = []
         for f in files:
-            if not f.lower().endswith((".mov", ".webm")) or f.startswith("."):
+            if not f.lower().endswith(".mov") or f.startswith("."):
                 continue
             fp = os.path.join(root, f)
-            items.append({"path": fp, "name": os.path.splitext(f)[0], "thumb": self._opening_thumb(fp),
+            name = os.path.splitext(f)[0]
+            items.append({"path": fp, "name": name, "title": titles.get(name, ""), "thumb": self._opening_thumb(fp),
                           "frame": self._opening_frame(fp)})
         return {"root": root, "items": items, "sync": sync}
 
