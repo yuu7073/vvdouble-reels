@@ -32,11 +32,13 @@ a{color:var(--blue)}
 .pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:14px;background:var(--sub);border:1px solid var(--line);font-size:12.5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pill.warn{border-color:var(--orange);color:var(--orange)}
 .pill.bad{border-color:var(--red);color:var(--red)}
-.clip .warnchip{position:absolute;left:6px;bottom:6px;z-index:2;font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.55);color:var(--orange)}
+.clip .warnchip{position:absolute;left:34px;bottom:8px;z-index:2;font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.55);color:var(--orange)}
 .rb{border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;line-height:1.25;overflow:hidden;white-space:nowrap;min-width:0}
 .rb.l{background:#3b3f6e;color:#cfd2ff}.rb.m{background:var(--blue-bg);color:var(--blue)}.rb.d{background:var(--orange-bg);color:var(--orange)}
 .thumb .use{position:absolute;right:6px;top:6px;width:18px;height:18px;border-radius:4px;border:1px solid rgba(255,255,255,.7);background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;cursor:pointer;z-index:2}
 .thumb .use.on{background:var(--blue);border-color:var(--blue)}
+.thumb .cu{position:absolute;left:6px;bottom:6px;width:24px;height:24px;border-radius:6px;border:1px solid rgba(255,255,255,.6);background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;z-index:2}
+.thumb .cu.on{background:var(--orange);border-color:var(--orange)}
 .clip.unused .thumb img{opacity:.35}.clip.unused{opacity:.75}
 .st3{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:11px;font-size:11.5px;font-weight:600;white-space:nowrap;border:1px solid var(--line);color:var(--faint);background:transparent}
 .st3.on.g{background:var(--green-bg);color:var(--green);border-color:transparent}.st3.on.b{background:var(--blue-bg);color:var(--blue);border-color:transparent}.st3.on.r{background:var(--red-bg);color:var(--red);border-color:transparent}
@@ -62,7 +64,7 @@ input.ipt::placeholder{color:var(--faint)}
 .main{flex:1;min-height:0;display:flex}
 .left{width:250px;flex:none;background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column}
 .center{flex:1;min-width:0;padding:18px 22px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
-.right{width:300px;flex:none;background:var(--card);border-left:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:16px;overflow:auto}
+.right{width:380px;flex:none;background:var(--card);border-left:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:16px;overflow:auto}
 .plist{display:flex;flex-direction:column;gap:4px;padding:0 10px;overflow:auto}
 .pitem{padding:10px 12px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;gap:3px;border:1px solid transparent}
 .pitem:hover{background:var(--sub)}.pitem.on{background:var(--blue-bg);border-color:var(--selb)}
@@ -217,7 +219,7 @@ input.ipt::placeholder{color:var(--faint)}
       <div style="display:flex;flex-direction:column;gap:10px">
         <div class="row"><span class="h">底圖</span><button class="btn l sm" onclick="app.go('bg')">底圖庫</button></div>
         <div id="bgPick" style="display:flex;gap:10px;align-items:center"></div>
-        <div class="two">
+        <div class="two" id="bgBtns">
           <button class="btn l sm" style="flex:1" onclick="app.pickBg('least_used')">最久沒用</button>
           <button class="btn l sm" style="flex:1" onclick="app.pickBg('random')">隨機</button>
           <button class="btn l sm" style="flex:1" onclick="app.setBg('')">不用</button>
@@ -460,7 +462,10 @@ const app = {
   async pickBg(mode){ const p=await this.call('bg_pick',mode); if(!p){ this.toast('底圖庫是空的',true); return; } this.setBg(p); },
   renderBgPick(){
     const el=$('#bgPick'); if(!el) return; const P=this.P(); const cur=P&&P.background;
-    if(!cur){ el.innerHTML=`<span style="font-size:12px;color:var(--faint)">不用底圖（版型需要時再選）</span>`; return; }
+    const lay=(this.state.layouts||[]).find(x=>x.id===(P&&P.layout||'')); const needs=!!(lay&&lay.needs_photo);
+    const bb=$('#bgBtns'); if(bb) bb.style.display=needs?'':'none';
+    if(!needs){ el.innerHTML=`<span style="font-size:12px;color:var(--faint)">此版型無底圖</span>`; return; }
+    if(!cur){ el.innerHTML=`<span style="font-size:12px;color:var(--faint)">產生時自動帶當期形象擺拍</span>`; return; }
     const it=(this.bg?this.bg.groups.flatMap(g=>g.items):[]).find(i=>i.path===cur);
     el.innerHTML=`<div style="width:48px;height:64px;border-radius:6px;overflow:hidden;background:#111;flex:none">${it&&it.thumb?`<img src="${it.thumb}" style="width:100%;height:100%;object-fit:cover">`:''}</div><div style="flex:1;min-width:0"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(it?it.name:cur.split(/[\\/]/).pop())}</div><div style="font-size:12px;color:var(--mute)">${it?esc(it.group)+'・'+(it.uses?'用過 '+it.uses+' 次':'沒用過'):''}</div></div>`;
   },
@@ -768,8 +773,8 @@ const app = {
       const warn=(c.duration&&c.duration<2.5)?'太短':(seen[c.path]>1?'重複':'');
       const edit=c._edit;
       return `<div class="card clip ${c.closeup?'closeup':''} ${c.use===false?'unused':''}" draggable="true" data-i="${i}">
-        <div class="thumb">${c.thumb?`<img src="${c.thumb}" alt="">`:''}<div class="use ${c.use===false?'':'on'}" title="選入／不選入" onclick="app.setClip(${i},'use',${c.use===false?'true':'false'})">${c.use===false?'':'✓'}</div>${c.strip?`<div class="strip" style="background-image:url(${c.strip})" onmousemove="app.scrub(this,event)"><i><b></b></i></div>`:''}<div class="num">${i+1}</div><div class="dur">${c.duration}s</div>${warn?`<span class="warnchip">${warn}</span>`:''}<button class="del" onclick="app.removeClip(${i})" title="移除">✕</button></div>
-        ${c.closeup?`<div class="pill" style="color:var(--faint)" onclick="app.setClip(${i},'closeup',false)">近拍・點一下改成滿版</div>`:(edit?`
+        <div class="thumb">${c.thumb?`<img src="${c.thumb}" alt="">`:''}<div class="use ${c.use===false?'':'on'}" title="選入／不選入" onclick="app.setClip(${i},'use',${c.use===false?'true':'false'})">${c.use===false?'':'✓'}</div>${c.strip?`<div class="strip" style="background-image:url(${c.strip})" onmousemove="app.scrub(this,event)"><i><b></b></i></div>`:''}<div class="num">${i+1}</div><div class="dur">${c.duration}s</div><div class="cu ${c.closeup?'on':''}" title="${c.closeup?'近拍（點一下改滿版）':'標為近拍'}" onclick="app.setClip(${i},'closeup',${!c.closeup})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg></div>${warn?`<span class="warnchip">${warn}</span>`:''}<button class="del" onclick="app.removeClip(${i})" title="移除">✕</button></div>
+        ${c.closeup?`<div class="pill" style="color:var(--orange);border-color:var(--orange)">近拍 CLOSE UP</div>`:(edit?`
         <div class="two">
           <select class="sel" onchange="app.setClip(${i},'model',this.value)">${ms.map(m=>`<option ${m.name===c.model?'selected':''}>${esc(m.name)}</option>`).join('')}${ms.some(m=>m.name===c.model)?'':`<option selected>${esc(c.model||'選模特')}</option>`}</select>
           <select class="sel" onchange="app.setClip(${i},'size',this.value)">${SIZES.map(s=>`<option ${s===c.size?'selected':''}>${s}</option>`).join('')}</select>
@@ -848,7 +853,7 @@ const app = {
     const l=list.find(x=>x.id===cur);
     $('#layoutMeta').textContent=l?l.pattern.split(',').map(t=>t==='#'?'版型':(t==='M'?'滿版':'近拍')).join(' → ')+(l.needs_photo?'　需要底圖':''):'';
   },
-  setLayout(v){ const P=this.P(); if(!P) return; P.layout=v||''; this.renderLayoutSel(); this.renderEstimate(); },
+  setLayout(v){ const P=this.P(); if(!P) return; P.layout=v||''; this.renderLayoutSel(); this.renderBgPick(); this.renderEstimate(); },
 
   /* ---------- music ---------- */
   renderMusicSel() {
