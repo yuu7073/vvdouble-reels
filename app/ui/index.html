@@ -35,7 +35,7 @@ a{color:var(--blue)}
 .clip .warnchip{position:absolute;left:34px;bottom:8px;z-index:2;font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.55);color:var(--orange)}
 .rb{border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;line-height:1.25;overflow:hidden;white-space:nowrap;min-width:0}
 .rb.l{background:#3b3f6e;color:#cfd2ff}.rb.m{background:var(--blue-bg);color:var(--blue)}.rb.d{background:var(--orange-bg);color:var(--orange)}
-.thumb .use{position:absolute;right:6px;top:6px;width:18px;height:18px;border-radius:4px;border:1px solid rgba(255,255,255,.7);background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;cursor:pointer;z-index:2}
+.thumb .use{position:absolute;right:6px;top:6px;width:22px;height:22px;border-radius:4px;border:1px solid rgba(255,255,255,.7);background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;cursor:pointer;z-index:2}
 .thumb .use.on{background:var(--blue);border-color:var(--blue)}
 .thumb .cu{position:absolute;left:6px;bottom:6px;width:24px;height:24px;border-radius:6px;border:1px solid rgba(255,255,255,.6);background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;z-index:2}
 .thumb .cu.on{background:var(--orange);border-color:var(--orange)}
@@ -89,7 +89,8 @@ input.ipt::placeholder{color:var(--faint)}
 .num{position:absolute;top:8px;left:8px;width:26px;height:26px;border-radius:13px;background:var(--ink);color:var(--onink);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .clip.closeup .num{background:var(--blue)}
 .dur{position:absolute;bottom:8px;right:8px;height:20px;padding:0 7px;border-radius:6px;background:rgba(0,0,0,.65);color:var(--field);font-size:11px;display:flex;align-items:center}
-.del{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:12px;background:rgba(0,0,0,.5);color:var(--field);display:none;align-items:center;justify-content:center;font-size:14px}
+.del{position:absolute;bottom:8px;right:8px;width:24px;height:24px;border-radius:12px;background:rgba(200,60,60,.85);color:#fff;display:none;align-items:center;justify-content:center;font-size:14px;z-index:3}
+.clip:hover .dur{display:none}
 .clip:hover .del{display:flex}
 .two{display:flex;gap:6px}
 .empty{flex:1;display:flex;align-items:center;justify-content:center;border:2px dashed var(--dash);border-radius:14px;color:var(--mute);font-size:14px;text-align:center;line-height:1.8}
