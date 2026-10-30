@@ -8,6 +8,6 @@ node render.js src out $args
 mkdir -p mov
 for d in out/*/; do
   id=$(basename "$d")
-  ffmpeg -y -loglevel error -framerate 30 -i "$d/f%04d.png" -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le -vendor apl0 "mov/開頭$id.mov"
-  echo "mov/開頭$id.mov"
+  ffmpeg -y -loglevel error -framerate 30 -i "$d/f%04d.png" -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le -vendor apl0 -bits_per_mb 1000 "mov/$id.mov"
+  echo "mov/$id.mov"
 done
