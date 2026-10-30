@@ -257,13 +257,26 @@ def _thumb(path, t, key):
 
 def _thumb_strip(path, dur, key, n=6):
     """滑過看片段用：抽 n 張小圖橫向拼成一張（每格 160×284）。只解關鍵影格，4K 大檔也只要一兩秒"""
-    out = os.path.join(THUMB_DIR, key + "_strip.jpg")
+    out = os.path.join(THUMB_DIR, key + "_strip2.jpg")
     if not os.path.exists(out):
         dur = max(0.5, float(dur or 0))
-        vf = (f"fps={n}/{dur:.3f}:round=up,scale=160:284:force_original_aspect_ratio=increase,crop=160:284,setsar=1,"
-              f"tile={n}x1")
+        # 關鍵影格少（手機長 GOP）時 fps 會不足 n 張 → tile 補黑格；tpad 用最後一格補滿
+        vf = (f"fps={n}/{dur:.3f}:round=up,tpad=stop_mode=clone:stop={n},"
+              f"scale=160:284:force_original_aspect_ratio=increase,crop=160:284,setsar=1,tile={n}x1")
         _run([_ffmpeg(), "-hide_banner", "-y", "-skip_frame", "nokey", "-i", path, "-vf", vf,
               "-frames:v", "1", "-q:v", "6", out], timeout=120)
+        # 關鍵影格太少（整條都是同一格）→ 改完整解碼一次（先縮小再取，4K 也只要幾秒）
+        try:
+            from PIL import Image, ImageChops
+            im = Image.open(out).convert("L")
+            tiles = [im.crop((i * 160, 0, (i + 1) * 160, 284)) for i in range(n)]
+            same = all(ImageChops.difference(tiles[0], t).getbbox() is None for t in tiles[1:])
+            if same and dur > 3:
+                vf2 = (f"scale=160:284:force_original_aspect_ratio=increase,crop=160:284,setsar=1,"
+                       f"fps={n}/{dur:.3f}:round=up,tpad=stop_mode=clone:stop={n},tile={n}x1")
+                _run([_ffmpeg(), "-hide_banner", "-y", "-i", path, "-vf", vf2, "-frames:v", "1", "-q:v", "6", out], timeout=180)
+        except Exception:
+            pass
     if os.path.exists(out):
         with open(out, "rb") as f:
             return "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("ascii")
