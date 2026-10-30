@@ -44,6 +44,10 @@ jobs:
         run: |
           Get-ChildItem dist/VVReels | Select-Object -First 5
           if (!(Test-Path "dist/VVReels/VVReels.exe")) { throw "exe missing" }
+          $env:VVREELS_SMOKE = "1"
+          $out = & dist/VVReels/VVReels.exe 2>&1 | Out-String
+          Write-Host $out
+          if ($LASTEXITCODE -ne 0 -or $out -notmatch "smoke ok") { throw "smoke test failed" }
       - name: Portable zip
         if: steps.ver.outputs.exists != 'true'
         shell: pwsh

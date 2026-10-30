@@ -2048,4 +2048,7 @@ def main():
 
 
 if __name__ == "__main__":
+    if os.environ.get("VVREELS_SMOKE"):      # 打包後的匯入檢查（GitHub Actions 用）：所有模組載得起來就結束
+        print("smoke ok", VERSION, REPO)
+        sys.exit(0)
     main()
