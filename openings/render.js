@@ -46,8 +46,7 @@ function buildHtml(src, id) {
 ${fontCss()}
 html,body{margin:0;background:transparent;overflow:hidden}
 ${style}
-#root{animation:rootOut ${dur}s linear infinite}
-@keyframes rootOut{0%,93%{opacity:1}100%{opacity:0}}
+/* 不做整體淡出：畫面上的色塊、壓暗要一路留到最後一格，跟著剪接點硬切（設計本身有淡出的字，照它自己的時間走） */
 ${FIX[id] || ''}
 </style></head><body>${body}</body></html>`;
   return { html, dur };
