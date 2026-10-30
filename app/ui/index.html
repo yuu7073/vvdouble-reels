@@ -233,7 +233,11 @@ input.ipt::placeholder{color:var(--faint)}
         <div class="row"><span class="h">開頭</span><span id="opMeta" style="font-size:12px;color:var(--mute);flex:1;margin-left:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span><button class="btn l sm" onclick="app.openingLib()">版型庫</button></div>
         <div style="display:flex;gap:14px;align-items:stretch">
           <div style="width:220px;flex:none;display:flex;flex-direction:column;gap:8px">
-            <canvas id="opPrev" width="270" height="480" style="width:220px;height:391px;border-radius:10px;background:#1c1c1c;display:block" title="套在首支影片上的預覽"></canvas>
+            <div id="opPrevWrap" style="position:relative;width:220px;height:391px;border-radius:10px;overflow:hidden;background:#1c1c1c" onmouseenter="app.opHover(true)" onmouseleave="app.opHover(false)" title="套在首支影片上的預覽，滑過播放">
+              <canvas id="opPrev" width="270" height="480" style="width:220px;height:391px;display:block"></canvas>
+              <video id="opPrevClip" muted playsinline preload="none" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none"></video>
+              <video id="opPrevAnim" muted playsinline preload="none" style="position:absolute;inset:0;width:100%;height:100%;display:none"></video>
+            </div>
             <div class="two" id="opBtns">
               <button class="btn l sm" style="flex:1" onclick="app.setOpening('random')">隨機</button>
               <button class="btn l sm" style="flex:1" onclick="app.setOpening('')">不使用版型</button>
@@ -509,6 +513,16 @@ const app = {
       if(a) cover(a); if(b) ctx.drawImage(b,0,0,cv.width,cv.height);
       if(!a&&!b){ ctx.fillStyle='#666'; ctx.font='28px sans-serif'; ctx.textAlign='center'; ctx.fillText(P.opening?'放入影片後預覽':'不疊開頭',cv.width/2,cv.height/2); }
     });
+  },
+  opHover(on){
+    const P=this.P(); const lib=(this.state.openings&&this.state.openings.items)||[];
+    const clipV=$('#opPrevClip'), animV=$('#opPrevAnim'); if(!clipV||!animV) return;
+    if(!on){ [clipV,animV].forEach(v=>{ v.pause(); v.style.display='none'; v.removeAttribute('src'); v.load(); }); return; }
+    if(!P) return;
+    const clip=(P.clips||[]).find(c=>c.use!==false&&!c.closeup)||(P.clips||[]).find(c=>c.use!==false);
+    const it=lib.find(i=>i.path===P.opening);
+    if(clip&&clip.path){ clipV.src='/media?p='+encodeURIComponent(clip.path)+'#t='+(clip.start!==''&&clip.start!=null?(+clip.start):0.5); clipV.style.display=''; clipV.loop=true; clipV.play().catch(()=>{}); }
+    if(it&&it.preview){ animV.src=it.preview; animV.style.display=''; animV.loop=true; animV.play().catch(()=>{}); }
   },
   renderOpening(){
     const el=$('#opPick'), meta=$('#opMeta'), bb=$('#opBtns'); if(!el) return; const P=this.P(); if(!P) return;

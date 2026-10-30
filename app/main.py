@@ -1748,8 +1748,11 @@ class Api:
                 continue
             fp = os.path.join(root, f)
             name = os.path.splitext(f)[0]
+            webm = os.path.join(root, name + ".webm")
+            from urllib.parse import quote
             items.append({"path": fp, "name": name, "title": titles.get(name, ""), "thumb": self._opening_thumb(fp),
-                          "frame": self._opening_frame(fp)})
+                          "frame": self._opening_frame(fp),
+                          "preview": ("/media?p=" + quote(webm)) if os.path.exists(webm) else ""})
         return {"root": root, "items": items, "sync": sync}
 
     def _opening_sync(self):
@@ -1771,7 +1774,7 @@ class Api:
             with urllib.request.urlopen(req, timeout=20) as resp:
                 j = json.loads(resp.read().decode("utf-8"))
             got = 0
-            assets = [a for a in j.get("assets", []) if (a.get("name") or "").lower().endswith(".mov")]
+            assets = [a for a in j.get("assets", []) if (a.get("name") or "").lower().endswith((".mov", ".webm"))]
             self._opening_sync_state["total"] = len(assets)
             for a in assets:
                 name = a.get("name") or ""
@@ -1993,7 +1996,7 @@ def _serve(api):
                 from urllib.parse import urlparse, parse_qs
                 q = parse_qs(urlparse(self.path).query)
                 fp = (q.get("p") or [""])[0]
-                if not fp or not os.path.isfile(fp) or not fp.lower().endswith(AUDIO_EXT + VIDEO_EXT):
+                if not fp or not os.path.isfile(fp) or not fp.lower().endswith(AUDIO_EXT + VIDEO_EXT + (".webm",)):
                     return self._send(404, b"not found", "text/plain")
                 size = os.path.getsize(fp)
                 rng = self.headers.get("Range")
@@ -2004,7 +2007,7 @@ def _serve(api):
                     end = int(b) if (b and a) else size - 1
                     end = min(end, size - 1)
                 ext = os.path.splitext(fp)[1].lower()
-                ctype = {".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".aac": "audio/aac", ".wav": "audio/wav", ".flac": "audio/flac", ".ogg": "audio/ogg", ".mp4": "video/mp4", ".mov": "video/quicktime"}.get(ext, "application/octet-stream")
+                ctype = {".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".aac": "audio/aac", ".wav": "audio/wav", ".flac": "audio/flac", ".ogg": "audio/ogg", ".mp4": "video/mp4", ".mov": "video/quicktime", ".webm": "video/webm"}.get(ext, "application/octet-stream")
                 self.send_response(206 if rng else 200)
                 self.send_header("Content-Type", ctype)
                 self.send_header("Accept-Ranges", "bytes")
