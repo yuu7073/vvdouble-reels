@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening AF Mixed Type</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500&amp;family=Pixelify+Sans&amp;family=Inter:wght@500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F6E9A8}a:hover{color:#F6E9A8}
+.af-1{animation:af-1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes af-1{0%,6%{opacity:0;transform:translateY(12px)}14%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.af-2{animation:af-2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes af-2{0%,14%{opacity:0;transform:scale(1.4)}22%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.af-3{animation:af-3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes af-3{0%,20%{opacity:0;transform:translateY(12px)}28%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.af-t1{animation:af-t1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes af-t1{0%,30%{opacity:0;transform:rotate(-12deg) scale(.5)}34%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.af-t2{animation:af-t2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes af-t2{0%,34%{opacity:0;transform:rotate(10deg) scale(.5)}38%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.af-i{animation:af-i 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes af-i{0%,38%{opacity:0;transform:scale(.4)}46%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #F6E9A8">
+<video src="/_blob/67af9a38693961d15cfdd0114a2c3ae1" poster="/_blob/ab7d5959794a132bd6741deade5d02e9" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video>
+<div style="position: absolute; inset: 0; background: rgba(26, 22, 18, 0.25)"></div>
+<div style="position: absolute; left: 0; right: 0; top: 300px; display: flex; flex-direction: column; align-items: center; font-family: 'Fredoka', sans-serif; font-weight: 500; font-size: 46px; line-height: 1; color: #F6E9A8; letter-spacing: -0.01em">
+<div class="af-1" style="display: flex; align-items: center; gap: 8px"><span class="af-i"><svg aria-hidden="true" viewBox="-12 -12 24 24" style="width: 34px; height: 34px"><g fill="none" stroke="#F6E9A8" stroke-width="1.4"><ellipse cx="0" cy="-6" rx="3.2" ry="5"></ellipse><ellipse cx="0" cy="-6" rx="3.2" ry="5" transform="rotate(72)"></ellipse><ellipse cx="0" cy="-6" rx="3.2" ry="5" transform="rotate(144)"></ellipse><ellipse cx="0" cy="-6" rx="3.2" ry="5" transform="rotate(216)"></ellipse><ellipse cx="0" cy="-6" rx="3.2" ry="5" transform="rotate(288)"></ellipse><circle r="2.2"></circle></g></svg></span>outfits that</div>
+<div style="display: flex; align-items: baseline; gap: 10px; margin-top: 4px"><span class="af-2" style="font-family: 'Pixelify Sans', sans-serif; font-size: 52px; color: #F4BCD3">feel</span><span class="af-3">like you</span></div>
+<div style="display: flex; align-items: center; gap: 10px; margin-top: 18px">
+<span class="af-i"><svg aria-hidden="true" viewBox="0 0 24 24" style="width: 30px; height: 30px"><path d="M4 5h16v10H9l-4 4v-4H4z" fill="none" stroke="#F6E9A8" stroke-width="1.6" stroke-linejoin="round"></path></svg></span>
+<span class="af-t1" style="padding: 4px 12px; background: #F2EEE6; color: #1f1c18; font-family: 'Inter', sans-serif; font-size: 22px">new</span>
+<span class="af-t2" style="padding: 4px 12px; background: #F2EEE6; color: #1f1c18; font-family: 'Inter', sans-serif; font-size: 22px">in</span>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

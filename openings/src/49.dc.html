@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening BG Word Stack</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&amp;family=Inter:wght@500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F3EEE4}a:hover{color:#F3EEE4}
+.bg-w0{animation:bg-w0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes bg-w0{0%,4%{opacity:0;transform:translateY(30px);filter:blur(8px)}13%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.bg-w1{animation:bg-w1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes bg-w1{0%,13%{opacity:0;transform:translateY(30px);filter:blur(8px)}22%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.bg-w2{animation:bg-w2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes bg-w2{0%,22%{opacity:0;transform:translateY(30px);filter:blur(8px)}31%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.bg-s{animation:bg-s 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes bg-s{0%,34%{opacity:0;}42%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.bg-r{animation:bgR 4.8s cubic-bezier(.6,0,.2,1) infinite}@keyframes bgR{0%,30%{transform:scaleX(0)}42%,94%{transform:scaleX(1);opacity:1}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #1f1c18; font-family: 'Cormorant Garamond', serif; color: #F3EEE4">
+<video src="/_blob/699cfc130329fe26818955bbae775cbf" poster="/_blob/266163afc39ae7d1c2a4172e74e14b84" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.3)"></div>
+<div style="position: absolute; left: 0; right: 0; top: 200px; text-align: center; font-size: 104px; line-height: .95; letter-spacing: -0.04em"><div class="bg-w0">soft.</div><div class="bg-w1">easy.</div><div class="bg-w2" style="font-style: italic">yours.</div></div>
+<div class="bg-r" style="position: absolute; left: 172px; top: 516px; width: 60px; height: 1px; background: #F3EEE4"></div>
+<div class="bg-s" style="position: absolute; left: 0; right: 0; top: 534px; text-align: center; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .32em">NEW IN AT VV DOUBLE</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

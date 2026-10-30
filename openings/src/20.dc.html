@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening Z Tracking Collapse</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&amp;family=Cormorant+Garamond:ital,wght@1,500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#fff}a:hover{color:#eee}
+.z-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:zVid 4.8s ease infinite}
+.z-big{animation:zBig 4.8s cubic-bezier(.16,1,.3,1) infinite}
+.z-pre{animation:zPre 4.8s ease infinite}
+.z-q{animation:zQ 4.8s ease infinite}
+.z-rule{animation:zRule 4.8s cubic-bezier(.6,0,.2,1) infinite}
+@keyframes zVid{0%{filter:brightness(.55)}30%,100%{filter:brightness(.82)}}
+@keyframes zBig{0%,4%{opacity:0;letter-spacing:1.1em;filter:blur(10px)}34%,94%{opacity:1;letter-spacing:0.04em;filter:blur(0)}100%{opacity:0;letter-spacing:0.04em}}
+@keyframes zPre{0%,24%{opacity:0}34%,94%{opacity:1}100%{opacity:0}}
+@keyframes zQ{0%,38%{opacity:0;transform:translateY(10px)}50%,94%{opacity:1;transform:none}100%{opacity:0}}
+@keyframes zRule{0%,30%{transform:scaleX(0)}44%,94%{transform:scaleX(1);opacity:1}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #141312; font-family: 'Inter', sans-serif; color: #ffffff">
+<video class="z-vid" src="/_blob/434131eeabb36ecbef47a3fec5e5c3d8" poster="/_blob/beea9590977abd4e2038c6d4f879f61a" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}"></video>
+<div style="position: absolute; left: 0; right: 0; top: 316px; display: flex; flex-direction: column; align-items: center; text-align: center">
+<div class="z-pre" style="font-size: 11px; font-weight: 500; letter-spacing: 0.32em; padding-left: 0.32em">THE A/W</div>
+<div class="z-big" style="margin-top: 10px; font-size: 40px; font-weight: 700; line-height: 1; white-space: nowrap">STYLEGUIDE</div>
+<div class="z-rule" style="margin-top: 18px; width: 56px; height: 1px; background: #ffffff"></div>
+<div class="z-q" style="margin-top: 16px; font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 500; font-size: 26px">simple pieces, endless days.</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

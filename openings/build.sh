@@ -12,5 +12,8 @@ for d in out/*/; do
   ffmpeg -y -loglevel error -framerate 30 -i "$d/f%04d.png" \
     -vf "format=rgba,premultiply=inplace=1,scale=1080:1920:flags=lanczos,format=yuva444p10le" \
     -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le -vendor apl0 -bits_per_mb 1000 "mov/$id.mov"
+  # 介面滑過預覽用：小尺寸帶透明的 webm（瀏覽器能播）
+  ffmpeg -y -loglevel error -framerate 30 -i "$d/f%04d.png" -vf "format=rgba,scale=270:480,fps=15" \
+    -c:v libvpx-vp9 -pix_fmt yuva420p -b:v 0 -crf 34 -auto-alt-ref 0 "mov/$id.webm"
   echo "mov/$id.mov"
 done

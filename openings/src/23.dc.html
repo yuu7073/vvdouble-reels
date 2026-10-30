@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening AC Circle Arrows</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&amp;family=Fredoka:wght@500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F6F0E2}a:hover{color:#F6F0E2}
+.ac-arc path{stroke-dasharray:600;stroke-dashoffset:600;animation:acArc 4.8s ease infinite}@keyframes acArc{0%,20%{stroke-dashoffset:600;opacity:1}44%,94%{stroke-dashoffset:0;opacity:1}100%{opacity:0}}
+.ac-top{animation:ac-top 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ac-top{0%,4%{opacity:0;transform:translateY(10px)}14%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ac-bot{animation:ac-bot 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ac-bot{0%,10%{opacity:0;transform:translateY(10px)}20%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ac-l{display:inline-block;animation:acL 4.8s cubic-bezier(.2,.9,.3,1.5) infinite}@keyframes acL{0%,14%{opacity:0;transform:translateY(20px) scale(.6)}22%,94%{opacity:1}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #F6F0E2">
+<video src="/_blob/699cfc130329fe26818955bbae775cbf" poster="/_blob/266163afc39ae7d1c2a4172e74e14b84" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video>
+<div style="position: absolute; inset: 0; background: rgba(26, 24, 20, 0.28)"></div>
+<div class="ac-top" style="position: absolute; left: 0; right: 0; top: 214px; text-align: center; font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 27px; line-height: 1.05">Soft layers,<br>easy shapes</div>
+<div style="position: absolute; left: 0; right: 0; top: 318px; text-align: center; font-family: 'Fredoka', sans-serif; font-weight: 500; font-size: 78px; line-height: 1; color: #F6F0E2"><span class="ac-l" style="transform: translateY(-6px) rotate(-4deg); animation-delay: 0.00s; margin: 0 1px">n</span><span class="ac-l" style="transform: translateY(4px) rotate(3deg); animation-delay: 0.05s; margin: 0 1px">e</span><span class="ac-l" style="transform: translateY(-3px) rotate(-2deg); animation-delay: 0.10s; margin: 0 1px">w</span><span style="display: inline-block; width: 22px"></span><span class="ac-l" style="transform: translateY(6px) rotate(4deg); animation-delay: 0.20s; margin: 0 1px">i</span><span class="ac-l" style="transform: translateY(-4px) rotate(-3deg); animation-delay: 0.25s; margin: 0 1px">n</span></div>
+<div class="ac-bot" style="position: absolute; left: 0; right: 0; top: 446px; text-align: center; font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 27px; line-height: 1.05">made for the way<br>you move</div>
+<svg class="ac-arc" aria-hidden="true" viewBox="0 0 405 720" style="position: absolute; inset: 0; width: 405px; height: 720px"><path d="M110 230 C 40 260, 30 440, 92 492" fill="none" stroke="#F6F0E2" stroke-width="2" stroke-linecap="round"></path><path d="M84 482 L94 494 L80 498" fill="none" stroke="#F6F0E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M298 506 C 372 470, 372 280, 312 218" fill="none" stroke="#F6F0E2" stroke-width="2" stroke-linecap="round"></path><path d="M322 222 L310 216 L312 230" fill="none" stroke="#F6F0E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

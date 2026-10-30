@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening AD Scattered Pills</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.ad-1{animation:ad-1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ad-1{0%,4%{opacity:0;transform:scale(.8)}10%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ad-2{animation:ad-2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ad-2{0%,10%{opacity:0;transform:scale(.8)}16%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ad-3{animation:ad-3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ad-3{0%,16%{opacity:0;transform:scale(.8)}22%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ad-4{animation:ad-4 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ad-4{0%,22%{opacity:0;transform:scale(.8)}28%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ad-p1{animation:ad-p1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ad-p1{0%,30%{opacity:0;transform:translateY(8px)}36%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ad-p2{animation:ad-p2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ad-p2{0%,36%{opacity:0;transform:translateY(8px)}42%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ad-p3{animation:ad-p3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ad-p3{0%,26%{opacity:0;transform:scale(.6) rotate(-10deg)}32%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/7dd3d73530218c2fe48d8e16d1121437" poster="/_blob/3a85844a82ad34b5af889d1e07897b55" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video>
+<div style="position: absolute; inset: 0; background: rgba(28, 24, 20, 0.2)"></div>
+<div class="ad-1" style="position: absolute; font-size: 44px; font-weight: 500; letter-spacing: -0.03em; color: #F8EEA6; line-height: 1; left: 40px; top: 170px">what</div>
+<div class="ad-2" style="position: absolute; font-size: 44px; font-weight: 500; letter-spacing: -0.03em; color: #F8EEA6; line-height: 1; left: 236px; top: 270px">i'd wear</div>
+<div class="ad-3" style="position: absolute; font-size: 44px; font-weight: 500; letter-spacing: -0.03em; color: #F8EEA6; line-height: 1; left: 52px; top: 392px">on</div>
+<div class="ad-4" style="position: absolute; font-size: 44px; font-weight: 500; letter-spacing: -0.03em; color: #F8EEA6; line-height: 1; left: 196px; top: 482px">repeat?</div>
+<div class="ad-p3" style="position: absolute; left: 70px; top: 232px; padding: 6px 12px; border-radius: 10px; background: #F8EEA6; color: #2a2620; font-size: 12px; line-height: 1.2; display: flex; align-items: center; gap: 6px"><svg aria-hidden="true" viewBox="0 0 24 24" style="width: 18px; height: 18px"><path d="M12 6.5a2 2 0 1 1 2 2c-1 0-2 .7-2 1.7v.8M12 11l8.5 6.2c.7.5.3 1.8-.6 1.8H4.1c-.9 0-1.3-1.3-.6-1.8Z" fill="none" stroke="#2a2620" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>soft layers<br>only</span></div>
+<div style="position: absolute; left: 0; right: 0; top: 566px; display: flex; flex-direction: column; align-items: center; gap: 10px">
+<div class="ad-p1" style="font-size: 15px; color: #ffffff">(on-body, up close)</div>
+<div class="ad-p2" style="display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; background: #F8EEA6; color: #2a2620; font-size: 15px"><svg aria-hidden="true" viewBox="0 0 24 24" style="width: 14px; height: 14px"><path d="M12 21s-6-5.7-6-11a6 6 0 1 1 12 0c0 5.3-6 11-6 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" fill="none" stroke="#2a2620" stroke-width="1.8"></path></svg>vv double studio</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

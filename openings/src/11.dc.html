@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening L Scattered Quote</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#D6F5A0}a:hover{color:#fff}
+.l-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.85) contrast(.95)}
+.l-w{position:absolute;font-weight:700;font-size:36px;letter-spacing:-0.04em;color:#D6F5A0;line-height:1}
+.l-1{animation:l1 4.6s ease infinite}.l-2{animation:l2 4.6s ease infinite}.l-3{animation:l3 4.6s ease infinite}.l-4{animation:l4 4.6s ease infinite}.l-5{animation:l5 4.6s ease infinite}.l-6{animation:l6 4.6s ease infinite}.l-7{animation:l7 4.6s ease infinite}
+.l-tag{animation:lTag 4.6s ease infinite}
+@keyframes l1{0%,4%{opacity:0;filter:blur(6px)}9%,92%{opacity:1;filter:blur(0)}98%,100%{opacity:0}}
+@keyframes l2{0%,11%{opacity:0;filter:blur(6px)}16%,92%{opacity:1;filter:blur(0)}98%,100%{opacity:0}}
+@keyframes l3{0%,18%{opacity:0;filter:blur(6px)}23%,92%{opacity:1;filter:blur(0)}98%,100%{opacity:0}}
+@keyframes l4{0%,25%{opacity:0;filter:blur(6px)}30%,92%{opacity:1;filter:blur(0)}98%,100%{opacity:0}}
+@keyframes l5{0%,32%{opacity:0;filter:blur(6px)}37%,92%{opacity:1;filter:blur(0)}98%,100%{opacity:0}}
+@keyframes l6{0%,39%{opacity:0;filter:blur(6px)}44%,92%{opacity:1;filter:blur(0)}98%,100%{opacity:0}}
+@keyframes l7{0%,46%{opacity:0;filter:blur(6px)}51%,92%{opacity:1;filter:blur(0)}98%,100%{opacity:0}}
+@keyframes lTag{0%,54%{opacity:0}62%,92%{opacity:1}98%,100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #c9c5be; font-family: 'Inter', sans-serif">
+<video class="l-vid" src="/_blob/67af9a38693961d15cfdd0114a2c3ae1" poster="/_blob/ab7d5959794a132bd6741deade5d02e9" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}"></video>
+<svg aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.22; mix-blend-mode: overlay"><filter id="lGrain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"></feTurbulence></filter><rect width="100%" height="100%" filter="url(#lGrain)"></rect></svg>
+<div style="position: absolute; inset: 0; background: rgba(30, 28, 24, 0.18)"></div>
+<div class="l-w l-1" style="left: 150px; top: 168px">Find</div>
+<div class="l-w l-2" style="left: 232px; top: 238px">more</div>
+<div class="l-w l-3" style="left: 46px; top: 318px">of</div>
+<div class="l-w l-4" style="left: 248px; top: 420px">what</div>
+<div class="l-w l-5" style="left: 132px; top: 470px">feels</div>
+<div class="l-w l-6" style="left: 52px; top: 548px">like</div>
+<div class="l-w l-7" style="left: 268px; top: 590px">you.</div>
+<div class="l-tag" style="position: absolute; left: 0; right: 0; top: 96px; text-align: center; font-size: 11px; font-weight: 500; letter-spacing: 0.24em; color: #ffffff">VV DOUBLE  A/W</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

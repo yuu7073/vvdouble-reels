@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening F Styleguide Notes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@600&amp;family=Playfair+Display:wght@400&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#FBF4E4}a:hover{color:#fff}
+.f-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.f-title{animation:fTitle 5s cubic-bezier(.2,.9,.3,1.2) infinite}
+.f-n1{animation:fN1 5s ease infinite}
+.f-n2{animation:fN2 5s ease infinite}
+.f-n3{animation:fN3 5s ease infinite}
+.f-n4{animation:fN4 5s ease infinite}
+.f-note{position:absolute;width:120px;text-align:center;font-family:'Playfair Display',serif;font-size:14px;line-height:1.1;color:#ffffff;white-space:pre-line}
+@keyframes fTitle{0%,4%{opacity:0;transform:scale(.86)}14%,90%{opacity:1;transform:scale(1)}97%,100%{opacity:0;transform:scale(1)}}
+@keyframes fN1{0%,18%{opacity:0;transform:translateY(6px)}24%,90%{opacity:1;transform:none}97%,100%{opacity:0;transform:none}}
+@keyframes fN2{0%,26%{opacity:0;transform:translateY(6px)}32%,90%{opacity:1;transform:none}97%,100%{opacity:0;transform:none}}
+@keyframes fN3{0%,34%{opacity:0;transform:translateY(6px)}40%,90%{opacity:1;transform:none}97%,100%{opacity:0;transform:none}}
+@keyframes fN4{0%,42%{opacity:0;transform:translateY(6px)}48%,90%{opacity:1;transform:none}97%,100%{opacity:0;transform:none}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #26241f; font-family: 'Inter', sans-serif; color: #FBF4E4">
+<video class="f-vid" src="/_blob/699cfc130329fe26818955bbae775cbf" poster="/_blob/266163afc39ae7d1c2a4172e74e14b84" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}"></video>
+<div style="position: absolute; inset: 0; background: rgba(20, 18, 15, 0.3)"></div>
+<div class="f-title" style="position: absolute; left: 0; right: 0; top: 300px; text-align: center; font-weight: 600; font-size: 58px; line-height: 0.92; letter-spacing: -0.045em">the a/w<br>styleguide</div>
+<div class="f-note f-n1" style="left: 22px; top: 130px">layer it
+up</div>
+<div class="f-note f-n1" style="left: 263px; top: 130px">tuck it
+in</div>
+<div class="f-note f-n2" style="left: 6px; top: 228px">roll the
+sleeves</div>
+<div class="f-note f-n2" style="left: 279px; top: 228px">wear it
+loose</div>
+<div class="f-note f-n3" style="left: 6px; top: 452px">mix &amp;
+match</div>
+<div class="f-note f-n3" style="left: 279px; top: 452px">day to
+night</div>
+<div class="f-note f-n4" style="left: 22px; top: 556px">add a
+scarf</div>
+<div class="f-note f-n4" style="left: 263px; top: 556px">one more
+layer</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

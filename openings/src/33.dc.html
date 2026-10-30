@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening AP Tape Label</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Playfair+Display:ital@1&amp;family=Cormorant+Garamond:ital@0;1&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#FBF6E6}a:hover{color:#FBF6E6}
+.ap-lab{animation:ap-lab 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ap-lab{0%,4%{opacity:0;transform:rotate(-6deg) scale(.7)}12%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ap-l0{animation:ap-l0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ap-l0{0%,14%{opacity:0;transform:translateY(12px)}20%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ap-l1{animation:ap-l1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ap-l1{0%,20%{opacity:0;transform:translateY(12px)}26%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ap-l2{animation:ap-l2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ap-l2{0%,26%{opacity:0;transform:translateY(12px)}32%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ap-top{animation:ap-top 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ap-top{0%,2%{opacity:0;}8%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #FBF6E6">
+<video src="/_blob/67af9a38693961d15cfdd0114a2c3ae1" poster="/_blob/ab7d5959794a132bd6741deade5d02e9" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.2)"></div>
+<div class="ap-top" style="position: absolute; left: 0; right: 0; top: 64px; text-align: center; font-family: 'Cormorant Garamond', serif; font-size: 16px">vv<i>double</i></div>
+<div style="position: absolute; left: 34px; top: 404px">
+<div class="ap-lab" style="position: relative; display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; background: #F6CFE0; color: #3a1f2a; font-size: 20px; font-weight: 600; transform-origin: left center">
+<span style="position: absolute; left: 50%; top: -9px; width: 54px; height: 16px; margin-left: -27px; background: rgba(240,236,226,.85); transform: rotate(-3deg)"></span>Hello, new in:</div>
+<div style="margin-top: 14px; font-size: 38px; line-height: 1.08; letter-spacing: -0.02em; color: #FBF6E6">
+<div class="ap-l0"><span style="font-weight: 300">some pieces </span><span style="font-weight: 700">just</span></div>
+<div class="ap-l1"><span style="font-weight: 700">work</span><span style="font-weight: 300"> with </span><span style="font-family: 'Playfair Display', serif; font-style: italic">"everything</span></div>
+<div class="ap-l2"><span style="font-family: 'Playfair Display', serif; font-style: italic">you own"</span></div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening AA Glass Window</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&amp;family=Space+Mono:wght@400&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F4EFDF}a:hover{color:#F4EFDF}
+.aa-win{animation:aaWin 4.8s cubic-bezier(.2,.9,.3,1.1) infinite}@keyframes aaWin{0%,2%{opacity:0;transform:scale(.72)}12%,94%{opacity:1;transform:scale(.82)}100%{opacity:0;transform:scale(.82)}}
+.aa-meta{animation:aa-meta 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes aa-meta{0%,12%{opacity:0;}20%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.aa-t1{animation:aa-t1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes aa-t1{0%,16%{opacity:0;transform:translateY(14px);filter:blur(6px)}26%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.aa-t2{animation:aa-t2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes aa-t2{0%,22%{opacity:0;transform:translateY(14px);filter:blur(6px)}32%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.aa-sub{animation:aa-sub 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes aa-sub{0%,30%{opacity:0;}40%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.aa-cur{animation:aaCur 4.8s cubic-bezier(.4,0,.2,1) infinite}@keyframes aaCur{0%,36%{opacity:0;transform:translate(60px,120px)}40%{opacity:1;transform:translate(60px,120px)}56%{transform:translate(0,0) scale(1)}59%{transform:translate(0,0) scale(.82)}62%,94%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0}}
+.aa-view{animation:aaView 4.8s ease infinite}@keyframes aaView{0%,57%{background:transparent}59%,94%{background:rgba(255,255,255,.28)}100%{background:transparent}}
+.aa-tab{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:12px 12px 0 0;background:rgba(240,236,222,.30);border:1px solid rgba(255,255,255,.5);border-bottom:0;font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.04em}
+.aa-ic{width:12px;height:12px}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2c22; font-family: 'Inter', sans-serif; color: #F4EFDF">
+<video src="/_blob/434131eeabb36ecbef47a3fec5e5c3d8" poster="/_blob/beea9590977abd4e2038c6d4f879f61a" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video>
+<div style="position: absolute; inset: 0; background: rgba(20, 22, 16, 0.12)"></div>
+<div class="aa-win" style="position: absolute; left: 22px; top: 200px; width: 361px; transform: scale(.82); transform-origin: 50% 50%">
+<div style="display: flex; align-items: flex-end; gap: 4px; padding-left: 64px">
+<div class="aa-tab" style="background: rgba(240,236,222,.55)"><svg class="aa-ic" aria-hidden="true" viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v11H3z" fill="none" stroke="#F4EFDF" stroke-width="2"></path></svg>NEW IN</div>
+<div class="aa-tab"><svg class="aa-ic" aria-hidden="true" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM9 11h7M9 15h7" fill="none" stroke="#F4EFDF" stroke-width="2"></path></svg>LOOKBOOK</div>
+<div class="aa-tab"><svg class="aa-ic" aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7h18v13H3zM3 7l2-3h14l2 3M10 12h4" fill="none" stroke="#F4EFDF" stroke-width="2"></path></svg>STYLE</div>
+</div>
+<div style="position: relative; box-sizing: border-box; border-radius: 0 16px 16px 16px; border: 1.5px solid rgba(255,255,255,.6); background: rgba(236,232,214,.22); backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px); padding: 16px 18px 12px; box-shadow: 0 16px 40px rgba(0,0,0,.18)">
+<div style="position: absolute; left: 14px; top: -24px; display: flex; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #E2584E"></span><span style="width: 10px; height: 10px; border-radius: 50%; background: #E9B949"></span><span style="width: 10px; height: 10px; border-radius: 50%; background: #6DBE58"></span></div>
+<div class="aa-meta" style="display: flex; justify-content: space-between; font-family: 'Space Mono', monospace; font-size: 10px; line-height: 1.35; letter-spacing: .04em">
+<span>LOOK:<br>NO. 01</span><span style="text-align: right">STUDIO:<br>VV DOUBLE</span>
+</div>
+<div class="aa-meta" style="margin: 10px 0 6px; border-top: 1px dashed rgba(255,255,255,.6)"></div>
+<div style="text-align: center; font-family: 'DM Serif Display', serif; font-size: 72px; line-height: .9; letter-spacing: -0.02em">
+<div class="aa-t1">Soft</div>
+<div class="aa-t2">Layers</div>
+</div>
+<div class="aa-sub" style="display: flex; align-items: center; gap: 10px; margin: 12px 8px 8px"><span style="flex: 1; height: 1px; background: rgba(255,255,255,.6)"></span><svg aria-hidden="true" viewBox="0 0 100 100" style="width: 12px; height: 12px"><path d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0Z" fill="#F4EFDF"></path></svg><span style="flex: 1; height: 1px; background: rgba(255,255,255,.6)"></span></div>
+<div class="aa-sub" style="text-align: center; font-family: 'Space Mono', monospace; font-size: 11px; line-height: 1.5; letter-spacing: .08em">MADE FOR SLOW MORNINGS.<br>WORN EVERY DAY.</div>
+<div class="aa-sub" style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,.5); padding-top: 8px; display: flex; justify-content: space-between; align-items: center; font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .06em">
+<span>ON-BODY</span><span>UP CLOSE</span><span class="aa-view" style="padding: 3px 8px; border-radius: 6px">VIEW</span>
+</div>
+<div class="aa-cur" style="position: absolute; right: 22px; bottom: -2px"><svg aria-hidden="true" viewBox="0 0 24 24" style="width: 26px; height: 26px"><path d="M5 3l14 8-6 1.6L10 19z" fill="#111111" stroke="#ffffff" stroke-width="1.4" stroke-linejoin="round"></path></svg></div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

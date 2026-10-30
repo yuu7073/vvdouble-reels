@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening H Search Bar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#1E7BF2}a:hover{color:#155fc0}
+.h-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.h-pill{animation:hPill 5s cubic-bezier(.2,.9,.3,1.15) infinite}
+.h-text{animation:hText 5s steps(12,end) infinite}
+.h-sel{animation:hSel 5s steps(1,end) infinite}
+.h-caret{animation:hCaret .8s steps(1,end) infinite}
+.h-send{animation:hSend 5s ease infinite}
+.h-st{position:absolute;width:96px;height:128px;object-fit:cover;border:4px solid #ffffff;border-radius:12px;box-shadow:0 6px 16px rgba(0,0,0,.22)}
+.h-s1{animation:hS1 5s cubic-bezier(.2,.9,.3,1.3) infinite}
+.h-s2{animation:hS2 5s cubic-bezier(.2,.9,.3,1.3) infinite}
+.h-s3{animation:hS3 5s cubic-bezier(.2,.9,.3,1.3) infinite}
+.h-s4{animation:hS4 5s cubic-bezier(.2,.9,.3,1.3) infinite}
+@keyframes hPill{0%,2%{opacity:0;transform:scale(.8)}10%,92%{opacity:1;transform:scale(1)}98%,100%{opacity:0;transform:scale(1)}}
+@keyframes hText{0%,10%{width:0}34%,100%{width:122px}}
+@keyframes hSel{0%{background:transparent}44%{background:#B9D5FA}100%{background:#B9D5FA}}
+@keyframes hCaret{0%{opacity:1}50%{opacity:0}}
+@keyframes hSend{0%,44%{transform:scale(1)}48%{transform:scale(.85)}52%,100%{transform:scale(1)}}
+@keyframes hS1{0%,50%{opacity:0;transform:rotate(-8deg) scale(.3)}56%,92%{opacity:1;transform:rotate(-8deg) scale(1)}98%,100%{opacity:0;transform:rotate(-8deg) scale(1)}}
+@keyframes hS2{0%,55%{opacity:0;transform:rotate(7deg) scale(.3)}61%,92%{opacity:1;transform:rotate(7deg) scale(1)}98%,100%{opacity:0;transform:rotate(7deg) scale(1)}}
+@keyframes hS3{0%,60%{opacity:0;transform:rotate(6deg) scale(.3)}66%,92%{opacity:1;transform:rotate(6deg) scale(1)}98%,100%{opacity:0;transform:rotate(6deg) scale(1)}}
+@keyframes hS4{0%,65%{opacity:0;transform:rotate(-5deg) scale(.3)}71%,92%{opacity:1;transform:rotate(-5deg) scale(1)}98%,100%{opacity:0;transform:rotate(-5deg) scale(1)}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #d9d6d0; font-family: 'Inter', sans-serif; color: #1b1b1b">
+<video class="h-vid" src="/_blob/7dd3d73530218c2fe48d8e16d1121437" poster="/_blob/3a85844a82ad34b5af889d1e07897b55" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}"></video>
+<div style="position: absolute; left: 0; right: 0; top: 332px; display: flex; justify-content: center">
+<div class="h-pill" style="width: 300px; height: 56px; box-sizing: border-box; padding: 0 8px 0 22px; background: #ffffff; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 8px 24px rgba(0,0,0,.18)">
+<div style="display: flex; align-items: center">
+<div class="h-sel" style="display: flex; align-items: center; border-radius: 2px">
+<div class="h-text" style="overflow: hidden; white-space: nowrap; font-size: 20px; font-weight: 500; letter-spacing: -0.01em">new arrivals</div>
+</div>
+<div class="h-caret" style="width: 2px; height: 26px; background: #1E7BF2; margin-left: 1px"></div>
+</div>
+<div class="h-send" style="width: 38px; height: 38px; border-radius: 50%; background: #1E7BF2; display: flex; align-items: center; justify-content: center">
+<svg aria-hidden="true" viewBox="0 0 24 24" style="width: 20px; height: 20px"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

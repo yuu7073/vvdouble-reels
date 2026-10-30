@@ -23,4 +23,6 @@ jobs:
           name: 開頭動畫庫
           prerelease: true
           body: "工具啟動時自動下載到 官網部門\\開頭動畫。帶透明的 ProRes 4444 .mov，1080x1920 30fps。"
-          files: openings/mov/*.mov
+          files: |
+            openings/mov/*.mov
+            openings/mov/*.webm

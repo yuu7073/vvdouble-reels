@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening X Title Panel</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&amp;family=Inter:wght@500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#2b2520}a:hover{color:#000}
+.x-panel{animation:xPanel 4.8s cubic-bezier(.7,0,.2,1) infinite}
+.x-vid{animation:xVid 4.8s cubic-bezier(.7,0,.2,1) infinite}
+.x-tag{animation:xTag 4.8s ease infinite}
+.x-t1{animation:xT1 4.8s cubic-bezier(.2,.8,.2,1) infinite}
+.x-t2{animation:xT2 4.8s cubic-bezier(.2,.8,.2,1) infinite}
+.x-rule{animation:xRule 4.8s cubic-bezier(.6,0,.2,1) infinite}
+@keyframes xPanel{0%{transform:translateY(-100%)}12%,94%{transform:none}100%{transform:translateY(-100%)}}
+@keyframes xVid{0%,4%{clip-path:inset(100% 0 0 0)}18%,94%{clip-path:inset(0 0 0 0)}100%{clip-path:inset(100% 0 0 0)}}
+@keyframes xTag{0%,14%{opacity:0}22%,90%{opacity:1}96%,100%{opacity:0}}
+@keyframes xT1{0%,16%{opacity:0;transform:translateY(16px)}28%,90%{opacity:1;transform:none}96%,100%{opacity:0}}
+@keyframes xT2{0%,22%{opacity:0;transform:translateY(16px)}34%,90%{opacity:1;transform:none}96%,100%{opacity:0}}
+@keyframes xRule{0%,30%{transform:scaleX(0)}44%,90%{transform:scaleX(1);opacity:1}96%,100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #1c1916; font-family: 'Cormorant Garamond', serif; color: #2b2520">
+<div class="x-vid" style="position: absolute; left: 0; right: 0; bottom: 0; height: 420px; overflow: hidden">
+<video src="/_blob/699cfc130329fe26818955bbae775cbf" poster="/_blob/266163afc39ae7d1c2a4172e74e14b84" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%"></video>
+</div>
+<div class="x-panel" style="position: absolute; left: 0; right: 0; top: 0; height: 300px; background: #EEE8DD">
+<div class="x-tag" style="position: absolute; left: 0; right: 0; top: 74px; text-align: center; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.26em">NEW ARRIVALS</div>
+<div style="position: absolute; left: 0; right: 0; top: 112px; display: flex; flex-direction: column; align-items: center; text-align: center">
+<div class="x-t1" style="font-size: 52px; line-height: 0.95; font-weight: 500">Here's to</div>
+<div class="x-t2" style="font-size: 52px; line-height: 0.95; font-weight: 500; font-style: italic">the everyday.</div>
+<div class="x-rule" style="margin-top: 22px; width: 44px; height: 1px; background: #2b2520"></div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

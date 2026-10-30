@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening AR Why It Matters</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&amp;family=Special+Elite&amp;family=Inter:wght@400&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#DDF19A}a:hover{color:#DDF19A}
+.ar-h{animation:ar-h 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ar-h{0%,2%{opacity:0;}10%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ar-q{animation:ar-q 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ar-q{0%,8%{opacity:0;}16%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ar-b0{animation:ar-b0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ar-b0{0%,14%{opacity:0;transform:translateY(14px)}20%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ar-b1{animation:ar-b1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ar-b1{0%,20%{opacity:0;transform:translateY(14px)}26%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ar-b2{animation:ar-b2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ar-b2{0%,26%{opacity:0;transform:translateY(14px)}32%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ar-m{animation:ar-m 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ar-m{0%,32%{opacity:0;transform:translateX(30px);filter:blur(6px)}42%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ar-f{animation:ar-f 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ar-f{0%,40%{opacity:0;}48%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Playfair Display', serif; color: #DDF19A">
+<video src="/_blob/4bc803b4d6f0557ad64a3dddae46e458" poster="/_blob/2bb37e47113ddc26398c62c7715fc5c0" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.25)"></div>
+<div class="ar-h" style="position: absolute; left: 0; right: 0; top: 92px; text-align: center; font-size: 20px; letter-spacing: -0.01em">What Getting Dressed Teaches Us</div>
+<div class="ar-q" style="position: absolute; left: 196px; top: 150px; width: 180px; font-family: 'Special Elite', monospace; font-size: 12px; line-height: 1.5; text-align: center">what looks like "just an outfit" can be your chance to slow down, show up, and feel like you.</div>
+<div style="position: absolute; left: 30px; top: 300px; font-size: 64px; line-height: .78; letter-spacing: -0.055em">
+<div class="ar-b0">This is why</div><div class="ar-b1">your everyday</div><div class="ar-b2">outfit</div>
+</div>
+<div class="ar-m" style="position: absolute; left: 120px; top: 432px; font-style: italic; font-size: 92px; line-height: 1; letter-spacing: -0.04em">Matters.</div>
+<div class="ar-f" style="position: absolute; left: 28px; bottom: 96px; font-family: 'Inter', sans-serif; font-size: 12px">@vvdoubleofficial</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

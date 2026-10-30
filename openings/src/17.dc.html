@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening U Marquee</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@800&amp;family=Instrument+Serif:ital@1&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#fff}a:hover{color:#ddd}
+.u-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.u-r0{animation:uM0 9s linear infinite}@keyframes uM0{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.u-f0{animation:uF0 4.8s ease infinite}@keyframes uF0{0%,2%{opacity:0}8%,94%{opacity:1}100%{opacity:0}}
+.u-r1{animation:uM1 7s linear infinite}@keyframes uM1{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+.u-f1{animation:uF1 4.8s ease infinite}@keyframes uF1{0%,8%{opacity:0}14%,94%{opacity:1}100%{opacity:0}}
+.u-r2{animation:uM2 11s linear infinite}@keyframes uM2{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.u-f2{animation:uF2 4.8s ease infinite}@keyframes uF2{0%,14%{opacity:0}20%,94%{opacity:1}100%{opacity:0}}
+.u-r3{animation:uM3 7s linear infinite}@keyframes uM3{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+.u-f3{animation:uF3 4.8s ease infinite}@keyframes uF3{0%,20%{opacity:0}26%,94%{opacity:1}100%{opacity:0}}
+.u-r4{animation:uM4 9s linear infinite}@keyframes uM4{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.u-f4{animation:uF4 4.8s ease infinite}@keyframes uF4{0%,26%{opacity:0}32%,94%{opacity:1}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #1a1816">
+<video class="u-vid" src="/_blob/699cfc130329fe26818955bbae775cbf" poster="/_blob/266163afc39ae7d1c2a4172e74e14b84" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}"></video>
+<div style="position: absolute; inset: 0; background: rgba(18, 16, 14, 0.38)"></div>
+<div class="u-f0" style="position: absolute; left: 0; top: 120px; width: 100%; overflow: hidden"><div class="u-r0" style="display: flex; width: max-content; white-space: pre; line-height: 1; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 64px; color: transparent; -webkit-text-stroke: 1.2px #ffffff"><span>NEW IN  /  NEW ARRIVALS  /  NEW IN  /  NEW ARRIVALS  /  NEW IN  /  NEW ARRIVALS  /  NEW IN  /  NEW ARRIVALS  /  </span><span>NEW IN  /  NEW ARRIVALS  /  NEW IN  /  NEW ARRIVALS  /  NEW IN  /  NEW ARRIVALS  /  NEW IN  /  NEW ARRIVALS  /  </span></div></div>
+<div class="u-f1" style="position: absolute; left: 0; top: 214px; width: 100%; overflow: hidden"><div class="u-r1" style="display: flex; width: max-content; white-space: pre; line-height: 1; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 64px; color: #ffffff"><span>LOOKBOOK  /  A/W  /  LOOKBOOK  /  A/W  /  LOOKBOOK  /  A/W  /  LOOKBOOK  /  A/W  /  </span><span>LOOKBOOK  /  A/W  /  LOOKBOOK  /  A/W  /  LOOKBOOK  /  A/W  /  LOOKBOOK  /  A/W  /  </span></div></div>
+<div class="u-f2" style="position: absolute; left: 0; top: 300px; width: 100%; overflow: hidden"><div class="u-r2" style="display: flex; width: max-content; white-space: pre; line-height: 1; font-family: 'Instrument Serif', serif; font-style: italic; font-size: 120px; color: #F4E9C8"><span>Styleguide  Styleguide  Styleguide  Styleguide  </span><span>Styleguide  Styleguide  Styleguide  Styleguide  </span></div></div>
+<div class="u-f3" style="position: absolute; left: 0; top: 412px; width: 100%; overflow: hidden"><div class="u-r3" style="display: flex; width: max-content; white-space: pre; line-height: 1; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 64px; color: #ffffff"><span>ON-BODY  /  UP CLOSE  /  ON-BODY  /  UP CLOSE  /  ON-BODY  /  UP CLOSE  /  ON-BODY  /  UP CLOSE  /  </span><span>ON-BODY  /  UP CLOSE  /  ON-BODY  /  UP CLOSE  /  ON-BODY  /  UP CLOSE  /  ON-BODY  /  UP CLOSE  /  </span></div></div>
+<div class="u-f4" style="position: absolute; left: 0; top: 500px; width: 100%; overflow: hidden"><div class="u-r4" style="display: flex; width: max-content; white-space: pre; line-height: 1; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 64px; color: transparent; -webkit-text-stroke: 1.2px #ffffff"><span>NEW IN  /  NEW ARRIVALS  /  NEW IN  /  NEW ARRIVALS  /  NEW IN  /  NEW ARRIVALS  /  NEW IN  /  NEW ARRIVALS  /  </span><span>NEW IN  /  NEW ARRIVALS  /  NEW IN  /  NEW ARRIVALS  /  NEW IN  /  NEW ARRIVALS  /  NEW IN  /  NEW ARRIVALS  /  </span></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

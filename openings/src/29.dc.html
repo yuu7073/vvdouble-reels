@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening AK Highlighter</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&amp;family=Instrument+Serif:ital@1&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#1d1b17}a:hover{color:#1d1b17}
+.ak-tag{animation:ak-tag 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ak-tag{0%,2%{opacity:0;}10%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ak-b0{animation:akB0 4.8s cubic-bezier(.6,0,.2,1) infinite;transform-origin:left}@keyframes akB0{0%,8%{transform:scaleX(0)}16%,94%{transform:scaleX(1);opacity:1}100%{opacity:0}}
+.ak-t0{animation:ak-t0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ak-t0{0%,10%{opacity:0;}14%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ak-b1{animation:akB1 4.8s cubic-bezier(.6,0,.2,1) infinite;transform-origin:left}@keyframes akB1{0%,18%{transform:scaleX(0)}26%,94%{transform:scaleX(1);opacity:1}100%{opacity:0}}
+.ak-t1{animation:ak-t1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ak-t1{0%,20%{opacity:0;}24%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ak-b2{animation:akB2 4.8s cubic-bezier(.6,0,.2,1) infinite;transform-origin:left}@keyframes akB2{0%,28%{transform:scaleX(0)}36%,94%{transform:scaleX(1);opacity:1}100%{opacity:0}}
+.ak-t2{animation:ak-t2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ak-t2{0%,30%{opacity:0;}34%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #d6d2ca; font-family: 'Inter', sans-serif; color: #1d1b17">
+<video src="/_blob/699cfc130329fe26818955bbae775cbf" poster="/_blob/266163afc39ae7d1c2a4172e74e14b84" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video>
+<div style="position: absolute; inset: 0; background: rgba(250, 248, 240, 0.08)"></div>
+<div class="ak-tag" style="position: absolute; left: 0; right: 0; top: 248px; text-align: center; font-family: 'Instrument Serif', serif; font-style: italic; font-size: 22px; color: #ffffff; text-shadow: 0 1px 10px rgba(0,0,0,.35)">a little reminder</div>
+<div style="position: absolute; left: 0; right: 0; top: 292px; display: flex; flex-direction: column; align-items: center; gap: 8px; font-weight: 700; font-size: 36px; line-height: 1.15; letter-spacing: -0.03em; color: #1d1b17"><div style="position: relative; display: inline-block; padding: 2px 10px"><div class="ak-b0" style="position: absolute; inset: 0; background: #F6E47A"></div><span class="ak-t0" style="position: relative">the pieces</span></div><div style="position: relative; display: inline-block; padding: 2px 10px"><div class="ak-b1" style="position: absolute; inset: 0; background: #F6E47A"></div><span class="ak-t1" style="position: relative">you'll reach for</span></div><div style="position: relative; display: inline-block; padding: 2px 10px"><div class="ak-b2" style="position: absolute; inset: 0; background: #F6E47A"></div><span class="ak-t2" style="position: relative">every day.</span></div></div>
+<div class="ak-tag" style="position: absolute; left: 0; right: 0; top: 480px; text-align: center; font-size: 10px; font-weight: 500; letter-spacing: .3em; color: #ffffff; text-shadow: 0 1px 8px rgba(0,0,0,.4)">VV DOUBLE  NEW ARRIVALS</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

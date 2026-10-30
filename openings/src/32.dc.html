@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening AO Word Swap</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&amp;family=Inter:wght@500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F3EEE4}a:hover{color:#F3EEE4}
+.ao-made{animation:ao-made 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ao-made{0%,2%{opacity:0;transform:translateY(10px)}10%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ao-roll{animation:aoRoll 4.8s cubic-bezier(.7,0,.2,1) infinite}@keyframes aoRoll{0%,22%{transform:translateY(0)}26%,42%{transform:translateY(-62px)}46%,62%{transform:translateY(-124px)}66%,100%{transform:translateY(-186px)}}
+.ao-u{animation:aoU 4.8s cubic-bezier(.6,0,.2,1) infinite}@keyframes aoU{0%,8%{transform:scaleX(0)}18%,94%{transform:scaleX(1);opacity:1}100%{opacity:0}}
+.ao-s{animation:ao-s 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ao-s{0%,8%{opacity:0;}14%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #1f1c18; font-family: 'Cormorant Garamond', serif; color: #F3EEE4">
+<video src="/_blob/7dd3d73530218c2fe48d8e16d1121437" poster="/_blob/3a85844a82ad34b5af889d1e07897b55" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video>
+<div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.32)"></div>
+<div class="ao-s" style="position: absolute; left: 0; right: 0; top: 240px; text-align: center; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .32em">NEW ARRIVALS</div>
+<div class="ao-made" style="position: absolute; left: 0; right: 0; top: 276px; text-align: center; font-size: 56px; line-height: 1">made for</div>
+<div style="position: absolute; left: 0; right: 0; top: 340px; height: 62px; overflow: hidden; text-align: center; font-style: italic; font-size: 56px">
+<div class="ao-roll"><div style="height: 62px; line-height: 62px; white-space: nowrap">slow mornings</div><div style="height: 62px; line-height: 62px; white-space: nowrap">long weekends</div><div style="height: 62px; line-height: 62px; white-space: nowrap">every day</div><div style="height: 62px; line-height: 62px; white-space: nowrap">you.</div></div>
+</div>
+<div class="ao-u" style="position: absolute; left: 122px; top: 410px; width: 160px; height: 1px; background: #F3EEE4"></div>
+<div class="ao-s" style="position: absolute; left: 0; right: 0; top: 432px; text-align: center; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .32em">VV DOUBLE  A/W STYLEGUIDE</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

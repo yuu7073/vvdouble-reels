@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening AL Letterbox</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500&amp;family=Space+Mono&amp;family=Cormorant+Garamond:ital,wght@1,500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F3EEE4}a:hover{color:#F3EEE4}
+.al-top{animation:alTop 4.8s cubic-bezier(.7,0,.2,1) infinite}@keyframes alTop{0%{transform:translateY(-100%)}10%,94%{transform:none}100%{transform:translateY(-100%)}}
+.al-bot{animation:alBot 4.8s cubic-bezier(.7,0,.2,1) infinite}@keyframes alBot{0%{transform:translateY(100%)}10%,94%{transform:none}100%{transform:translateY(100%)}}
+.al-meta{animation:al-meta 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes al-meta{0%,10%{opacity:0;}16%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.al-sub{animation:alSub 4.8s steps(28,end) infinite}@keyframes alSub{0%,16%{clip-path:inset(0 100% 0 0)}46%,94%{clip-path:inset(0 0 0 0);opacity:1}100%{opacity:0}}
+.al-rec{animation:alRec 1s steps(1,end) infinite}@keyframes alRec{50%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #0b0b0b; font-family: 'Inter', sans-serif; color: #F3EEE4">
+<video src="/_blob/434131eeabb36ecbef47a3fec5e5c3d8" poster="/_blob/beea9590977abd4e2038c6d4f879f61a" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(.85) contrast(1.05)"></video>
+<div class="al-top" style="position: absolute; left: 0; right: 0; top: 0; height: 128px; background: #0b0b0b; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 16px; box-sizing: border-box">
+<div class="al-meta" style="font-size: 10px; font-weight: 500; letter-spacing: .34em">VV DOUBLE PRESENTS</div>
+</div>
+<div class="al-bot" style="position: absolute; left: 0; right: 0; bottom: 0; height: 128px; background: #0b0b0b; display: flex; align-items: flex-start; justify-content: center; padding-top: 16px; box-sizing: border-box">
+<div class="al-meta" style="font-size: 10px; font-weight: 500; letter-spacing: .34em">THE A/W STYLEGUIDE</div>
+</div>
+<div class="al-meta" style="position: absolute; left: 22px; top: 144px; display: flex; align-items: center; gap: 6px; font-family: 'Space Mono', monospace; font-size: 11px"><span class="al-rec" style="width: 7px; height: 7px; border-radius: 50%; background: #E2584E"></span>SCENE 01</div>
+<div style="position: absolute; left: 0; right: 0; bottom: 156px; display: flex; justify-content: center">
+<div class="al-sub" style="padding: 4px 10px; background: rgba(0,0,0,.45); font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 22px; white-space: nowrap">chapter one: the new arrivals</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

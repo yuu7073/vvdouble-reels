@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening BA Lessons</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F6EEC8}a:hover{color:#F6EEC8}
+.ba-l0{animation:ba-l0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ba-l0{0%,4%{opacity:0;transform:translateY(20px)}12%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ba-l1{animation:ba-l1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ba-l1{0%,11%{opacity:0;transform:translateY(20px)}19%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ba-l2{animation:ba-l2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ba-l2{0%,18%{opacity:0;transform:translateY(20px)}26%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ba-l3{animation:ba-l3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ba-l3{0%,25%{opacity:0;transform:translateY(20px)}33%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ba-f{animation:ba-f 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ba-f{0%,36%{opacity:0;}44%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #F6EEC8">
+<video src="/_blob/7dd3d73530218c2fe48d8e16d1121437" poster="/_blob/3a85844a82ad34b5af889d1e07897b55" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.2)"></div>
+<div style="position: absolute; left: 0; right: 0; top: 112px; text-align: center; font-family: 'Gloock', serif; font-size: 64px; line-height: .86; letter-spacing: -0.05em">
+<div class="ba-l0">Lessons my</div><div class="ba-l1">closet taught</div><div class="ba-l2">me, so</div><div class="ba-l3">far</div>
+</div>
+<div class="ba-f" style="position: absolute; left: 0; right: 0; bottom: 96px; text-align: center; font-family: 'Gloock', serif; font-size: 14px">VV DOUBLE  |  no. 1</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

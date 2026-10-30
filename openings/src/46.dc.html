@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening BC Typewriter</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime&amp;family=Cormorant+Garamond:ital@1&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F3EEE4}a:hover{color:#F3EEE4}
+.bc-tag{animation:bc-tag 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes bc-tag{0%,2%{opacity:0;}8%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.bc-1{animation:bc1 4.8s steps(10,end) infinite}@keyframes bc1{0%,6%{clip-path:inset(0 100% 0 0)}22%,94%{clip-path:inset(0 0 0 0);opacity:1}100%{opacity:0}}
+.bc-2{animation:bc2 4.8s steps(13,end) infinite}@keyframes bc2{0%,24%{clip-path:inset(0 100% 0 0)}42%,94%{clip-path:inset(0 0 0 0);opacity:1}100%{opacity:0}}
+.bc-cur{animation:bcCur .7s steps(1,end) infinite}@keyframes bcCur{50%{opacity:0}}
+.bc-s{animation:bc-s 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes bc-s{0%,46%{opacity:0;}54%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #1f1c18; font-family: 'Courier Prime', monospace; color: #F3EEE4">
+<video src="/_blob/4bc803b4d6f0557ad64a3dddae46e458" poster="/_blob/2bb37e47113ddc26398c62c7715fc5c0" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.42)"></div>
+<div class="bc-tag" style="position: absolute; left: 0; right: 0; top: 250px; text-align: center; font-size: 11px; letter-spacing: .3em">NOTE TO SELF:</div>
+<div style="position: absolute; left: 0; right: 0; top: 290px; display: flex; flex-direction: column; align-items: center; font-size: 36px; line-height: 1.25">
+<div class="bc-1" style="white-space: nowrap">get dressed</div>
+<div style="display: flex; align-items: center"><span class="bc-2" style="white-space: nowrap">for yourself.</span><span class="bc-cur" style="width: 14px; height: 34px; margin-left: 4px; background: #F3EEE4"></span></div>
+</div>
+<div class="bc-s" style="position: absolute; left: 0; right: 0; top: 420px; text-align: center; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 22px">new arrivals, from vv double</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

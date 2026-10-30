@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening AZ A Few Notes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&amp;family=Gochi+Hand&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#C9E59A}a:hover{color:#C9E59A}
+.az-n{animation:az-n 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes az-n{0%,2%{opacity:0;transform:scale(1.1);filter:blur(8px)}12%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.az-a{animation:az-a 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes az-a{0%,12%{opacity:0;transform:rotate(-8deg)}18%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.az-h{animation:azH 4.8s ease infinite}@keyframes azH{0%,18%{clip-path:inset(0 0 100% 0)}36%,94%{clip-path:inset(0 0 0 0);opacity:1}100%{opacity:0}}
+.az-s{animation:az-s 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes az-s{0%,34%{opacity:0;transform:translateY(12px)}42%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #C9E59A">
+<video src="/_blob/434131eeabb36ecbef47a3fec5e5c3d8" poster="/_blob/beea9590977abd4e2038c6d4f879f61a" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.25)"></div>
+<div class="az-n" style="position: absolute; left: 0; right: 0; top: 120px; text-align: center; font-family: 'DM Serif Display', serif; font-size: 150px; line-height: 1; letter-spacing: -0.04em">notes</div>
+<div class="az-a" style="position: absolute; left: 66px; top: 108px; font-family: 'Gochi Hand', cursive; font-size: 30px; color: #ffffff">a few</div>
+<div class="az-h" style="position: absolute; left: 40px; top: 330px; font-family: 'Gochi Hand', cursive; font-size: 30px; line-height: 1; color: #ffffff">if you're<br>building a<br>closet you<br>actually wear</div>
+<div class="az-s" style="position: absolute; left: 0; right: 0; top: 540px; text-align: center; font-family: 'DM Serif Display', serif; font-size: 58px; line-height: 1">starting <i>fresh</i></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

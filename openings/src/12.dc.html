@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening M Staggered Serif</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#fff}a:hover{color:#eee}
+.m-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.m-w{position:absolute;font-family:'Instrument Serif',serif;font-size:46px;line-height:1;letter-spacing:-0.02em;color:#ffffff}
+.m-1{animation:m1 4.8s cubic-bezier(.2,.7,.2,1) infinite}.m-2{animation:m2 4.8s cubic-bezier(.2,.7,.2,1) infinite}.m-3{animation:m3 4.8s cubic-bezier(.2,.7,.2,1) infinite}.m-4{animation:m4 4.8s cubic-bezier(.2,.7,.2,1) infinite}.m-5{animation:m5 4.8s cubic-bezier(.2,.7,.2,1) infinite}.m-6{animation:m6 4.8s cubic-bezier(.2,.7,.2,1) infinite}
+.m-pill{animation:mPill 4.8s ease infinite}
+.m-side{animation:mSide 4.8s ease infinite}
+@keyframes m1{0%,6%{opacity:0;transform:translateY(14px)}12%,92%{opacity:1;transform:none}98%,100%{opacity:0}}
+@keyframes m2{0%,12%{opacity:0;transform:translateY(14px)}18%,92%{opacity:1;transform:none}98%,100%{opacity:0}}
+@keyframes m3{0%,18%{opacity:0;transform:translateY(14px)}24%,92%{opacity:1;transform:none}98%,100%{opacity:0}}
+@keyframes m4{0%,24%{opacity:0;transform:translateY(14px)}30%,92%{opacity:1;transform:none}98%,100%{opacity:0}}
+@keyframes m5{0%,30%{opacity:0;transform:translateY(14px)}36%,92%{opacity:1;transform:none}98%,100%{opacity:0}}
+@keyframes m6{0%,36%{opacity:0;transform:translateY(14px)}42%,92%{opacity:1;transform:none}98%,100%{opacity:0}}
+@keyframes mPill{0%,1%{opacity:0;transform:scale(.9)}8%,92%{opacity:1;transform:none}98%,100%{opacity:0}}
+@keyframes mSide{0%,46%{opacity:0}56%,92%{opacity:1}98%,100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2724; font-family: 'Inter', sans-serif; color: #ffffff">
+<video class="m-vid" src="/_blob/434131eeabb36ecbef47a3fec5e5c3d8" poster="/_blob/beea9590977abd4e2038c6d4f879f61a" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}"></video>
+<div style="position: absolute; inset: 0; background: rgba(22, 20, 18, 0.26)"></div>
+<div class="m-pill" style="position: absolute; left: 0; right: 0; top: 150px; display: flex; justify-content: center">
+<div style="padding: 5px 18px; border: 1px solid #ffffff; border-radius: 999px; font-family: 'Instrument Serif', serif; font-size: 18px">note no. 01</div>
+</div>
+<div class="m-w m-1" style="left: 58px; top: 222px">every</div>
+<div class="m-w m-2" style="left: 150px; top: 280px">day</div>
+<div class="m-w m-3" style="left: 210px; top: 338px">deserves</div>
+<div class="m-w m-4" style="left: 128px; top: 396px">a</div>
+<div class="m-w m-5" style="left: 60px; top: 454px">good</div>
+<div class="m-w m-6" style="left: 176px; top: 512px; font-style: italic">outfit.</div>
+<div class="m-side" style="position: absolute; left: 0; right: 0; top: 600px; display: flex; flex-direction: column; align-items: center; font-family: 'Instrument Serif', serif; line-height: 0.95">
+<div style="font-size: 16px; letter-spacing: 0.02em">the a/w</div>
+<div style="font-size: 30px; font-style: italic">styleguide</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

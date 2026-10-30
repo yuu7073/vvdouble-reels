@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening AQ Feature Pills</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&amp;family=Inter:wght@400&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F7F0E2}a:hover{color:#F7F0E2}
+.aq-t{animation:aq-t 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes aq-t{0%,2%{opacity:0;transform:translateY(12px);filter:blur(6px)}12%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.aq-p0{animation:aq-p0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes aq-p0{0%,14%{opacity:0;transform:scale(.6)}19%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.aq-p1{animation:aq-p1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes aq-p1{0%,19%{opacity:0;transform:scale(.6)}24%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.aq-p2{animation:aq-p2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes aq-p2{0%,24%{opacity:0;transform:scale(.6)}29%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.aq-p3{animation:aq-p3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes aq-p3{0%,29%{opacity:0;transform:scale(.6)}34%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.aq-p4{animation:aq-p4 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes aq-p4{0%,34%{opacity:0;transform:scale(.6)}39%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.aq-p5{animation:aq-p5 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes aq-p5{0%,39%{opacity:0;transform:scale(.6)}44%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Cormorant Garamond', serif; color: #F7F0E2">
+<video src="/_blob/7dd3d73530218c2fe48d8e16d1121437" poster="/_blob/3a85844a82ad34b5af889d1e07897b55" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.12)"><div class="aq-p5" style="position: absolute; left: 250px; top: 572px; padding: 7px 14px; border-radius: 10px; color: #2b2520; font-size: 10px; font-family: 'Inter', sans-serif; white-space: nowrap; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 10px; width: 104px; height: 10px; background-color: #F7F0E2E5">Every day, every size</div><div class="aq-p4" style="position: absolute; left: 25px; top: 492px; padding: 7px 14px; border-radius: 10px; color: #2b2520; font-size: 10px; font-family: 'Inter', sans-serif; white-space: nowrap; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 10px; width: 81px; height: 10px; background-color: #F7F0E2E5">Wear it your way</div><div class="aq-p3" style="position: absolute; left: 287px; top: 390px; padding: 7px 14px; border-radius: 10px; color: #2b2520; font-size: 10px; font-family: 'Inter', sans-serif; white-space: nowrap; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 10px; width: 57px; height: 10px; background-color: #F7F0E2E5">Mix &amp; match</div><div class="aq-p2" style="position: absolute; left: 32px; top: 314px; padding: 7px 14px; border-radius: 10px; color: #2b2520; font-size: 10px; font-family: 'Inter', sans-serif; white-space: nowrap; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 10px; width: 68px; height: 10px; background-color: #F7F0E2E5">Made to move</div><div class="aq-p0" style="position: absolute; left: 85px; top: 227px; padding: 7px 14px; border-radius: 10px; color: #2b2520; font-size: 10px; font-family: 'Inter', sans-serif; white-space: nowrap; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 10px; width: 60px; height: 10px; background-color: #F7F0E2E5">Easy to layer</div><div class="aq-p1" style="position: absolute; left: 286px; top: 251px; padding: 7px 14px; border-radius: 10px; color: #2b2520; font-size: 10px; font-family: 'Inter', sans-serif; white-space: nowrap; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 10px; width: 56px; height: 10px; background-color: #F7F0E2E5">Day to night</div></div>
+<div class="aq-t" style="position: absolute; left: 0; right: 0; top: 104px; text-align: center; font-size: 74px; line-height: 1; letter-spacing: -0.03em"><i>the</i> Everyday</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

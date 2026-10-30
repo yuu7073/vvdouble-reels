@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening BB How We Style</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display&amp;family=Inter:wght@400;600&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F2D84E}a:hover{color:#F2D84E}
+.bb-r{animation:bbR 4.8s cubic-bezier(.6,0,.2,1) infinite;transform-origin:left}@keyframes bbR{0%,2%{transform:scaleX(0)}14%,94%{transform:scaleX(1);opacity:1}100%{opacity:0}}
+.bb-m{animation:bb-m 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes bb-m{0%,10%{opacity:0;}16%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.bb-t0{animation:bb-t0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes bb-t0{0%,10%{opacity:0;transform:translateY(16px)}18%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.bb-t1{animation:bb-t1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes bb-t1{0%,16%{opacity:0;transform:translateY(16px)}24%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.bb-t2{animation:bb-t2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes bb-t2{0%,22%{opacity:0;transform:translateY(16px)}30%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.bb-p{animation:bb-p 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes bb-p{0%,30%{opacity:0;}38%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.bb-ar path{stroke-dasharray:300;stroke-dashoffset:300;animation:bbAr 4.8s ease infinite}@keyframes bbAr{0%,30%{stroke-dashoffset:300}46%,94%{stroke-dashoffset:0;opacity:1}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #F2D84E">
+<video src="/_blob/67af9a38693961d15cfdd0114a2c3ae1" poster="/_blob/ab7d5959794a132bd6741deade5d02e9" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.38)"></div>
+<div class="bb-r" style="position: absolute; left: 22px; right: 22px; top: 92px; height: 1px; background: rgba(255,255,255,.7)"></div>
+<div class="bb-m" style="position: absolute; left: 22px; right: 22px; top: 72px; display: flex; justify-content: space-between; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: .06em; color: #ffffff"><span>VV DOUBLE STYLEGUIDE</span><span>@VVDOUBLEOFFICIAL</span></div>
+<div style="position: absolute; left: 24px; top: 300px; font-family: 'Playfair Display', serif; font-size: 58px; line-height: .86; letter-spacing: -0.04em">
+<div class="bb-t0">How We Style</div><div class="bb-t1">The Everyday</div><div class="bb-t2">Edit.</div>
+</div>
+<svg class="bb-ar" aria-hidden="true" viewBox="0 0 120 120" style="position: absolute; left: 200px; top: 340px; width: 120px; height: 120px"><path d="M100 4 C130 40 90 80 60 70 C40 64 50 40 66 50 C80 60 60 100 20 104 M28 96 L18 105 L30 110" fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<div class="bb-p" style="position: absolute; left: 24px; right: 24px; top: 480px; font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.25">THE PIECES WE KEEP COMING BACK TO, WORN, LAYERED AND SEEN UP CLOSE, SO YOU KNOW EXACTLY HOW THEY FEEL.</div>
+<div class="bb-r" style="position: absolute; left: 22px; right: 22px; top: 600px; height: 1px; background: rgba(255,255,255,.7)"></div>
+<div class="bb-m" style="position: absolute; left: 22px; right: 22px; top: 612px; display: flex; justify-content: space-between; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: .06em; color: #ffffff"><span>SAVE FOR LATER</span><span>NO. 01</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

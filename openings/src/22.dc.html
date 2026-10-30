@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening AB Style Notes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500;1,600&amp;family=Space+Mono:wght@400&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.ab-strip{animation:ab-strip 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ab-strip{0%,2%{opacity:0;transform:translateY(-12px)}10%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ab-card{animation:abCard 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes abCard{0%,4%{opacity:0;transform:translateY(40px)}16%,94%{opacity:1;transform:none}100%{opacity:0}}
+.ab-t{animation:ab-t 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ab-t{0%,18%{opacity:0;filter:blur(6px)}30%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ab-s{animation:ab-s 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ab-s{0%,28%{opacity:0;}38%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ab-badge{animation:abBadge 4.8s cubic-bezier(.2,.9,.3,1.4) infinite}@keyframes abBadge{0%,30%{opacity:0;transform:rotate(-30deg) scale(.4)}38%,94%{opacity:1;transform:rotate(12deg) scale(1)}100%{opacity:0}}
+.ab-cur{animation:abCur 4.8s cubic-bezier(.4,0,.2,1) infinite}@keyframes abCur{0%,36%{opacity:0;transform:translate(70px,80px)}40%{opacity:1}54%{transform:none}57%{transform:scale(.82)}60%,94%{opacity:1;transform:none}100%{opacity:0}}
+.ab-tab{padding:6px 8px;background:#EDE5CF;color:#3c3a2c;font-family:"Space Mono",monospace;font-size:8.5px;letter-spacing:.04em;border-radius:4px 4px 0 0;line-height:1.2;text-align:center}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/67af9a38693961d15cfdd0114a2c3ae1" poster="/_blob/ab7d5959794a132bd6741deade5d02e9" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video>
+<div style="position: absolute; inset: 0; background: rgba(24, 22, 16, 0.12)"></div>
+<div class="ab-strip" style="position: absolute; left: 0; right: 0; top: 112px; display: flex; flex-direction: column; align-items: center; gap: 6px">
+<div style="font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .3em">VV DOUBLE STUDIO</div>
+<div style="padding: 6px 22px; background: #EDE5CF; color: #3c3a2c; font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: .2em">STYLE NOTES</div>
+</div>
+<div class="ab-card" style="position: absolute; left: 30px; top: 236px; width: 345px">
+<div style="display: flex; gap: 5px; padding-left: 14px">
+<div class="ab-tab" style="background-color: #EDE5CFD4">NEW<br>IN</div><div class="ab-tab" style="background-color: #EDE5CFD4">LOOK<br>BOOK</div><div class="ab-tab" style="background-color: #EDE5CFD4">UP<br>CLOSE</div><div class="ab-tab" style="background-color: #EDE5CFD4">STYLE<br>GUIDE</div>
+</div>
+<div style="position: relative; border: 1px solid rgba(255,255,255,.35); border-radius: 0 10px 10px 10px; padding: 22px 20px 26px; text-align: center; color: #F2EDDC; box-shadow: 0 14px 30px rgba(0,0,0,.25); background-color: #4F5B3BAC">
+<div class="ab-s" style="font-family: 'Cormorant Garamond', serif; font-size: 13px; letter-spacing: .04em">on-body notes  ·  vol. 01</div>
+<div class="ab-t" style="margin-top: 10px; font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 600; font-size: 44px; line-height: .95">So, What Are<br>We Wearing?</div>
+<div class="ab-s" style="margin-top: 14px; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 16px; line-height: 1.25">a closer look at the pieces<br>made for every day</div>
+<div class="ab-cur" style="position: absolute; right: 30px; bottom: -14px"><svg aria-hidden="true" viewBox="0 0 24 24" style="width: 26px; height: 26px"><path d="M5 3l14 8-6 1.6L10 19z" fill="#111111" stroke="#ffffff" stroke-width="1.4" stroke-linejoin="round"></path></svg></div>
+<div class="ab-badge" style="position: absolute; left: 257px; top: 186px; width: 70px; height: 70px; border-radius: 50%; background: #C9563D; color: #F7EEDD; display: flex; align-items: center; justify-content: center; text-align: center; font-family: 'Space Mono', monospace; font-size: 10px; line-height: 1.2; letter-spacing: .06em; transform: rotate(9deg)">NEW<br>IN</div></div>
+</div>
+
+<div class="ab-strip" style="position: absolute; left: 0; right: 0; top: 590px; text-align: center; font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .3em">ON-BODY NOTES  /  VV DOUBLE</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
