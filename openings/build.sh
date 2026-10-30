@@ -8,6 +8,9 @@ node render.js src out $args
 mkdir -p mov
 for d in out/*/; do
   id=$(basename "$d")
-  ffmpeg -y -loglevel error -framerate 30 -i "$d/f%04d.png" -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le -vendor apl0 -bits_per_mb 1000 "mov/$id.mov"
+  # 先把色彩乘上透明度（premultiplied，CapCut 讀 ProRes 4444 的慣例，否則邊緣會有白邊），再用 lanczos 縮到 1080x1920
+  ffmpeg -y -loglevel error -framerate 30 -i "$d/f%04d.png" \
+    -vf "format=rgba,premultiply=inplace=1,scale=1080:1920:flags=lanczos,format=yuva444p10le" \
+    -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le -vendor apl0 -bits_per_mb 1000 "mov/$id.mov"
   echo "mov/$id.mov"
 done

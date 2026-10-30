@@ -4,7 +4,7 @@ const fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 
 const [,, SRC, OUT, ...PAIRS] = process.argv;
-const FPS = 30, W = 405, H = 720, SCALE = 1080 / 405;
+const FPS = 30, W = 405, H = 720, SCALE = 2160 / 405;   // 先渲 2 倍（2160x3840），ffmpeg 再縮回 1080，邊緣更乾淨
 const FONT_DIR = path.join(__dirname, 'node_modules', '@fontsource');
 
 // 每支的特別修正（避免裁字等）

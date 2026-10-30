@@ -419,6 +419,7 @@ def build_draft(spec, models, log=None, progress=None):
     layout_windows = []     # [(t0, dur)] 版型段的時間，網址／商品名稱要避開或改位置
     cursor = 0
     card_runs, close_runs, out_segments = [], [], []
+    first_clip_us = None    # 第一段實拍的精確長度（微秒），開頭動畫要跟它切齊
     total_steps = max(1, len(sequence))
 
     for idx, (kind, full, c, nb) in enumerate(sequence):
@@ -475,6 +476,8 @@ def build_draft(spec, models, log=None, progress=None):
                                  "stabilized": mat.material_id in g.STABILIZE_IDS})
             _log(log, f"{fname} 從 {start / SEC:.1f}s 取 {dur / SEC:.1f}s（{how}，近拍）")
             next_start(full, start, dur)
+            if first_clip_us is None:
+                first_clip_us = dur
             cursor += dur
             continue
 
@@ -512,6 +515,8 @@ def build_draft(spec, models, log=None, progress=None):
                              "scale": round(scale, 2), "stabilized": mat.material_id in g.STABILIZE_IDS})
         _log(log, f"{fname} 從 {skip / SEC:.1f}s 取 {dur / SEC:.1f}s（{how}）")
         next_start(full, skip, dur)
+        if first_clip_us is None:
+            first_clip_us = dur
         cursor += dur
 
     # 開頭動畫：帶 alpha 的 .mov 疊在第一段滿版上（最上層），長度跟著第一段調速；文字（MODEL 卡／商品名稱／網址）等開頭結束再出現
@@ -521,11 +526,9 @@ def build_draft(spec, models, log=None, progress=None):
         try:
             omat = cc.VideoMaterial(opening_path)
             odur = int(omat.duration)
-            first_dur = int(round(out_segments[0]["dur"] * SEC))
-            speed = max(0.75, min(1.6, odur / max(first_dur, 1)))
-            tdur = min(int(odur / speed), cursor)
-            src = min(odur, int(tdur * speed))
-            script.add_segment(cc.VideoSegment(omat, cc.Timerange(0, tdur), source_timerange=cc.Timerange(0, src),
+            tdur = int(first_clip_us or out_segments[0]["dur"] * SEC)   # 跟第一段一樣長，整支動畫調速塞進去
+            speed = odur / max(tdur, 1)
+            script.add_segment(cc.VideoSegment(omat, cc.Timerange(0, tdur), source_timerange=cc.Timerange(0, odur),
                                                speed=speed, volume=0.0),
                                layout_track(cc.TrackType.video, "開頭動畫", 30))
             opening_window = (0, tdur)
