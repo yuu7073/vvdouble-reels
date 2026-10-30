@@ -756,8 +756,8 @@ class Api:
         rec["export_file"] = found if exported else None
         rec["exported_at"] = dt.datetime.now().isoformat(timespec="seconds") if exported else None
         _save_json(HISTORY_FILE, self.history)
-        self._status_set(rec.get("sku") or rec["name"], {"name": rec["name"], "exported_at": rec["exported_at"],
-                                                          "export_file": rec["export_file"]})
+        for key in {rec.get("sku") or "", rec["name"]}:
+            self._status_set(key, {"name": rec["name"], "exported_at": rec["exported_at"], "export_file": rec["export_file"]})
         uses = None
         if exported:
             self._cloud_event("export", rec["name"])
@@ -803,6 +803,12 @@ class Api:
             _save_json(self._status_path(), idx)
         except Exception:
             traceback.print_exc()
+
+    def todo_status(self):
+        """待製作頁切回來時只重讀製作狀態（本機，很快），不用重抓 Shopline"""
+        return {"ok": True, "status": self._status_index(),
+                "history_names": [h.get("name") for h in self.history if h.get("ok")],
+                "history_skus": [h.get("sku") for h in self.history if h.get("ok") and h.get("sku")]}
 
     def todo_list(self, force=False, days=90):
         """待製作清單：直接從 Shopline 抓近期商品（依排程上架日分檔期）；沒有工具密碼時才退回上架排程試算表"""
