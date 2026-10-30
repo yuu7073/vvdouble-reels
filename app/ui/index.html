@@ -415,6 +415,7 @@ const app = {
     if (ev==='analyzing') { $('#analyzing').textContent = p.i<p.n ? `分析中 ${p.i+1}/${p.n}　${p.name}` : ''; }
     else if (ev==='drop_start') { $('#analyzing').textContent = `讀取 ${p.n} 個檔案…`; document.body.classList.remove('dragging'); }
     else if (ev==='dropped') { clearTimeout(this._dropWait); this.ingest(p); }
+    else if (ev==='opening_sync') { if(this.state.openings){ this.state.openings.sync=p; } else this.state.openings={items:[],sync:p}; this.renderOpening(); }
     else if (ev==='openings_changed') { this.call('opening_list').then(r=>{ this.state.openings=r; this.renderOpening(); this.toast(`開頭動畫庫更新了 ${p.added} 支`); }); }
     else if (ev==='auto_exported') { const rec=this.state.history.find(x=>x.id===p.id); if(rec){ rec.exported=true; rec.export_file=p.file; } this.renderHistory(); this.toast(`偵測到成品，已自動勾匯出：${p.name}`); this.reloadMusic&&this.reloadMusic(); const detailOpen=$('#detail')&&$('#detail').dataset.id===p.id; if(rec&&detailOpen) this.showDetail(rec); }
     else if (ev==='drop_nopath') { clearTimeout(this._dropWait); $('#analyzing').textContent=''; this.toast('拖曳拿不到檔案路徑（WebView2 太舊），請用「＋ 加入影片」或「＋ 加入資料夾」', true); }
@@ -486,7 +487,9 @@ const app = {
     if(P.opening===undefined) P.opening='random';
     if(cardFirst){ el.innerHTML=`<span style="font-size:12px;color:var(--faint)">此版型第一段是版型卡，不疊開頭</span>`; meta.textContent=''; bb.style.display='none'; return; }
     bb.style.display='';
-    if(!lib.length){ el.innerHTML=`<span style="font-size:12px;color:var(--faint)">找不到開頭動畫庫（官網部門\\開頭動畫）</span>`; meta.textContent=''; return; }
+    const sy=(this.state.openings&&this.state.openings.sync)||{};
+    if(!lib.length){ el.innerHTML=`<span style="font-size:12px;color:var(--faint)">${sy.running?`開頭動畫庫下載中 ${sy.done||0}/${sy.total||'…'}`:'找不到開頭動畫庫（官網部門\\開頭動畫）'}</span>`; meta.textContent=''; return; }
+    if(sy.running) meta.textContent=`下載中 ${sy.done||0}/${sy.total||'…'}`;
     meta.textContent=P.opening==='random'?'自動挑選':(P.opening?lib.find(i=>i.path===P.opening)?.name||'':'不用');
     el.innerHTML=`<div class="oprow">${lib.map(i=>`<div class="opit ${i.path===P.opening?'on':''}" title="${esc(i.name)}" onclick="app.setOpening(${JSON.stringify(i.path).replace(/"/g,'&quot;')})">${i.thumb?`<img src="${i.thumb}" alt="">`:''}<div class="nm">${esc(i.name.replace(/^開頭/,''))}</div></div>`).join('')}</div>`;
   },

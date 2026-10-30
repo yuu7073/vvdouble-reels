@@ -1702,8 +1702,9 @@ class Api:
 
     def opening_list(self):
         root = self._opening_root()
+        sync = dict(getattr(self, "_opening_sync_state", {}) or {})
         if not root:
-            return {"root": "", "items": []}
+            return {"root": "", "items": [], "sync": sync}
         items = []
         try:
             files = sorted(os.listdir(root))
@@ -1714,17 +1715,19 @@ class Api:
                 continue
             fp = os.path.join(root, f)
             items.append({"path": fp, "name": os.path.splitext(f)[0], "thumb": self._opening_thumb(fp)})
-        return {"root": root, "items": items}
+        return {"root": root, "items": items, "sync": sync}
 
     def _opening_sync(self):
         """開頭動畫庫同步：GitHub Release（tag=openings）裡有、Dropbox 開頭動畫資料夾沒有的 .mov 就下載進去
         （資料夾放 官網部門\開頭動畫，一台電腦載過全公司都有）"""
         import urllib.request
+        self._opening_sync_state = {"running": True, "done": 0, "total": 0}
         try:
             root = self._opening_root()
             if not root:
                 base = self._bg_root()
                 if not base:
+                    print("[開頭動畫] 找不到 官網部門 資料夾，略過同步")
                     return
                 root = os.path.join(base, OPENING_SUBDIR)
                 os.makedirs(root, exist_ok=True)
@@ -1733,13 +1736,16 @@ class Api:
             with urllib.request.urlopen(req, timeout=20) as resp:
                 j = json.loads(resp.read().decode("utf-8"))
             got = 0
-            for a in j.get("assets", []):
+            assets = [a for a in j.get("assets", []) if (a.get("name") or "").lower().endswith(".mov")]
+            self._opening_sync_state["total"] = len(assets)
+            for a in assets:
                 name = a.get("name") or ""
-                if not name.lower().endswith(".mov"):
-                    continue
                 dst = os.path.join(root, name)
                 if os.path.exists(dst) and os.path.getsize(dst) == int(a.get("size") or -1):
+                    self._opening_sync_state["done"] += 1
                     continue
+                print(f"[開頭動畫] 下載 {name}（{int(a.get('size') or 0) // 1048576} MB）")
+                self._emit("opening_sync", dict(self._opening_sync_state, name=name))
                 tmp = dst + ".part"
                 if os.path.exists(tmp) and time.time() - os.path.getmtime(tmp) < 600:
                     continue        # 別台電腦正在載
@@ -1748,10 +1754,16 @@ class Api:
                     shutil.copyfileobj(resp, f, 1024 * 256)
                 os.replace(tmp, dst)
                 got += 1
+                self._opening_sync_state["done"] += 1
+                self._emit("opening_sync", dict(self._opening_sync_state, name=name))
+            print(f"[開頭動畫] 同步完成，新載 {got} 支")
             if got:
                 self._emit("openings_changed", {"root": root, "added": got})
-        except Exception:
+        except Exception as e:
+            print(f"[開頭動畫] 同步失敗：{type(e).__name__}: {e}")
             traceback.print_exc()
+        finally:
+            self._opening_sync_state["running"] = False
 
     def opening_pick(self, exclude=None):
         items = self.opening_list()["items"]
