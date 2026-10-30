@@ -402,7 +402,8 @@ class Api:
             "vision_ok": bool(vision and vision.available()),
             "vision_error": VISION_ERROR or ("" if (vision and vision.available()) else getattr(vision, "LOAD_ERROR", "模型或套件缺少")),
             "version": VERSION,
-            "layouts": layouts.list_layouts() if layouts else [],
+            # 版型（LOOKBOOK／相機／郵票…）已停用，改用開頭動畫；設定 show_layouts=true 可叫回來
+            "layouts": layouts.list_layouts() if (layouts and self.settings.get("show_layouts")) else [],
             "openings": self.opening_list(),
             "frozen": FROZEN,
             "log_file": LOG_FILE,

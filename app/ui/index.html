@@ -145,7 +145,7 @@ input.ipt::placeholder{color:var(--faint)}
       <button data-view="work" class="on">製作</button>
       <button data-view="done">完成</button>
       <button data-view="music">音樂庫</button>
-      <button data-view="bg">底圖庫</button>
+      <button data-view="bg" id="navBg" style="display:none">底圖庫</button>
       <button data-view="models">模特資料</button>
       <button data-view="settings">設定</button>
     </div>
@@ -187,7 +187,7 @@ input.ipt::placeholder{color:var(--faint)}
         <div style="position:relative;flex:1;min-width:0"><input class="ipt" id="prodName" style="height:38px;font-size:15px;font-weight:700" placeholder="商品名稱（輸入兩個字以上自動查找）" oninput="app.renameProduct(this.value);app.lookupProduct(this.value)" onfocus="app.lookupProduct(this.value)" onblur="setTimeout(()=>$('#lookup').style.display='none',200)"><div id="lookup" class="card" style="display:none;position:absolute;left:0;right:0;top:42px;z-index:5;max-height:360px;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.15)"></div></div>
         <button class="btn w" onclick="app.pickVideos()">＋ 加入影片</button>
         <button class="btn w" onclick="app.pickFolder()">＋ 加入資料夾</button>
-        <button class="btn w" onclick="app.pickBatch()" title="大資料夾裡每個子資料夾一個商品，自動配對商品、分配版型與音樂">＋ 匯入大資料夾</button>
+        <button class="btn w" onclick="app.pickBatch()" title="大資料夾裡每個子資料夾一個商品，自動配對商品、分配開頭與音樂">＋ 匯入大資料夾</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;color:var(--mute)" id="filterBar">
         <span class="chip k" id="cntAll">全部 0</span>
@@ -218,7 +218,7 @@ input.ipt::placeholder{color:var(--faint)}
         <audio id="musicAudio" preload="none"></audio>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;flex-direction:column;gap:10px" id="laySec">
         <div class="row"><span class="h">版型</span></div>
         <select class="sel" id="layoutSel" style="height:36px;font-weight:500" onchange="app.setLayout(this.value)"></select>
         <div id="layoutMeta" style="font-size:12px;color:var(--mute);padding:0 2px"></div>
@@ -233,7 +233,7 @@ input.ipt::placeholder{color:var(--faint)}
         </div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;flex-direction:column;gap:10px" id="bgSec">
         <div class="row"><span class="h">底圖</span><button class="btn l sm" onclick="app.go('bg')">底圖庫</button></div>
         <div id="bgPick" style="display:flex;gap:10px;align-items:center"></div>
         <div class="two" id="bgBtns">
@@ -713,7 +713,7 @@ const app = {
     }
     $('#analyzing').textContent='';
     this.cur=Math.max(0,this.products.length-r.items.length); this.renderAll();
-    this.toast(`匯入 ${r.items.length} 個商品${unmatched?`，${unmatched} 個沒配對到商品（名稱左側標紅）`:''}${pool.length?`，底圖用 ${esc((pool[0].group||'').split('/')[0])} 檔期`:'，沒找到當期底圖（需要底圖的版型請手動選）'}`, !!unmatched||!pool.length);
+    this.toast(`匯入 ${r.items.length} 個商品${unmatched?`，${unmatched} 個沒配對到商品（名稱左側標紅）`:''}${(this.state.layouts||[]).length?(pool.length?`，底圖用 ${esc((pool[0].group||'').split('/')[0])} 檔期`:'，沒找到當期底圖（需要底圖的版型請手動選）'):''}`, !!unmatched||((this.state.layouts||[]).length>0&&!pool.length));
   },
   ingest(res) {
     $('#analyzing').textContent='';
@@ -892,6 +892,8 @@ const app = {
   /* ---------- layout ---------- */
   renderLayoutSel() {
     const P=this.P?this.P():null; const list=this.state.layouts||[]; const cur=P&&P.layout||'';
+    const on=list.length>0; ['#laySec','#bgSec','#navBg'].forEach(q=>{ const e=$(q); if(e) e.style.display=on?'':'none'; });
+    if(!on&&P) P.layout='';
     const sel=$('#layoutSel'); if(!sel) return;
     sel.innerHTML=`<option value="">00 標準版</option>`+list.map(l=>`<option value="${l.id}" ${l.id===cur?'selected':''}>${esc(l.name)}</option>`).join('');
     const l=list.find(x=>x.id===cur);
