@@ -130,6 +130,9 @@ ${FIX[id] || ''}
 body.top-pass #root{background:transparent !important}
 body.top-pass #root *{visibility:hidden !important}
 body.top-pass #root .__top,body.top-pass #root .__top *{visibility:visible !important}
+/* 介面預覽用：格子塗成純綠，之後去背變成透明洞，滑過時首支影片會從洞裡透出來 */
+body.prev-pass .__slot{visibility:visible !important;background:#00ff00 !important;background-image:none !important;box-shadow:none !important;filter:none !important;opacity:1 !important}
+body.prev-pass #root .__top,body.prev-pass #root .__top *{visibility:hidden !important}   /* 上層字另外用 t 序列疊回去，免得邊緣沾到綠 */
 </style></head><body>${body}</body></html>`;
   return { html, dur, cut, slots, slotMeta, top: TOP[id] || '' };
 }
@@ -159,6 +162,10 @@ body.top-pass #root .__top,body.top-pass #root .__top *{visibility:visible !impo
         await page.screenshot({ path: path.join(dir, `t${String(i).padStart(4, '0')}.png`), omitBackground: true });
         await page.evaluate(() => document.body.classList.remove('top-pass'));
       }
+      // 預覽用整張（底層＋格子純綠＋上層字），build.sh 會把純綠去背
+      await page.evaluate(() => document.body.classList.add('prev-pass'));
+      await page.screenshot({ path: path.join(dir, `p${String(i).padStart(4, '0')}.png`), omitBackground: true });
+      await page.evaluate(() => document.body.classList.remove('prev-pass'));
       // 取樣每個格子：中心點、未旋轉前的寬高、縮放、旋轉、透明度（含所有祖先）
       const smp = await page.evaluate(() => {
         const root = document.getElementById('root').getBoundingClientRect();

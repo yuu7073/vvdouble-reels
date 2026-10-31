@@ -12,9 +12,21 @@ for d in out/*/; do
   ffmpeg -y -loglevel error -framerate 30 -i "$d/f%04d.png" \
     -vf "format=rgba,premultiply=inplace=1,scale=1080:1920:flags=lanczos,format=yuva444p10le" \
     -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le -vendor apl0 -bits_per_mb 1000 "mov/$id.mov"
-  # 介面滑過預覽用：小尺寸帶透明的 webm（瀏覽器能播）
-  ffmpeg -y -loglevel error -framerate 30 -i "$d/f%04d.png" -vf "format=rgba,scale=270:480,fps=15" \
-    -c:v libvpx-vp9 -pix_fmt yuva420p -b:v 0 -crf 34 -auto-alt-ref 0 "mov/$id.webm"
+  # 介面滑過預覽用：小尺寸帶透明的 webm（瀏覽器能播）＋ 60% 處一張透明 PNG（縮圖／靜態預覽）
+  # 多格影片類用 p 序列（格子是純綠），先去背再縮，滑過時首支影片會從格子透出來
+  n=$(ls "$d"/f*.png | wc -l); idx=$(printf %04d $((n * 6 / 10)))
+  if [ -f "$d/p0000.png" ] && [ -f "$d/t0000.png" ]; then
+    # 去綠 → 疊上層字 → 縮
+    fc="[0]format=rgba,colorkey=0x00FF00:0.4:0.1[a];[1]format=rgba[b];[a][b]overlay=format=auto,format=rgba,scale=270:480"
+    ffmpeg -y -loglevel error -framerate 30 -i "$d/p%04d.png" -framerate 30 -i "$d/t%04d.png" -filter_complex "$fc,fps=15" \
+      -c:v libvpx-vp9 -pix_fmt yuva420p -b:v 0 -crf 34 -auto-alt-ref 0 "mov/$id.webm"
+    ffmpeg -y -loglevel error -i "$d/p$idx.png" -i "$d/t$idx.png" -filter_complex "$fc" -frames:v 1 "mov/$id.png"
+  else
+    if [ -f "$d/p0000.png" ]; then seq="p"; key="colorkey=0x00FF00:0.4:0.1,"; else seq="f"; key=""; fi
+    ffmpeg -y -loglevel error -framerate 30 -i "$d/${seq}%04d.png" -vf "format=rgba,${key}scale=270:480,fps=15" \
+      -c:v libvpx-vp9 -pix_fmt yuva420p -b:v 0 -crf 34 -auto-alt-ref 0 "mov/$id.webm"
+    ffmpeg -y -loglevel error -i "$d/${seq}${idx}.png" -vf "format=rgba,${key}scale=270:480" -frames:v 1 "mov/$id.png"
+  fi
   # 多格影片類：上層文字 + 格子軌跡
   if [ -f "$d/slots.json" ]; then
     cp "$d/slots.json" "mov/$id.json"

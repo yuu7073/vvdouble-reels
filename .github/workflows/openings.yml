@@ -27,3 +27,4 @@ jobs:
             openings/mov/*.mov
             openings/mov/*.webm
             openings/mov/*.json
+            openings/mov/*.png

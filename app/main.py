@@ -1728,7 +1728,9 @@ class Api:
     def _opening_thumb(self, fp):
         """開頭動畫縮圖：60% 處那一格疊在深灰底上（用 PIL 合成，透明一定看得到字）"""
         try:
-            key = hashlib.md5(f"op3|{fp}|{os.path.getmtime(fp)}".encode("utf-8")).hexdigest()[:16]
+            png0 = os.path.splitext(fp)[0] + ".png"
+            pm = os.path.getmtime(png0) if os.path.exists(png0) else 0
+            key = hashlib.md5(f"op4|{fp}|{os.path.getmtime(fp)}|{pm}".encode("utf-8")).hexdigest()[:16]
             out = os.path.join(THUMB_DIR, key + ".jpg")
             if not os.path.exists(out):
                 from PIL import Image
@@ -1743,6 +1745,10 @@ class Api:
             return ""
 
     def _opening_frame_file(self, fp):
+        # 庫裡有同名 .png（渲染時就做好的 60% 預覽格，多格類的格子是透明洞）就直接用，不用再從 mov 抽
+        png = os.path.splitext(fp)[0] + ".png"
+        if os.path.exists(png):
+            return png
         key = hashlib.md5(f"opf|{fp}|{os.path.getmtime(fp)}".encode("utf-8")).hexdigest()[:16]
         out = os.path.join(THUMB_DIR, key + ".png")
         if not os.path.exists(out):
@@ -1801,7 +1807,7 @@ class Api:
             with urllib.request.urlopen(req, timeout=20) as resp:
                 j = json.loads(resp.read().decode("utf-8"))
             got = 0
-            assets = [a for a in j.get("assets", []) if (a.get("name") or "").lower().endswith((".mov", ".webm", ".json"))]
+            assets = [a for a in j.get("assets", []) if (a.get("name") or "").lower().endswith((".mov", ".webm", ".json", ".png"))]
             self._opening_sync_state["total"] = len(assets)
             for a in assets:
                 name = a.get("name") or ""
