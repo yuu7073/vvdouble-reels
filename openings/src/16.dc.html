@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening T Flash Cuts</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&amp;family=Instrument+Serif:ital@1&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.t-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0}
+.t-l0{animation:tL0 3.6s linear infinite;z-index:10}@keyframes tL0{0%,0%{opacity:0}0.01%{opacity:1;transform:scale(1.1)}4%{opacity:1;transform:scale(1)}4.01%,100%{opacity:0}}
+.t-l1{animation:tL1 3.6s linear infinite;z-index:9}@keyframes tL1{0%,4%{opacity:0}4.01%{opacity:1;transform:scale(1.1)}8%{opacity:1;transform:scale(1)}8.01%,100%{opacity:0}}
+.t-l2{animation:tL2 3.6s linear infinite;z-index:8}@keyframes tL2{0%,8%{opacity:0}8.01%{opacity:1;transform:scale(1.1)}12%{opacity:1;transform:scale(1)}12.01%,100%{opacity:0}}
+.t-l3{animation:tL3 3.6s linear infinite;z-index:7}@keyframes tL3{0%,12%{opacity:0}12.01%{opacity:1;transform:scale(1.1)}16%{opacity:1;transform:scale(1)}16.01%,100%{opacity:0}}
+.t-l4{animation:tL4 3.6s linear infinite;z-index:6}@keyframes tL4{0%,16%{opacity:0}16.01%{opacity:1;transform:scale(1.1)}20%{opacity:1;transform:scale(1)}20.01%,100%{opacity:0}}
+.t-flash{animation:tFlash 3.6s linear infinite;z-index:15}@keyframes tFlash{0%,20%{opacity:0}20.5%{opacity:.9}26%,100%{opacity:0}}
+.t-vid{animation:tVid 3.6s ease infinite}@keyframes tVid{0%,20%{transform:scale(1.12)}40%,100%{transform:scale(1)}}
+.t-txt{z-index:20;animation:tTxt 3.6s ease infinite}@keyframes tTxt{0%,22%{opacity:0;letter-spacing:0.9em}40%,95%{opacity:1;letter-spacing:0.32em}100%{opacity:0;letter-spacing:0.32em}}
+.t-ser{z-index:20;animation:tSer 3.6s ease infinite}@keyframes tSer{0%,34%{opacity:0;transform:translateY(10px)}46%,95%{opacity:1;transform:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #111111; font-family: 'Inter', sans-serif; color: #ffffff">
+<img class="t-layer t-l0" src="/_blob/abf9b9b185601175130f7cfcf886dfd5" alt="">
+<img class="t-layer t-l1" src="/_blob/56b43190828ca549b353b50c9e3bf1e1" alt="">
+<img class="t-layer t-l2" src="/_blob/a80f8dfb9613e5bd32596d1292885125" alt="">
+<img class="t-layer t-l3" src="/_blob/31632b8a2174bdff54ae4ffe16ae3d79" alt="">
+<img class="t-layer t-l4" src="/_blob/e84390028712e2d7ca767c38b7b7adcc" alt="">
+<video class="t-vid" src="/_blob/7dd3d73530218c2fe48d8e16d1121437" poster="/_blob/3a85844a82ad34b5af889d1e07897b55" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1"></video>
+<div class="t-flash" style="position: absolute; inset: 0; background: #ffffff"></div>
+<div class="t-txt" style="position: absolute; left: 0; right: 0; top: 330px; text-align: center; font-size: 26px; font-weight: 600; padding-left: 0.32em; white-space: nowrap; text-shadow: 0 2px 14px rgba(0,0,0,.4)">NEW ARRIVALS</div>
+<div class="t-ser" style="position: absolute; left: 0; right: 0; top: 372px; text-align: center; font-family: 'Instrument Serif', serif; font-style: italic; font-size: 26px; text-shadow: 0 2px 14px rgba(0,0,0,.4)">take a closer look</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

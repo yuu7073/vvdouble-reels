@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening B Styleguide</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#fff}a:hover{color:#ddd}
+.b-card{position:absolute;left:50%;top:50%;width:220px;height:391px;object-fit:cover;opacity:0;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.b-c1{animation:bC1 5.4s cubic-bezier(.2,.8,.2,1) infinite}
+.b-c2{animation:bC2 5.4s cubic-bezier(.2,.8,.2,1) infinite}
+.b-c3{animation:bC3 5.4s cubic-bezier(.2,.8,.2,1) infinite}
+.b-c4{animation:bC4 5.4s cubic-bezier(.2,.8,.2,1) infinite}
+.b-c5{animation:bC5 5.4s cubic-bezier(.2,.8,.2,1) infinite}
+.b-c6{animation:bC6 5.4s cubic-bezier(.2,.8,.2,1) infinite}
+.b-vid{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);object-fit:cover;opacity:0;animation:bVid 5.4s cubic-bezier(.65,0,.2,1) infinite}
+.b-flank{animation:bFlank 5.4s ease infinite}
+.b-end{animation:bEnd 5.4s ease infinite}
+@keyframes bC1{0%,2.8%{opacity:0;transform:translate(calc(-50% - 6px),calc(-50% + 4px)) rotate(-5deg) scale(1.08)}5.3%,97%{opacity:1;transform:translate(calc(-50% - 6px),calc(-50% + 4px)) rotate(-5deg) scale(1)}100%{opacity:0}}
+@keyframes bC2{0%,10.6%{opacity:0;transform:translate(calc(-50% + 8px),calc(-50% - 6px)) rotate(4deg) scale(1.08)}13.1%,97%{opacity:1;transform:translate(calc(-50% + 8px),calc(-50% - 6px)) rotate(4deg) scale(1)}100%{opacity:0}}
+@keyframes bC3{0%,18.3%{opacity:0;transform:translate(calc(-50% - 4px),calc(-50% + 8px)) rotate(-3deg) scale(1.08)}20.8%,97%{opacity:1;transform:translate(calc(-50% - 4px),calc(-50% + 8px)) rotate(-3deg) scale(1)}100%{opacity:0}}
+@keyframes bC4{0%,26.1%{opacity:0;transform:translate(calc(-50% + 10px),calc(-50% - 2px)) rotate(6deg) scale(1.08)}28.6%,97%{opacity:1;transform:translate(calc(-50% + 10px),calc(-50% - 2px)) rotate(6deg) scale(1)}100%{opacity:0}}
+@keyframes bC5{0%,33.9%{opacity:0;transform:translate(calc(-50% + 2px),calc(-50% + 6px)) rotate(-2deg) scale(1.08)}36.4%,97%{opacity:1;transform:translate(calc(-50% + 2px),calc(-50% + 6px)) rotate(-2deg) scale(1)}100%{opacity:0}}
+@keyframes bC6{0%,41.7%{opacity:0;transform:translate(calc(-50% - 8px),calc(-50% - 4px)) rotate(3deg) scale(1.08)}44.2%,97%{opacity:1;transform:translate(calc(-50% - 8px),calc(-50% - 4px)) rotate(3deg) scale(1)}100%{opacity:0}}
+@keyframes bVid{0%,49.4%{opacity:0;width:220px;height:391px}52%,60%{opacity:1;width:220px;height:391px}72%,97%{opacity:1;width:405px;height:720px}100%{opacity:0;width:405px;height:720px}}
+@keyframes bFlank{0%,1%{opacity:0}4%,60%{opacity:1}66%,100%{opacity:0}}
+@keyframes bEnd{0%,72%{opacity:0;transform:translateY(10px)}80%,95%{opacity:1;transform:none}100%{opacity:0;transform:none}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #0d0d0d; font-family: 'Inter', sans-serif; color: #ffffff">
+<img class="b-card b-c1" src="/_blob/7bdd06dbaa80d8be34099a5e3282174b" alt="">
+<img class="b-card b-c2" src="/_blob/97151ecb6ce136d4ff7ac0d582650607" alt="">
+<img class="b-card b-c3" src="/_blob/551e59f497f1df80a590f2da4439b4f5" alt="">
+<img class="b-card b-c4" src="/_blob/abf9b9b185601175130f7cfcf886dfd5" alt="">
+<img class="b-card b-c5" src="/_blob/4e252d9fe526d6c69f353dd9e327b6aa" alt="">
+<img class="b-card b-c6" src="/_blob/a2461431adf6bef2afe4d02668e9307a" alt="">
+<video class="b-vid" src="/_blob/7dd3d73530218c2fe48d8e16d1121437" poster="/_blob/3a85844a82ad34b5af889d1e07897b55" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}"></video>
+<div class="b-flank" style="position: absolute; left: 22px; right: 22px; top: 352px; display: flex; justify-content: space-between; font-size: 11px; font-weight: 500; letter-spacing: 0.2em; mix-blend-mode: difference">
+<span>A/W</span>
+<span>STYLEGUIDE</span>
+</div>
+<div class="b-end" style="position: absolute; left: 0; right: 0; bottom: 96px; display: flex; flex-direction: column; align-items: center; gap: 6px">
+<div style="font-family: 'Instrument Serif', serif; font-style: italic; font-size: 68px; line-height: 1">Styleguide</div>
+<div style="font-size: 11px; font-weight: 500; letter-spacing: 0.24em">VV DOUBLE  A/W</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

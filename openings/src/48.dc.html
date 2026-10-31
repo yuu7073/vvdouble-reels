@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening BF Photo Booth</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500&amp;family=La+Belle+Aurore&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F3EEE4}a:hover{color:#F3EEE4}
+.bf-strip{animation:bfStrip 4.8s cubic-bezier(.2,.9,.3,1.2) infinite}@keyframes bfStrip{0%,2%{transform:translateY(-120%) rotate(-4deg)}14%,94%{transform:rotate(-4deg)}100%{transform:translateY(-120%) rotate(-4deg)}}
+.bf-f0{animation:bfF0 4.8s steps(1,end) infinite}@keyframes bfF0{0%,16%{opacity:0}16.01%{opacity:1;filter:brightness(2.4)}17.5%,100%{opacity:1;filter:none}}
+.bf-f1{animation:bfF1 4.8s steps(1,end) infinite}@keyframes bfF1{0%,23%{opacity:0}23.01%{opacity:1;filter:brightness(2.4)}24.5%,100%{opacity:1;filter:none}}
+.bf-f2{animation:bfF2 4.8s steps(1,end) infinite}@keyframes bfF2{0%,30%{opacity:0}30.01%{opacity:1;filter:brightness(2.4)}31.5%,100%{opacity:1;filter:none}}
+.bf-f3{animation:bfF3 4.8s steps(1,end) infinite}@keyframes bfF3{0%,37%{opacity:0}37.01%{opacity:1;filter:brightness(2.4)}38.5%,100%{opacity:1;filter:none}}
+.bf-h{animation:bf-h 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes bf-h{0%,40%{opacity:0;transform:translateY(8px)}48%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.bf-t{animation:bf-t 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes bf-t{0%,4%{opacity:0;}10%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2b2724; font-family: 'Inter', sans-serif; color: #F3EEE4">
+<div style="position: absolute; left: 230px; top: 236px; width: 160px; display: flex; flex-direction: column; align-items: flex-start">
+<div class="bf-t" style="font-size: 9px; font-weight: 500; letter-spacing: .3em">NO. 01</div>
+<div class="bf-t" style="margin-top: 14px; font-family: 'Instrument Serif', serif; font-size: 44px; line-height: .92; letter-spacing: -0.02em">New<br>looks,<br><i>up close.</i></div>
+<div class="bf-h" style="margin-top: 18px; width: 40px; height: 1px; background: #F3EEE4"></div>
+<div class="bf-h" style="margin-top: 14px; font-size: 9px; font-weight: 500; letter-spacing: .26em; line-height: 1.6">VV DOUBLE<br>PHOTO BOOTH</div>
+<div class="bf-h" style="margin-top: 16px; font-family: 'La Belle Aurore', cursive; font-size: 20px">take a closer look</div>
+</div>
+<div style="position: absolute; left: 36px; top: 32px; transform: rotate(-4deg); width: 146px; box-sizing: border-box; padding: 8px 8px 30px; background: #FBF8F1; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 16px 34px rgba(0,0,0,.35)"><div style="width: 130px; height: 150px; overflow: hidden; background: #1a1a1a"><div class="bf-f0" style="width: 100%; height: 100%"><video src="/_blob/434131eeabb36ecbef47a3fec5e5c3d8" poster="/_blob/beea9590977abd4e2038c6d4f879f61a" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="width: 100%; height: 100%; object-fit: cover"></video></div></div><div style="width: 130px; height: 150px; overflow: hidden; background: #1a1a1a"><div class="bf-f1" style="width: 100%; height: 100%"><video src="/_blob/699cfc130329fe26818955bbae775cbf" poster="/_blob/266163afc39ae7d1c2a4172e74e14b84" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="width: 100%; height: 100%; object-fit: cover"></video></div></div><div style="width: 130px; height: 150px; overflow: hidden; background: #1a1a1a"><div class="bf-f2" style="width: 100%; height: 100%"><video src="/_blob/67af9a38693961d15cfdd0114a2c3ae1" poster="/_blob/ab7d5959794a132bd6741deade5d02e9" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="width: 100%; height: 100%; object-fit: cover"></video></div></div><div style="width: 130px; height: 150px; overflow: hidden; background: #1a1a1a"><div class="bf-f3" style="width: 100%; height: 100%"><video src="/_blob/4bc803b4d6f0557ad64a3dddae46e458" poster="/_blob/2bb37e47113ddc26398c62c7715fc5c0" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="width: 100%; height: 100%; object-fit: cover"></video></div></div></div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

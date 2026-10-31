@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening C New In</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Space+Mono:wght@400;700&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F2E3A0}a:hover{color:#fff}
+.c-top{animation:cTop 3s cubic-bezier(.2,.8,.2,1) infinite}
+.c-bot{animation:cBot 3s cubic-bezier(.2,.8,.2,1) infinite}
+.c-w1{animation:cW1 3s cubic-bezier(.2,.9,.3,1) infinite}
+.c-w2{animation:cW2 3s cubic-bezier(.2,.9,.3,1) infinite}
+.c-mono{animation:cMono 3s steps(1,end) infinite}
+@keyframes cTop{0%{transform:translateY(-100%)}16%,84%{transform:translateY(0)}100%{transform:translateY(-100%)}}
+@keyframes cBot{0%{transform:translateY(100%)}16%,84%{transform:translateY(0)}100%{transform:translateY(100%)}}
+@keyframes cW1{0%,22%{opacity:0;transform:scale(1.25)}28%,84%{opacity:1;transform:scale(1)}90%,100%{opacity:0;transform:scale(1)}}
+@keyframes cW2{0%,34%{opacity:0;transform:scale(1.25)}40%,84%{opacity:1;transform:scale(1)}90%,100%{opacity:0;transform:scale(1)}}
+@keyframes cMono{0%{opacity:0}46%{opacity:1}86%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #1c1b19; font-family: 'Space Mono', monospace; color: #F2E3A0">
+<div class="c-top" style="position: absolute; left: 0; right: 0; top: 0; height: 360px; overflow: hidden">
+<video src="/_blob/67af9a38693961d15cfdd0114a2c3ae1" poster="/_blob/ab7d5959794a132bd6741deade5d02e9" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%"></video>
+</div>
+<div class="c-bot" style="position: absolute; left: 0; right: 0; bottom: 0; height: 360px; overflow: hidden">
+<video src="/_blob/7dd3d73530218c2fe48d8e16d1121437" poster="/_blob/3a85844a82ad34b5af889d1e07897b55" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 70%"></video>
+</div>
+<div style="position: absolute; left: 28px; top: 214px; display: flex; flex-direction: column; font-family: 'Archivo Black', sans-serif; font-size: 168px; line-height: 0.84; letter-spacing: -0.02em">
+<span class="c-w1" style="transform-origin: left center">NEW</span>
+<span class="c-w2" style="transform-origin: left center">IN</span>
+</div>
+<div class="c-mono" style="position: absolute; left: 24px; right: 24px; top: 84px; display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; letter-spacing: 0.04em">
+<span>VV DOUBLE</span>
+<span>NEW ARRIVALS</span>
+</div>
+<div class="c-mono" style="position: absolute; left: 246px; top: 400px; font-size: 13px; font-weight: 700; line-height: 1.25; white-space: pre-line">ON-BODY
+LOOKBOOK
+A/W</div>
+<div class="c-mono" style="position: absolute; left: 24px; right: 24px; bottom: 96px; display: flex; justify-content: space-between; align-items: flex-end; font-size: 12px; font-weight: 700; letter-spacing: 0.04em">
+<span style="white-space: pre-line; line-height: 1.2">TAKE
+A CLOSER
+LOOK</span>
+<span>WWW.VVDOUBLE.COM</span>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening BD Three Columns</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&amp;family=Inter:wght@500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.bd-c0{animation:bdC0 4.8s cubic-bezier(.7,0,.2,1) infinite}@keyframes bdC0{0%,0%{transform:translateY(-100%)}14%,92%{transform:none}100%{transform:translateY(100%)}}
+.bd-c1{animation:bdC1 4.8s cubic-bezier(.7,0,.2,1) infinite}@keyframes bdC1{0%,4%{transform:translateY(100%)}18%,92%{transform:none}100%{transform:translateY(-100%)}}
+.bd-c2{animation:bdC2 4.8s cubic-bezier(.7,0,.2,1) infinite}@keyframes bdC2{0%,8%{transform:translateY(-100%)}22%,92%{transform:none}100%{transform:translateY(100%)}}
+.bd-t{animation:bd-t 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes bd-t{0%,26%{opacity:0;transform:scale(1.15);filter:blur(8px)}36%,90%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.bd-s{animation:bd-s 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes bd-s{0%,34%{opacity:0;}42%,90%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #1a1816; font-family: 'Inter', sans-serif; color: #ffffff">
+<div class="bd-c0" style="position: absolute; left: 0px; top: 0; width: 135px; height: 720px; overflow: hidden"><video src="/_blob/67af9a38693961d15cfdd0114a2c3ae1" poster="/_blob/ab7d5959794a132bd6741deade5d02e9" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="width: 100%; height: 100%; object-fit: cover"></video></div><div class="bd-c1" style="position: absolute; left: 135px; top: 0; width: 135px; height: 720px; overflow: hidden"><video src="/_blob/7dd3d73530218c2fe48d8e16d1121437" poster="/_blob/3a85844a82ad34b5af889d1e07897b55" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="width: 100%; height: 100%; object-fit: cover"></video></div><div class="bd-c2" style="position: absolute; left: 270px; top: 0; width: 135px; height: 720px; overflow: hidden"><video src="/_blob/699cfc130329fe26818955bbae775cbf" poster="/_blob/266163afc39ae7d1c2a4172e74e14b84" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="width: 100%; height: 100%; object-fit: cover"></video></div><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.18)"></div>
+<div class="bd-t" style="position: absolute; left: 0; right: 0; top: 300px; text-align: center; font-family: 'Playfair Display', serif; font-size: 96px; line-height: .9; letter-spacing: -0.03em; text-shadow: 0 2px 20px rgba(0,0,0,.3)">New<br><i>In</i></div>
+<div class="bd-s" style="position: absolute; left: 0; right: 0; top: 488px; text-align: center; font-size: 10px; font-weight: 500; letter-spacing: .32em">THREE WAYS, ONE STUDIO</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1771,7 +1771,7 @@ class Api:
         except Exception:
             files = []
         for f in files:
-            if not f.lower().endswith(".mov") or f.startswith("."):
+            if not f.lower().endswith(".mov") or f.startswith(".") or f.lower().endswith("_top.mov"):
                 continue
             fp = os.path.join(root, f)
             name = os.path.splitext(f)[0]
@@ -1801,7 +1801,7 @@ class Api:
             with urllib.request.urlopen(req, timeout=20) as resp:
                 j = json.loads(resp.read().decode("utf-8"))
             got = 0
-            assets = [a for a in j.get("assets", []) if (a.get("name") or "").lower().endswith((".mov", ".webm"))]
+            assets = [a for a in j.get("assets", []) if (a.get("name") or "").lower().endswith((".mov", ".webm", ".json"))]
             self._opening_sync_state["total"] = len(assets)
             for a in assets:
                 name = a.get("name") or ""

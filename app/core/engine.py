@@ -2,6 +2,7 @@
 # 引擎：依介面傳入的片段規格產生 CapCut 草稿（沿用 generator 的卡點／置中／穩定／潤飾／預設組）
 
 import os
+import traceback
 import json
 import sys
 
@@ -82,6 +83,110 @@ def audio_material(path):
 
 
 OPENING_MIN_US = int(3.0 * 1_000_000)   # 開頭動畫至少撐 3 秒（第一段不夠長就延到下一個切點）
+
+
+def _opening_slots(script, layout_track, opening_path, tdur, out_segments, log):
+    """多格影片類開頭：讀 XX.json（渲染時逐格取樣的格子軌跡），每格一軌實拍影片，上層文字 XX_top.mov。
+    回傳放了幾格；不是多格類（沒有 json）回 0。"""
+    base = os.path.splitext(opening_path)[0]
+    sj_path = base + ".json"
+    if not os.path.exists(sj_path):
+        return 0
+    with open(sj_path, encoding="utf-8") as f:
+        sj = json.load(f)
+    fps, n, DW, DH = float(sj["fps"]), int(sj["frames"]), float(sj["w"]), float(sj["h"])
+    samples = sj["samples"]
+    slots = sj["slots"]
+    if not samples or not slots:
+        return 0
+    k_time = tdur / (n / fps * SEC)            # 設計時間 → 草稿時間（整支開頭被調速塞進 tdur）
+    K = 1080.0 / DW                            # 設計 px → 畫布 px
+    # 影片來源：照時間軸上排好的實拍（同一支用同一個起點），不夠長的跳過
+    pool = []
+    for sg in out_segments:
+        if sg.get("how") == "版型" or not sg.get("path"):
+            continue
+        pool.append((sg["path"], float(sg.get("start") or 0.0)))
+    if not pool:
+        return 0
+    mats = {}
+    placed = 0
+    for i, meta in enumerate(slots):
+        s0 = next((sm[i] for sm in samples if sm[i]["op"] > 0), samples[-1][i])
+        w0, h0 = float(s0["w0"]), float(s0["h0"])
+        if w0 <= 0 or h0 <= 0:
+            continue
+        # 選一支夠長的實拍
+        pick = None
+        for j in range(len(pool)):
+            path, st = pool[(i + j) % len(pool)]
+            if path not in mats:
+                mats[path] = cc.VideoMaterial(path)
+            m0 = mats[path]
+            if m0.duration >= tdur:
+                st_us = int(min(st * SEC, max(0, m0.duration - tdur)))
+                pick = (path, st_us, m0)
+                break
+        if not pick:
+            continue
+        path, st_us, m0 = pick
+        # 依格子比例裁切（object-position 決定裁哪邊），裁完 CapCut 會把裁切區「置入」畫布，再算縮放
+        a = w0 / h0
+        sa = m0.width / m0.height if m0.height else 9 / 16
+        op = (meta.get("objpos") or "50% 50%").split()
+        try:
+            px = float(op[0].rstrip("%")) / 100 if op[0].endswith("%") else 0.5
+            py = float(op[1].rstrip("%")) / 100 if len(op) > 1 and op[1].endswith("%") else 0.5
+        except Exception:
+            px, py = 0.5, 0.5
+        if sa > a:
+            cw, ch = a / sa, 1.0
+            x0, y0 = (1 - cw) * px, 0.0
+        else:
+            cw, ch = 1.0, sa / a
+            x0, y0 = 0.0, (1 - ch) * py
+        crop = cc.CropSettings(upper_left_x=x0, upper_left_y=y0, upper_right_x=x0 + cw, upper_right_y=y0,
+                               lower_left_x=x0, lower_left_y=y0 + ch, lower_right_x=x0 + cw, lower_right_y=y0 + ch)
+        mat = cc.VideoMaterial(path, crop_settings=crop)
+        # 裁切區置入 1080x1920：比畫布寬就貼寬、否則貼高
+        fit_w = 1080.0 if a >= 1080 / 1920 else 1920.0 * a
+        def frame_vals(sm):
+            sc = (w0 * sm["s"] * K) / fit_w
+            tx = (sm["cx"] * K - 540.0) / 540.0
+            ty = (960.0 - sm["cy"] * K) / 960.0
+            return (round(tx, 4), round(ty, 4), round(sc, 4), round(sm["rot"], 2), round(sm["op"], 3))
+        first = frame_vals(samples[0][i])
+        seg = cc.VideoSegment(mat, cc.Timerange(0, tdur), source_timerange=cc.Timerange(st_us, tdur), volume=0.0,
+                              clip_settings=ClipSettings(transform_x=first[0], transform_y=first[1], scale_x=first[2], scale_y=first[2],
+                                                         rotation=first[3], alpha=first[4]))
+        props = (KeyframeProperty.position_x, KeyframeProperty.position_y, KeyframeProperty.uniform_scale,
+                 KeyframeProperty.rotation, KeyframeProperty.alpha)
+        eps = (0.002, 0.002, 0.002, 0.1, 0.01)
+        last_emit = [None] * 5
+        prev_vals = None
+        for fi, sm in enumerate(samples):
+            vals = frame_vals(sm[i])
+            t_us = int(round(fi / fps * SEC * k_time))
+            t_us = min(t_us, tdur - 1)
+            for p_i in range(5):
+                v = vals[p_i]
+                le = last_emit[p_i]
+                if le is None or abs(v - le[1]) > eps[p_i] or fi == len(samples) - 1:
+                    # 值有變：先把上一格補成關鍵影格（維持停頓），再放這一格
+                    if le is not None and prev_vals is not None and le[0] != fi - 1 and abs(prev_vals[p_i] - le[1]) <= eps[p_i]:
+                        seg.add_keyframe(props[p_i], int(round((fi - 1) / fps * SEC * k_time)), prev_vals[p_i])
+                    seg.add_keyframe(props[p_i], t_us, v)
+                    last_emit[p_i] = (fi, v)
+            prev_vals = vals
+        script.add_segment(seg, layout_track(cc.TrackType.video, f"開頭格{i + 1}", 25 + i))
+        placed += 1
+    top = base + "_top.mov"
+    if os.path.exists(top) and sj.get("hasTop"):
+        tm = cc.VideoMaterial(top)
+        script.add_segment(cc.VideoSegment(tm, cc.Timerange(0, tdur), source_timerange=cc.Timerange(0, int(tm.duration)),
+                                           speed=tm.duration / max(tdur, 1), volume=0.0),
+                           layout_track(cc.TrackType.video, "開頭文字", 45))
+    return placed
 
 
 def build_draft(spec, models, log=None, progress=None):
@@ -538,8 +643,16 @@ def build_draft(spec, models, log=None, progress=None):
             speed = odur / max(tdur, 1)
             script.add_segment(cc.VideoSegment(omat, cc.Timerange(0, tdur), source_timerange=cc.Timerange(0, odur),
                                                speed=speed, volume=0.0),
-                               layout_track(cc.TrackType.video, "開頭動畫", 30))
+                               layout_track(cc.TrackType.video, "開頭動畫", 24))
             opening_window = (0, tdur)
+            # 多格影片類開頭：影片格子用 CapCut 原生圖層（位置／縮放／旋轉／透明度關鍵影格），字在最上層
+            try:
+                n_slots = _opening_slots(script, layout_track, opening_path, tdur, out_segments, log)
+                if n_slots:
+                    _log(log, f"開頭格子：{n_slots} 格實拍（可在 CapCut 直接換影片）")
+            except Exception as e:
+                _log(log, f"開頭格子放不上去（{type(e).__name__}: {e}）")
+                traceback.print_exc()
             _log(log, f"疊開頭動畫「{os.path.splitext(os.path.basename(opening_path))[0]}」{tdur / SEC:.1f} 秒（速度 {speed:.2f}x）")
         except Exception as e:
             _log(log, f"開頭動畫加不上去（{type(e).__name__}: {e}），這支先不疊")

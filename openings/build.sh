@@ -15,5 +15,14 @@ for d in out/*/; do
   # 介面滑過預覽用：小尺寸帶透明的 webm（瀏覽器能播）
   ffmpeg -y -loglevel error -framerate 30 -i "$d/f%04d.png" -vf "format=rgba,scale=270:480,fps=15" \
     -c:v libvpx-vp9 -pix_fmt yuva420p -b:v 0 -crf 34 -auto-alt-ref 0 "mov/$id.webm"
+  # 多格影片類：上層文字 + 格子軌跡
+  if [ -f "$d/slots.json" ]; then
+    cp "$d/slots.json" "mov/$id.json"
+    if ls "$d"/t0000.png >/dev/null 2>&1; then
+      ffmpeg -y -loglevel error -framerate 30 -i "$d/t%04d.png" \
+        -vf "format=rgba,premultiply=inplace=1,scale=1080:1920:flags=lanczos,format=yuva444p10le" \
+        -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le -vendor apl0 -bits_per_mb 1000 "mov/${id}_top.mov"
+    fi
+  fi
   echo "mov/$id.mov"
 done

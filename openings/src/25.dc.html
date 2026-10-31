@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening AE Split Day</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.ae-top{animation:aeTop 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes aeTop{0%{transform:translateX(-100%)}10%,100%{transform:none}}
+.ae-bot{animation:aeBot 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes aeBot{0%,3%{transform:translateX(100%)}13%,100%{transform:none}}
+.ae-w1{animation:ae-w1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ae-w1{0%,14%{opacity:0;transform:scale(1.2)}20%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ae-w2{animation:ae-w2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ae-w2{0%,20%{opacity:0;transform:scale(1.2)}26%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ae-b1{animation:ae-b1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ae-b1{0%,28%{opacity:0;transform:rotate(-8deg) scale(.6)}34%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ae-b2{animation:ae-b2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes ae-b2{0%,34%{opacity:0;transform:rotate(8deg) scale(.6)}40%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ae-st{animation:aeSt 1.4s ease-in-out infinite alternate}@keyframes aeSt{from{opacity:.3;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #F3EEE4; font-family: 'Inter', sans-serif; color: #ffffff">
+<div class="ae-top" style="position: absolute; left: 0; right: 0; top: 0; height: 360px; overflow: hidden"><video src="/_blob/434131eeabb36ecbef47a3fec5e5c3d8" poster="/_blob/beea9590977abd4e2038c6d4f879f61a" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%"></video></div>
+<div class="ae-bot" style="position: absolute; left: 0; right: 0; bottom: 0; height: 360px; overflow: hidden"><video src="/_blob/4bc803b4d6f0557ad64a3dddae46e458" poster="/_blob/2bb37e47113ddc26398c62c7715fc5c0" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 70%"></video></div>
+<div style="position: absolute; left: 0; right: 0; top: 262px; display: flex; flex-direction: column; align-items: center; font-weight: 600; font-size: 74px; line-height: .98; letter-spacing: -0.05em">
+<div class="ae-w1">a day in</div>
+<div class="ae-w2">my layers</div>
+</div>
+<div class="ae-b1" style="position: absolute; left: 34px; top: 336px; padding: 3px 9px; background: #F6C9DB; color: #2a2024; font-size: 14px">[ everyday edition ]</div>
+<div class="ae-b2" style="position: absolute; left: 216px; top: 448px; padding: 3px 9px; background: #F6C9DB; color: #2a2024; font-size: 14px">[ vv double studio ]</div>
+<svg class="ae-st" aria-hidden="true" viewBox="0 0 24 24" style="position: absolute; left: 60px; top: 170px; width: 18px; height: 18px; animation-delay: 0s"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L2 9.2l7.1-.6z" fill="#ffffff"></path></svg><svg class="ae-st" aria-hidden="true" viewBox="0 0 24 24" style="position: absolute; left: 330px; top: 140px; width: 16px; height: 16px; animation-delay: 0.4s"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L2 9.2l7.1-.6z" fill="#ffffff"></path></svg><svg class="ae-st" aria-hidden="true" viewBox="0 0 24 24" style="position: absolute; left: 36px; top: 420px; width: 14px; height: 14px; animation-delay: 0.8s"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L2 9.2l7.1-.6z" fill="#ffffff"></path></svg><svg class="ae-st" aria-hidden="true" viewBox="0 0 24 24" style="position: absolute; left: 352px; top: 470px; width: 18px; height: 18px; animation-delay: 0.2s"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L2 9.2l7.1-.6z" fill="#ffffff"></path></svg><svg class="ae-st" aria-hidden="true" viewBox="0 0 24 24" style="position: absolute; left: 90px; top: 610px; width: 16px; height: 16px; animation-delay: 0.6s"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L2 9.2l7.1-.6z" fill="#ffffff"></path></svg><svg class="ae-st" aria-hidden="true" viewBox="0 0 24 24" style="position: absolute; left: 310px; top: 640px; width: 14px; height: 14px; animation-delay: 1s"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L2 9.2l7.1-.6z" fill="#ffffff"></path></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
