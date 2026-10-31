@@ -1,2 +1,2 @@
-VERSION = "1.5.9"
+VERSION = "1.5.10"
 REPO = "yuu7073/vvdouble-reels"

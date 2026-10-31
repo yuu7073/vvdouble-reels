@@ -9,13 +9,10 @@ const FONT_DIR = path.join(__dirname, 'node_modules', '@fontsource');
 
 // 每支的特別修正（避免裁字等）
 const FIX = {
-  '01': `.a-script{padding:.35em .3em;margin:-.35em -.3em}.a-new{padding:.2em .2em;margin:-.2em -.2em}`,
-  '05': `.e-l2,.e-l4{padding:.3em .25em;margin:-.3em -.25em}`,
-  '07': `.g-type{padding:.2em .15em;margin:-.2em -.15em}`,
   '10': `.k-w1,.k-w2{padding:.12em .1em;margin:-.12em -.1em}`,
   '19': `.x-panel,.x-vid{animation:none !important}`,                 // 大色塊從第 0 格就定住，不滑入
   '30': `.al-top,.al-bot{animation:none !important}`,               // 上下黑邊從第 0 格就定住
-  '41': `.ax-w,.ax-w2{padding:.45em .35em;margin:-.45em -.35em}.ax-s{top:540px !important}`,
+  '41': `.ax-s{top:540px !important}`,
 };
 
 function fontCss() {
@@ -29,6 +26,17 @@ function fontCss() {
     }
   }
   return css;
+}
+
+function widenClip(style) {
+  // 文字用 clip-path:inset() 做擦入時，裁切框只有行高大小，草寫字的上下伸部會被切掉：
+  // 把 0 的邊往外推（上下 0.6em、左右 0.4em），100% 的邊照舊，動畫不變、字不會被裁
+  return style.replace(/inset\(([^)]*)\)/g, (m, inner) => {
+    const v = inner.trim().split(/\s+/);
+    if (v.length !== 4 || !v.every(x => x === '0' || x === '100%')) return m;
+    const out = v.map((x, i) => x === '0' ? (i % 2 === 0 ? '-0.6em' : '-0.4em') : x);
+    return `inset(${out.join(' ')})`;
+  });
 }
 
 function cutoffFrac(style, dur) {
@@ -58,7 +66,7 @@ function cycleSec(style) {
 }
 
 function buildHtml(src, id) {
-  const style = (src.match(/<style>([\s\S]*?)<\/style>/) || [, ''])[1];
+  const style = widenClip((src.match(/<style>([\s\S]*?)<\/style>/) || [, ''])[1]);
   let body = src.slice(src.indexOf('</helmet>') + 9, src.indexOf('</x-dc>'));
   body = body.replace(/<video[\s\S]*?<\/video>/g, '');                 // 影片由 CapCut 放
   body = body.replace(/(<div style="width: 405px; height: 720px;[^"]*?)background:\s*#[0-9a-fA-F]{3,8}\s*;?/, '$1background: transparent;');

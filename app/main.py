@@ -175,10 +175,24 @@ def _load_json(path, default):
 
 
 def _save_json(path, data):
+    """寫 JSON：先寫 .tmp 再換名；Dropbox 同步中會短暫鎖檔（WinError 5／32），重試幾次，還是不行就直接覆寫"""
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=1)
-    os.replace(tmp, path)
+    for i in range(6):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            time.sleep(0.3 * (i + 1))
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=1)
+    finally:
+        try:
+            os.remove(tmp)
+        except Exception:
+            pass
 
 
 def _ffmpeg():
@@ -841,7 +855,20 @@ class Api:
 
     def todo_status(self):
         """待製作頁切回來時只重讀製作狀態（本機，很快），不用重抓 Shopline"""
-        return {"ok": True, "status": self._status_index(),
+        # 共用狀態檔寫不進去時（Dropbox 鎖檔），用本機紀錄補：這台做過的一樣看得到已匯出
+        idx = dict(self._status_index())
+        for h in self.history:
+            if not h.get("ok"):
+                continue
+            for key in (h.get("sku"), h.get("name")):
+                if not key:
+                    continue
+                rec = dict(idx.get(key, {}))
+                rec.setdefault("draft_at", h.get("created"))
+                if h.get("exported") and not rec.get("exported_at"):
+                    rec["exported_at"] = h.get("exported_at") or h.get("created")
+                idx[key] = rec
+        return {"ok": True, "status": idx,
                 "history_names": [h.get("name") for h in self.history if h.get("ok")],
                 "history_skus": [h.get("sku") for h in self.history if h.get("ok") and h.get("sku")]}
 
@@ -892,7 +919,7 @@ class Api:
         for t in tabs:
             t["ym"] = f"{t.get('year') or ''}-{t.get('month')}"
         cached_at = (cache or {}).get("ts") if (fresh and not force) or (err and source == "shopline") else dt.datetime.now().timestamp()
-        return {"ok": True, "tabs": tabs, "status": self._status_index(), "error": err, "source": source,
+        return {"ok": True, "tabs": tabs, "status": self.todo_status()["status"], "error": err, "source": source,
                 "cached_at": dt.datetime.fromtimestamp(cached_at or dt.datetime.now().timestamp()).strftime("%H:%M"),
                 "history_names": [h.get("name") for h in self.history if h.get("ok")],
                 "history_skus": [h.get("sku") for h in self.history if h.get("ok") and h.get("sku")]}
