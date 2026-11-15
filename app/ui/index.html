@@ -170,7 +170,7 @@ input.ipt::placeholder{color:var(--faint)}
       <div style="font-size:12px;color:var(--faint);padding:10px 16px" id="todoMeta"></div>
     </div>
     <div style="flex:1;min-width:0;padding:18px 22px;display:flex;flex-direction:column;gap:12px;overflow:hidden">
-      <div style="display:flex;align-items:center;gap:8px" id="todoChips"></div>
+      <div style="display:flex;align-items:center;gap:8px"><div style="display:flex;align-items:center;gap:8px;flex:1" id="todoChips"></div><input class="ipt" id="todoQ" style="width:220px;height:32px" placeholder="搜尋名稱／貨號" oninput="app.todoQ=this.value;app.renderTodo()"></div>
       <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden">
         <div class="tr head" style="grid-template-columns:28px 110px 1fr 150px 180px 100px 96px"><span><input type="checkbox" id="todoAll" onchange="app.todoCheckAll(this.checked)" title="全選目前列出的"></span><span>檔期</span><span>名稱</span><span>顏色</span><span>標籤／特點</span><span>狀態</span><span></span></div>
         <div id="todoRows" style="overflow:auto;flex:1"></div>
@@ -375,6 +375,9 @@ input.ipt::placeholder{color:var(--faint)}
 <div class="toast" id="toast"></div>
 
 <script>
+// 規則：所有 <input>／<select>／<textarea> 都不可以放在會用 innerHTML 重畫的區塊裡，否則打字時會失去焦點、中文輸入法選字跳掉。
+// 輸入框一律寫在靜態 HTML 裡，重畫函式只更新它的 value（且只在值不同時才寫）。
+
 const $ = (s, r=document) => r.querySelector(s);
 (function(){ try{ const t=localStorage.getItem('vv_theme'); if(t) document.documentElement.dataset.theme=t; }catch(e){} })();
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -723,7 +726,9 @@ const app = {
     items.forEach(it=>it._st=this.todoStatus(it)); this._todoAllItems=items;
     const n={all:items.length,todo:items.filter(i=>i._st.k==='todo').length,draft:items.filter(i=>i._st.k==='draft').length,exported:items.filter(i=>i._st.k==='exported').length};
     $('#todoChips').innerHTML=[['all','全部'],['todo','未製作'],['draft','已產草稿'],['exported','已匯出']].map(([k,t])=>`<span class="chip ${this.todoFilter===k?'k':'w'}" style="cursor:pointer" onclick="app.todoFilter='${k}';app.renderTodo()">${t} ${n[k]}</span>`).join('')+
-      `<div class="sp"></div><button class="btn w sm" onclick="app.todoMakeFolders()" ${this.todoChk.size?'':'disabled'}>建立資料夾（${this.todoChk.size}）</button><input class="ipt" style="width:220px;height:32px" placeholder="搜尋名稱／貨號" value="${esc(this.todoQ)}" oninput="app.todoQ=this.value;app.renderTodo()">`;
+      `<div class="sp"></div><button class="btn w sm" onclick="app.todoMakeFolders()" ${this.todoChk.size?'':'disabled'}>建立資料夾（${this.todoChk.size}）</button>`;
+    // 搜尋框是固定元素（#todoQ），不在重畫範圍內——輸入框放進 innerHTML 重畫區會每打一個字就失去焦點、中文選字跳掉
+    if($('#todoQ').value!==this.todoQ) $('#todoQ').value=this.todoQ;
     const q=this.todoQ.trim().toLowerCase();
     const rows=items.filter(it=>(this.todoFilter==='all'||it._st.k===this.todoFilter)&&(!q||(it.name+' '+it.sku).toLowerCase().includes(q)));
     this._todoRows=rows;
