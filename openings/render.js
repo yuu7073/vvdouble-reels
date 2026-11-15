@@ -43,6 +43,7 @@ const TOP = {
   '47': '.bd-t,.bd-s',
   '48': '',
   '15': '',
+  '94': '.t1,.t2,.pop',     // 膠帶標籤與貼紙壓在影片上
 };
 
 function fontCss() {
@@ -124,6 +125,9 @@ function buildHtml(src, id) {
     body = body.replace(/<video[\s\S]*?<\/video>/g, '');                 // 影片由 CapCut 放
     body = body.replace(/(<div style="width: 405px; height: 720px;[^"]*?)background:\s*#[0-9a-fA-F]{3,8}\s*;?/, '$1background: transparent;');
   }
+  // 貼紙圖（畫板附件 /_blob/<id>）改讀本機 emoji/<id>.png
+  const EMOJI_DIR = path.join(__dirname, 'emoji');
+  body = body.replace(/src="\/_blob\/([0-9a-f]{32})"/g, (m, b) => fs.existsSync(path.join(EMOJI_DIR, b + '.png')) ? `src="file://${EMOJI_DIR}/${b}.png"` : m);
   body = body.replace(/<div style="width: 405px; height: 720px;/, '<div id="root" style="width: 405px; height: 720px;');
   const dur = cycleSec(style);
   const cut = cutoffFrac(style, dur);
