@@ -810,9 +810,13 @@ const app = {
       const startM=c.name.match(/@(\d+(?:\.\d+)?)/);
       const modelName=(isClose||isMulti)?'':(byName?byName.name:(last?last.model:(s.last_model||(this.state.models[0]?.name||''))));
       const sheet=(P.modelSizes||{})[modelName.toUpperCase()]||null;   // 上架排程表裡這位模特的著用尺碼
+      // 商品頁有尺寸表但沒有這位模特：尺碼留空（顯示 ?），不沿用上一支的，避免帶錯
+      const sheetHas=Object.keys(P.modelSizes||{}).length>0;
+      const fallbackSize=sheetHas?'':(last?last.size:(s.last_size||'大碼'));
+      const fallbackFit=sheetHas?'':(last?last.fit:'舒適');
       P.clips.push({...c, closeup:isClose, multi:isMulti, model: modelName,
-        size: (isClose||isMulti)?'':(size||(sheet&&sheet.size)||(last?last.size:(s.last_size||'大碼'))),
-        fit: fit||(sheet&&sheet.fit)||(last?last.fit:'舒適'), start: startM?startM[1]:''});
+        size: (isClose||isMulti)?'':(size||(sheet&&sheet.size)||fallbackSize),
+        fit: fit||(sheet&&sheet.fit)||fallbackFit, start: startM?startM[1]:''});
     }
     if (res.music && res.music.length && !P.music) { P.music={path:res.music[0].path, name:res.music[0].name, external:true}; }
     if (!P.music && (res.clips||[]).length) this.autoMusic(P);
@@ -1054,6 +1058,7 @@ const app = {
     const bad=list.filter(p=>!p.clips.length); if(bad.length){ this.toast('有商品還沒放影片',true); return; }
     const noname=list.filter(p=>!p.name.trim()); if(noname.length){ this.toast('請輸入商品名稱',true); return; }
     const nomodel=list.flatMap(p=>p.clips).filter(c=>!c.closeup&&!c.multi&&!c.model); if(nomodel.length){ this.toast('有片段還沒選模特',true); return; }
+    const nosize=list.flatMap(p=>p.clips).filter(c=>c.use!==false&&!c.closeup&&!c.multi&&c.model&&!c.size); if(nosize.length){ this.toast(`${[...new Set(nosize.map(c=>c.model))].join('、')} 還沒填著用尺碼（商品頁沒有她的資料，點模特名稱旁的尺碼填）`,true); return; }
     const r=await this.call('generate', list.map(p=>this.spec(p)));
     if(!r||!r.ok){ this.toast(r?r.error:'無法開始',true); return; }
     this.busy=true; this.results=[]; this._jobsN=list.length; this.updateCapcut(false); $('#doneList').innerHTML=''; this.go('done');
