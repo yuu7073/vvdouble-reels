@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 076</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&amp;family=Inter:wght@700&amp;family=Caveat&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.sh{text-shadow:0 2px 18px rgba(0,0,0,.25)}
+.spin{animation:spin 9s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.bd{animation:bd 4.8s cubic-bezier(.2,1.4,.4,1) infinite}@keyframes bd{0%,2%{opacity:0;transform:scale(.3) rotate(-14deg)}8%,94%{opacity:1;transform:rotate(0deg)}100%{opacity:0;transform:rotate(0deg)}}
+.h0{animation:h0 4.8s cubic-bezier(.2,1.4,.4,1) infinite}@keyframes h0{0%,8%{opacity:0;transform:scale(.3) rotate(-14deg)}14%,94%{opacity:1;transform:rotate(0deg)}100%{opacity:0;transform:rotate(0deg)}}
+.h1{animation:h1 4.8s cubic-bezier(.2,1.4,.4,1) infinite}@keyframes h1{0%,13%{opacity:0;transform:scale(.3) rotate(-21deg)}19%,94%{opacity:1;transform:rotate(-7deg)}100%{opacity:0;transform:rotate(-7deg)}}
+.h2{animation:h2 4.8s cubic-bezier(.2,1.4,.4,1) infinite}@keyframes h2{0%,18%{opacity:0;transform:scale(.3) rotate(-14deg)}24%,94%{opacity:1;transform:rotate(0deg)}100%{opacity:0;transform:rotate(0deg)}}
+.n{animation:n 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes n{0%,28%{opacity:0;}36%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.tw{animation:tw 1.6s ease-in-out infinite alternate}@keyframes tw{from{opacity:.4;transform:scale(.7) rotate(-12deg)}to{opacity:1;transform:scale(1) rotate(10deg)}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/c964a4314e764b973daa3bd2268d6212" poster="/_blob/ed7cb3974dcc553f08ddf72366874b2b" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.12)"></div>
+<div class="bd" style="position: absolute; left: 262px; top: 40px; width: 116px; height: 116px">
+<svg class="spin" viewBox="0 0 120 120" style="width: 116px; height: 116px"><defs><path id="cir" d="M60 60 m-46 0 a46 46 0 1 1 92 0 a46 46 0 1 1 -92 0"></path></defs><text font-family="Inter, sans-serif" font-weight="700" font-size="9.6" letter-spacing="1.6" fill="#ffffff"><textPath href="#cir" textLength="286" lengthAdjust="spacing">NEW ARRIVALS ✦ VV DOUBLE ✦ NEW IN ✦ </textPath></text></svg>
+<svg viewBox="0 0 100 100" style="position: absolute; left: 40px; top: 40px; width: 36px; height: 36px"><path d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0Z" fill="#F4D66B"></path></svg></div>
+<div style="position: absolute; left: 26px; top: 452px">
+<div class="h0 sh" style="font-family: 'Playfair Display', serif; font-size: 66px; line-height: .95; letter-spacing: -0.03em">just</div>
+<div class="h1" style="display: inline-block; margin: 4px 0 4px 54px; padding: 2px 18px 8px; border-radius: 999px; background: #DDF39A; color: #1E1C19; font-family: 'Playfair Display', serif; font-style: italic; font-size: 60px; line-height: 1; transform: rotate(-7deg)">landed</div>
+<div class="h2 sh" style="font-weight: 700; font-size: 20px; letter-spacing: -0.02em; margin-left: 6px">in the studio, up close</div></div>
+<div class="n sh" style="position: absolute; right: 26px; top: 640px; font-family: 'Caveat', cursive; font-size: 22px; transform: rotate(-4deg)">come take a look →</div>
+<svg class="tw" aria-hidden="true" viewBox="-10 -10 20 20" style="position: absolute; left: 44px; top: 400px; width: 22px; height: 22px; animation-delay: 0s"><g stroke="#F5B8D0" stroke-width="2.6" stroke-linecap="round"><path d="M0-9V9"></path><path d="M-7.8-4.5L7.8 4.5"></path><path d="M-7.8 4.5L7.8-4.5"></path></g></svg><svg class="tw" aria-hidden="true" viewBox="0 0 100 100" style="position: absolute; left: 330px; top: 560px; width: 20px; height: 20px; animation-delay: 0.5s"><path d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0Z" fill="#F4D66B"></path></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

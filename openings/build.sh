@@ -3,7 +3,13 @@
 set -e
 cd "$(dirname "$0")"
 args=""
-for f in src/*.dc.html; do id=$(basename "$f" .dc.html); args="$args $id=$id.dc.html"; done
+for f in src/*.dc.html; do
+  id=$(basename "$f" .dc.html)
+  # RENDER_ONLY="51 52 53" 只渲這些（工作流程用來只補庫裡還沒有的）
+  if [ -n "$RENDER_ONLY" ] && ! printf ' %s ' $RENDER_ONLY | grep -q " $id "; then continue; fi
+  args="$args $id=$id.dc.html"
+done
+[ -z "$args" ] && { echo "沒有要渲的"; mkdir -p mov; exit 0; }
 node render.js src out $args
 mkdir -p mov
 for d in out/*/; do

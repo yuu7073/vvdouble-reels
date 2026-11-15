@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 086</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.l0{animation:l0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes l0{0%,3%{opacity:0;transform:translateY(12px)}9%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.l1{animation:l1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes l1{0%,9%{opacity:0;transform:translateY(12px)}15%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.l2{animation:l2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes l2{0%,15%{opacity:0;transform:translateY(12px)}21%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.s{animation:s 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes s{0%,26%{opacity:0;}34%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.tw{animation:tw 1.6s ease-in-out infinite alternate}@keyframes tw{from{opacity:.4;transform:scale(.7) rotate(-12deg)}to{opacity:1;transform:scale(1) rotate(10deg)}}
+div{text-shadow:0 1px 14px rgba(0,0,0,.22)}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/c964a4314e764b973daa3bd2268d6212" poster="/_blob/ed7cb3974dcc553f08ddf72366874b2b" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.12)"></div>
+<div style="position: absolute; left: 0; right: 0; top: 390px; text-align: center; font-family: 'Playfair Display', serif; font-size: 58px; line-height: 1; letter-spacing: -0.02em"><div class="l0"><span style="font-size: 26px">(how to)</span> <i>build</i></div><div class="l1">a closet</div><div class="l2">you <i>love</i></div></div>
+<svg class="tw" aria-hidden="true" viewBox="-10 -10 20 20" style="position: absolute; left: 40px; top: 370px; width: 24px; height: 24px; animation-delay: 0s"><g stroke="#F5B8D0" stroke-width="2.6" stroke-linecap="round"><path d="M0-9V9"></path><path d="M-7.8-4.5L7.8 4.5"></path><path d="M-7.8 4.5L7.8-4.5"></path></g></svg><svg class="tw" aria-hidden="true" viewBox="-10 -10 20 20" style="position: absolute; left: 340px; top: 470px; width: 20px; height: 20px; animation-delay: 0.4s"><g stroke="#9ED3A4" stroke-width="2.6" stroke-linecap="round"><path d="M0-9V9"></path><path d="M-7.8-4.5L7.8 4.5"></path><path d="M-7.8 4.5L7.8-4.5"></path></g></svg><svg class="tw" aria-hidden="true" viewBox="-10 -10 20 20" style="position: absolute; left: 56px; top: 580px; width: 18px; height: 18px; animation-delay: 0.8s"><g stroke="#7FB5E6" stroke-width="2.6" stroke-linecap="round"><path d="M0-9V9"></path><path d="M-7.8-4.5L7.8 4.5"></path><path d="M-7.8 4.5L7.8-4.5"></path></g></svg>
+<div class="s" style="position: absolute; left: 0; right: 0; text-align: center; top: 650px; font-family: 'Playfair Display', serif; font-style: italic; font-size: 15px">one easy piece at a time</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

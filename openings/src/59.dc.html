@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 059</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@700&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#E9F27A}a:hover{color:#E9F27A}
+.c0{animation:c0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c0{0%,4%{opacity:0;}10%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.c1{animation:c1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c1{0%,10%{opacity:0;}16%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.c2{animation:c2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c2{0%,16%{opacity:0;}22%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.c3{animation:c3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c3{0%,22%{opacity:0;}28%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.c4{animation:c4 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c4{0%,28%{opacity:0;}34%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.s{animation:s 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes s{0%,36%{opacity:0;}44%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #E9F27A">
+<video src="/_blob/7dd3d73530218c2fe48d8e16d1121437" poster="/_blob/3a85844a82ad34b5af889d1e07897b55" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.12)"></div>
+<svg aria-hidden="true" viewBox="0 0 405 720" style="position: absolute; inset: 0; width: 405px; height: 720px"><path id="ar0" d="M70 190 Q120 120 190 150" fill="none"></path><text class="c0" font-family="Space Mono, monospace" font-weight="700" font-size="17" fill="#E9F27A" letter-spacing="1"><textPath href="#ar0">THE FIT,</textPath></text><path id="ar1" d="M230 170 Q290 150 330 210" fill="none"></path><text class="c1" font-family="Space Mono, monospace" font-weight="700" font-size="17" fill="#E9F27A" letter-spacing="1"><textPath href="#ar1">THE FEEL,</textPath></text><path id="ar2" d="M60 300 Q140 420 280 380" fill="none"></path><text class="c2" font-family="Space Mono, monospace" font-weight="700" font-size="17" fill="#E9F27A" letter-spacing="1"><textPath href="#ar2">THE WAY IT MOVES</textPath></text><path id="ar3" d="M250 430 Q310 470 350 520" fill="none"></path><text class="c3" font-family="Space Mono, monospace" font-weight="700" font-size="17" fill="#E9F27A" letter-spacing="1"><textPath href="#ar3">&amp; BEST OF ALL</textPath></text><path id="ar4" d="M60 560 Q200 470 360 540" fill="none"></path><text class="c4" font-family="Space Mono, monospace" font-weight="700" font-size="17" fill="#E9F27A" letter-spacing="1"><textPath href="#ar4">IT FEELS LIKE YOU</textPath></text></svg>
+<div class="s" style="position: absolute; left: 70px; top: 610px; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; color: #E9F27A">- VV DOUBLE</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

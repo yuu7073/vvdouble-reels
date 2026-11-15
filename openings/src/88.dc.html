@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 088</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@600&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#FFFFFF}a:hover{color:#FFFFFF}
+.a{animation:a 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes a{0%,2%{opacity:0;}8%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.b{animation:b 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes b{0%,5%{opacity:0;}11%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.c{animation:c 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c{0%,8%{opacity:0;transform:scale(.9)}16%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.f{animation:f 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes f{0%,22%{opacity:0;}30%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+div,span{text-shadow:0 1px 16px rgba(0,0,0,.28)}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #FFFFFF">
+<video src="/_blob/27730b530163a4ab4cc78f5d0ac84c72" poster="/_blob/5c6b2257f604897fae22ae88c2910fbc" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.14)"></div>
+<div style="position: absolute; left: 0; right: 0; top: 28px; display: flex; justify-content: center; align-items: center; gap: 12px">
+<div style="text-align: right"><div class="a" style="font-family: 'Instrument Serif', serif; font-style: italic; font-size: 28px; line-height: 1">the</div><div class="b" style="font-size: 9px; font-weight: 600; letter-spacing: .3em; font-size: 10px; letter-spacing: .4em">EVERYDAY</div></div>
+<div class="c" style="font-family: 'Instrument Serif', serif; font-style: italic; font-size: 112px; line-height: 1; letter-spacing: -0.03em; color: #DDF39A">edit</div></div>
+<div class="f" style="position: absolute; left: 24px; top: 672px; font-size: 9px; font-weight: 600; letter-spacing: .3em">VV DOUBLE</div><div class="f" style="position: absolute; left: 300px; top: 672px; font-size: 9px; font-weight: 600; letter-spacing: .3em; width: 81px; text-align: right">NO. 03</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

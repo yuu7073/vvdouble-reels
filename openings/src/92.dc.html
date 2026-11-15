@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 092</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital@0;1&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#FFFFFF}a:hover{color:#FFFFFF}
+.a{animation:a 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes a{0%,2%{opacity:0;filter:blur(5px)}8%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.b{animation:b 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes b{0%,7%{opacity:0;filter:blur(6px)}15%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.c{animation:c 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c{0%,14%{opacity:0;filter:blur(5px)}20%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+div,span{text-shadow:0 1px 16px rgba(0,0,0,.28)}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #FFFFFF">
+<video src="/_blob/0554ffc59de31f3e62fd862d580107dd" poster="/_blob/152bace58ee611e4e02db73c6d3df4fd" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.14)"></div>
+<div style="position: absolute; left: 0; right: 0; top: 36px; text-align: center; font-family: 'Cormorant Garamond', serif">
+<div class="a" style="font-style: italic; font-size: 22px; line-height: 1">quietly</div>
+<div class="b" style="font-size: 62px; line-height: 1; letter-spacing: -0.01em; color: #F4D66B">Confident</div>
+<div class="c" style="font-style: italic; font-size: 22px; line-height: 1">today.</div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

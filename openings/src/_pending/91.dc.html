@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 091</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,400&amp;family=Inter:wght@700&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F6EED6}a:hover{color:#F6EED6}
+.pop{animation:pop 4.8s cubic-bezier(.2,.9,.3,1.5) infinite}@keyframes pop{0%,20%{opacity:0;transform:scale(.2) rotate(-20deg)}28%,94%{opacity:1;transform:none}100%{opacity:0}}.bob{animation:bob 2.4s ease-in-out infinite alternate}@keyframes bob{from{transform:translateY(-4px) rotate(-6deg)}to{transform:translateY(4px) rotate(6deg)}}
+.t{animation:t 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes t{0%,2%{opacity:0;transform:translateY(-14px)}12%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.m{animation:m 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes m{0%,10%{opacity:0;}16%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.p{animation:p 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes p{0%,30%{opacity:0;transform:scale(.7)}38%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #F6EED6">
+<video src="/_blob/434131eeabb36ecbef47a3fec5e5c3d8" poster="/_blob/beea9590977abd4e2038c6d4f879f61a" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.08)"></div><svg aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.22; mix-blend-mode: overlay; pointer-events: none"><filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence></filter><rect width="100%" height="100%" filter="url(#gr)"></rect></svg>
+<div class="t" style="position: absolute; left: 0; right: 0; text-align: center; top: 64px; font-family: 'Fraunces', serif; font-weight: 600; font-size: 40px; letter-spacing: -0.02em; color: #F6EED6">THE EVERYDAY EDIT</div>
+<div class="m" style="position: absolute; left: 24px; right: 24px; top: 116px; display: flex; justify-content: space-between; font-size: 9px; font-weight: 700; letter-spacing: .08em; color: #F6EED6"><span>ISSUE NO.1</span><span>VVDOUBLE</span></div>
+<img class="pop" src="/_blob/67633553a528b0462549a6f5cfafcb27" alt="" style="position: absolute; left: 40px; top: 200px; width: 34px; height: 34px; animation-delay: 0s"><img class="pop" src="/_blob/67633553a528b0462549a6f5cfafcb27" alt="" style="position: absolute; left: 320px; top: 280px; width: 26px; height: 26px; animation-delay: 0.2s"><img class="pop" src="/_blob/2c556418dc49745efc0275f7af782444" alt="" style="position: absolute; left: 300px; top: 470px; width: 38px; height: 38px; animation-delay: 0.35s"><img class="pop" src="/_blob/67633553a528b0462549a6f5cfafcb27" alt="" style="position: absolute; left: 60px; top: 520px; width: 24px; height: 24px; animation-delay: 0.5s">
+<div class="p" style="position: absolute; left: 50px; top: 600px; width: 305px; padding: 10px 0; border-radius: 999px; background: #F3A9C9; border: 2px solid #F6EED6; text-align: center; font-family: 'Fraunces', serif; font-style: italic; font-size: 22px; color: #6B1E43">a very wearable thread... :)</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

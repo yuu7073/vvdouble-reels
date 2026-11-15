@@ -15,7 +15,17 @@ jobs:
         with: { node-version: 22 }
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-noto-cjk
       - run: cd openings && npm i --no-audit --no-fund && npx playwright install --with-deps chromium
-      - run: bash openings/build.sh
+      - name: Decide what to render (only ids missing from the release, unless commit says [render all] or ids are given)
+        id: pick
+        env: { GH_TOKEN: "${{ github.token }}", MSG: "${{ github.event.head_commit.message }}" }
+        run: |
+          have=$(gh api repos/${{ github.repository }}/releases/tags/openings -q '.assets[].name' 2>/dev/null | grep -E '^[0-9]+\.mov$' | sed 's/\.mov$//' | tr '\n' ' ' || true)
+          only=""
+          if echo "$MSG" | grep -q '\[render all\]'; then only=""
+          elif echo "$MSG" | grep -qoE '\[render [0-9 ]+\]'; then only=$(echo "$MSG" | grep -oE '\[render [0-9 ]+\]' | head -1 | sed 's/\[render //;s/\]//')
+          else for f in openings/src/*.dc.html; do id=$(basename "$f" .dc.html); printf ' %s ' $have | grep -q " $id " || only="$only $id"; done; [ -z "$only" ] && only="none"; fi
+          echo "only=$only" >> "$GITHUB_OUTPUT"; echo "render: ${only:-all}"
+      - run: RENDER_ONLY="${{ steps.pick.outputs.only }}" bash openings/build.sh
       - name: Upload to release "openings"
         uses: softprops/action-gh-release@v2
         with:

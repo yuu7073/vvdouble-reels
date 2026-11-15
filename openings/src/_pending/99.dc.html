@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 099</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&amp;family=Mrs+Saint+Delafield&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#D9F0FA}a:hover{color:#D9F0FA}
+.pop{animation:pop 4.8s cubic-bezier(.2,.9,.3,1.5) infinite}@keyframes pop{0%,20%{opacity:0;transform:scale(.2) rotate(-20deg)}28%,94%{opacity:1;transform:none}100%{opacity:0}}.bob{animation:bob 2.4s ease-in-out infinite alternate}@keyframes bob{from{transform:translateY(-4px) rotate(-6deg)}to{transform:translateY(4px) rotate(6deg)}}
+.a{animation:a 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes a{0%,4%{opacity:0;transform:translateY(20px)}14%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.b{animation:b 4.8s ease infinite}@keyframes b{0%,14%{clip-path:inset(0 100% 0 0)}34%,94%{clip-path:inset(0 0 0 0);opacity:1}100%{opacity:0}}
+.c{animation:c 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c{0%,30%{opacity:0;transform:translateY(20px)}40%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #D9F0FA">
+<video src="/_blob/67af9a38693961d15cfdd0114a2c3ae1" poster="/_blob/ab7d5959794a132bd6741deade5d02e9" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.15)"></div>
+<div class="a" style="position: absolute; left: 0; right: 0; text-align: center; top: 110px; font-family: 'Gloock', serif; font-size: 108px; line-height: 1; letter-spacing: -0.03em; color: #D9F0FA">slowly</div>
+<div class="b" style="position: absolute; left: 0; right: 0; text-align: center; top: 330px; font-family: 'Mrs Saint Delafield', cursive; font-size: 84px; line-height: 1; color: #D9F0FA; padding: 0 20px">Becoming</div>
+<div class="c" style="position: absolute; left: 0; right: 0; text-align: center; top: 520px; font-family: 'Gloock', serif; font-size: 108px; line-height: 1; color: #D9F0FA">me.</div>
+<img class="pop" src="/_blob/27b4577de38a2aba772740ba235a528d" alt="" style="position: absolute; left: 282px; top: 560px; width: 36px; height: 36px; animation-delay: 0.4s">
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

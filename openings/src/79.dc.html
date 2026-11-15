@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 079</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&amp;family=Inter:wght@600&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#1d1b17}a:hover{color:#1d1b17}
+.m{animation:m 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes m{0%,2%{opacity:0;}8%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.h0{animation:h0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes h0{0%,8%{opacity:0;transform:translateY(10px)}14%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.h1{animation:h1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes h1{0%,13%{opacity:0;transform:translateY(10px)}19%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.h2{animation:h2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes h2{0%,18%{opacity:0;transform:translateY(10px)}24%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.c{animation:c 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c{0%,26%{opacity:0;}34%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #EFEAE0; font-family: 'Inter', sans-serif; color: #1d1b17">
+<div style="position: absolute; inset: 0; background: #EFEAE0"></div><svg aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.22; mix-blend-mode: overlay; pointer-events: none"><filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence></filter><rect width="100%" height="100%" filter="url(#gr)"></rect></svg>
+<div class="m" style="position: absolute; left: 0; right: 0; text-align: center; top: 70px; font-family: 'Playfair Display', serif; font-size: 34px; letter-spacing: .04em">THE DAILY DRESS</div>
+<div class="m" style="position: absolute; left: 24px; right: 24px; top: 116px; border-top: 2px solid #1d1b17; border-bottom: 1px solid #1d1b17; padding: 4px 0; display: flex; justify-content: space-between; font-size: 8px; font-weight: 600; letter-spacing: .14em"><span>VV DOUBLE</span><span>NEW ARRIVALS EDITION</span><span>NO. 01</span></div>
+<div style="position: absolute; left: 24px; right: 24px; top: 148px; font-family: 'Playfair Display', serif; font-size: 40px; line-height: .95; letter-spacing: -0.02em"><div class="h0">Easy Pieces</div><div class="h1"><i>Take Over</i></div><div class="h2">The Week</div></div>
+<div style="position: absolute; left: 24px; top: 290px; width: 357px; height: 270px; overflow: hidden"><video src="/_blob/7dd3d73530218c2fe48d8e16d1121437" poster="/_blob/3a85844a82ad34b5af889d1e07897b55" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="width: 100%; height: 100%; object-fit: cover"></video></div>
+<div class="c" style="position: absolute; left: 24px; right: 24px; top: 572px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; font-family: 'Playfair Display', serif; font-size: 11px; line-height: 1.35"><span>Shoppers report reaching for the same three pieces all week, and saying so with a smile.</span><span>Stylists agree: a good outfit starts with what feels like you. More on the next page.</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

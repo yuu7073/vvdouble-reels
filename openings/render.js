@@ -10,6 +10,7 @@ const fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 
 const [,, SRC, OUT, ...PAIRS] = process.argv;
+module.exports = { buildHtml: (...a) => buildHtml(...a), FPS: 30, W: 405, H: 720 };
 const FPS = 30, W = 405, H = 720, SCALE = 2160 / 405;   // 先渲 2 倍（2160x3840），ffmpeg 再縮回 1080，邊緣更乾淨
 const FONT_DIR = path.join(__dirname, 'node_modules', '@fontsource');
 
@@ -23,6 +24,11 @@ const FIX = {
   '14': `.r-grid{animation:none !important;opacity:1 !important}`,  // 九宮格第 0 格就在，不淡入
   '25': `.ae-top,.ae-bot{animation:none !important}`,
   '48': `.bf-strip{animation:none !important;transform:rotate(-4deg) !important}`,  // 底片條定住，不掉下來
+};
+
+// 直接改 HTML 的修正（SVG 路徑太短讓字被截掉之類）
+const PATCH = {
+  '59': [['M250 430 Q310 470 350 520', 'M236 424 Q306 468 384 546']],   // 「& BEST OF ALL」路徑拉長，最後的 L 不會被截掉
 };
 
 // 多格影片類：哪些元素要渲到「上層」（壓在影片上面的字、壓暗、裝飾）
@@ -100,6 +106,7 @@ function isSlotsMode(body) {
 function buildHtml(src, id) {
   const style = widenClip((src.match(/<style>([\s\S]*?)<\/style>/) || [, ''])[1]);
   let body = src.slice(src.indexOf('</helmet>') + 9, src.indexOf('</x-dc>'));
+  for (const [a, b] of (PATCH[id] || [])) body = body.split(a).join(b);
   const slots = id === '19' ? false : isSlotsMode(body);   // 19 上方字卡：影片在下半，直接用底下那支滿版就好
   let nslot = 0;
   const slotMeta = [];
@@ -137,7 +144,7 @@ body.prev-pass #root .__top,body.prev-pass #root .__top *{visibility:hidden !imp
   return { html, dur, cut, slots, slotMeta, top: TOP[id] || '' };
 }
 
-(async () => {
+if (require.main === module) (async () => {
   const browser = await chromium.launch();
   for (const pair of PAIRS) {
     const [id, file] = pair.split('=');

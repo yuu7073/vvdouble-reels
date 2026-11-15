@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 053</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&amp;family=Inter:wght@500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.t{animation:t 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes t{0%,4%{opacity:0;filter:blur(6px)}12%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.b{animation:b 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes b{0%,14%{opacity:0;filter:blur(6px)}22%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.m{animation:m 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes m{0%,24%{opacity:0;}30%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.vb{animation:vb 4.8s ease infinite}@keyframes vb{0%{filter:blur(6px)}30%,100%{filter:blur(0)}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video class="vb" src="/_blob/67af9a38693961d15cfdd0114a2c3ae1" poster="/_blob/ab7d5959794a132bd6741deade5d02e9" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.18)"></div><svg aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.22; mix-blend-mode: overlay; pointer-events: none"><filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence></filter><rect width="100%" height="100%" filter="url(#gr)"></rect></svg>
+<div class="t" style="position: absolute; left: 18px; right: 18px; top: 70px"><div style="display: flex; justify-content: space-between; font-family: 'Italiana', serif; font-size: 44px; line-height: .95; letter-spacing: .01em"><span>SORRY</span><span>I'M</span></div><div style="display: flex; justify-content: space-between; font-family: 'Italiana', serif; font-size: 44px; line-height: .95; letter-spacing: .01em"><span>RUNNING</span><span>LATE</span></div></div>
+<div class="b" style="position: absolute; left: 18px; right: 18px; top: 520px"><div style="display: flex; justify-content: space-between; font-family: 'Italiana', serif; font-size: 44px; line-height: .95; letter-spacing: .01em"><span>I</span><span>WAS</span><span>PICKING</span></div><div style="display: flex; justify-content: space-between; font-family: 'Italiana', serif; font-size: 44px; line-height: .95; letter-spacing: .01em"><span>AN</span><span>OUTFIT</span></div></div>
+<div class="m" style="position: absolute; left: 132px; top: 620px; width: 140px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); font-size: 7px; letter-spacing: .2em; text-align: center"><span>THINGS</span><span>WE</span><span>SAY</span><span>AT</span><span></span><span>VV</span><span>DOUBLE</span><span></span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

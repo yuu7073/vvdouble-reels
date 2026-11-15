@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 061</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital@0;1&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.a{animation:a 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes a{0%,4%{opacity:0;transform:translateY(10px)}12%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.wv path{stroke-dasharray:200;stroke-dashoffset:200;animation:wv 4.8s ease infinite}@keyframes wv{0%,12%{stroke-dashoffset:200}36%,94%{stroke-dashoffset:0;opacity:1}100%{opacity:0}}
+.b{animation:b 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes b{0%,32%{opacity:0;transform:translateY(10px)}40%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/67af9a38693961d15cfdd0114a2c3ae1" poster="/_blob/ab7d5959794a132bd6741deade5d02e9" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.25)"></div>
+<div class="a" style="position: absolute; left: 60px; top: 240px; font-family: 'Cormorant Garamond', serif; font-size: 30px; line-height: 1; text-align: center"><i>embrace</i><br>where you are</div>
+<svg class="wv" aria-hidden="true" viewBox="0 0 405 720" style="position: absolute; inset: 0"><path d="M135 318 L 255 470" fill="none" stroke="#ffffff" stroke-width="1" stroke-linecap="round"></path><circle cx="135" cy="318" r="2.5" fill="#ffffff"></circle><circle cx="255" cy="470" r="2.5" fill="#ffffff"></circle></svg>
+<div class="b" style="position: absolute; left: 200px; top: 486px; font-family: 'Cormorant Garamond', serif; font-size: 28px; line-height: 1">as you <i>grow</i> into<br>your own style</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

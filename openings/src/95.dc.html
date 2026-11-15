@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 095</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F5B8D0}a:hover{color:#F5B8D0}
+.w0{animation:w0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w0{0%,3%{opacity:0;transform:translateX(-30px)}9%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.w1{animation:w1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w1{0%,8%{opacity:0;transform:translateX(-30px)}14%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.w2{animation:w2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w2{0%,13%{opacity:0;transform:translateX(-30px)}19%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.w3{animation:w3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w3{0%,18%{opacity:0;transform:translateX(-30px)}24%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.s{animation:s 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes s{0%,28%{opacity:0;}36%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #F5B8D0">
+<video src="/_blob/c964a4314e764b973daa3bd2268d6212" poster="/_blob/ed7cb3974dcc553f08ddf72366874b2b" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.3)"></div>
+<div style="position: absolute; left: 22px; top: 344px; font-weight: 700; font-size: 86px; line-height: .86; letter-spacing: -0.06em; color: #F5B8D0"><div class="w0">wear</div><div class="w1">it</div><div class="w2">your</div><div class="w3">way</div></div>
+<div class="s" style="position: absolute; left: 26px; top: 668px; font-size: 11px; font-weight: 500; color: #F5B8D0">@vvdoubleofficial</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

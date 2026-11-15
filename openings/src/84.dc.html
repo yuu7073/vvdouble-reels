@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 084</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.l0{animation:l0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes l0{0%,3%{opacity:0;filter:blur(6px)}9%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.l1{animation:l1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes l1{0%,9%{opacity:0;filter:blur(6px)}15%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.l2{animation:l2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes l2{0%,15%{opacity:0;filter:blur(6px)}21%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.s{animation:s 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes s{0%,26%{opacity:0;}34%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.tw{animation:tw 1.6s ease-in-out infinite alternate}@keyframes tw{from{opacity:.4;transform:scale(.7) rotate(-12deg)}to{opacity:1;transform:scale(1) rotate(10deg)}}
+div{text-shadow:0 1px 14px rgba(0,0,0,.22)}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/2b77150b4d7c345d761da465204a4414" poster="/_blob/ff054ee85565d2deedfeb27aace008ec" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.12)"></div>
+<div style="position: absolute; left: 0; right: 0; top: 390px; text-align: center; font-family: 'Playfair Display', serif; font-size: 50px; line-height: 1; letter-spacing: -0.02em"><div class="l0">Small things</div><div class="l1">I <i>love</i> about</div><div class="l2">mornings</div></div>
+<div class="s" style="position: absolute; left: 0; right: 0; text-align: center; top: 560px; font-family: 'Playfair Display', serif; font-style: italic; font-size: 16px">a slow start, a good outfit</div>
+<svg class="tw" aria-hidden="true" viewBox="-10 -10 20 20" style="position: absolute; left: 50px; top: 356px; width: 30px; height: 30px; animation-delay: 0s"><path d="M0-9C3-9 3-3 0-1 -3-3 -3-9 0-9ZM9 0C9 3 3 3 1 0 3-3 9-3 9 0ZM0 9C-3 9-3 3 0 1 3 3 3 9 0 9ZM-9 0C-9-3-3-3-1 0-3 3-9 3-9 0Z" fill="#F5B8D0"></path><circle r="2.2" fill="#F6D515"></circle></svg><svg class="tw" aria-hidden="true" viewBox="-10 -10 20 20" style="position: absolute; left: 318px; top: 380px; width: 24px; height: 24px; animation-delay: 0.4s"><path d="M0-9C3-9 3-3 0-1 -3-3 -3-9 0-9ZM9 0C9 3 3 3 1 0 3-3 9-3 9 0ZM0 9C-3 9-3 3 0 1 3 3 3 9 0 9ZM-9 0C-9-3-3-3-1 0-3 3-9 3-9 0Z" fill="#F1ECE2"></path><circle r="2.2" fill="#F6D515"></circle></svg><svg class="tw" aria-hidden="true" viewBox="-10 -10 20 20" style="position: absolute; left: 70px; top: 600px; width: 22px; height: 22px; animation-delay: 0.8s"><path d="M0-9C3-9 3-3 0-1 -3-3 -3-9 0-9ZM9 0C9 3 3 3 1 0 3-3 9-3 9 0ZM0 9C-3 9-3 3 0 1 3 3 3 9 0 9ZM-9 0C-9-3-3-3-1 0-3 3-9 3-9 0Z" fill="#F1ECE2"></path><circle r="2.2" fill="#F6D515"></circle></svg><svg class="tw" aria-hidden="true" viewBox="-10 -10 20 20" style="position: absolute; left: 312px; top: 582px; width: 32px; height: 32px; animation-delay: 1.1s"><path d="M0-9C3-9 3-3 0-1 -3-3 -3-9 0-9ZM9 0C9 3 3 3 1 0 3-3 9-3 9 0ZM0 9C-3 9-3 3 0 1 3 3 3 9 0 9ZM-9 0C-9-3-3-3-1 0-3 3-9 3-9 0Z" fill="#F5B8D0"></path><circle r="2.2" fill="#F6D515"></circle></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

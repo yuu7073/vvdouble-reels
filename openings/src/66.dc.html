@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 066</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono&amp;family=Inter:wght@600&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.c{animation:c 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c{0%,2%{opacity:0;}8%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.rec{animation:rec 1s steps(1,end) infinite}@keyframes rec{50%{opacity:0}}
+.t1{animation:t1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes t1{0%,12%{opacity:0;transform:translateX(-20px)}20%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.t2{animation:t2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes t2{0%,20%{opacity:0;}28%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/7dd3d73530218c2fe48d8e16d1121437" poster="/_blob/3a85844a82ad34b5af889d1e07897b55" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.1)"></div>
+<svg class="c" aria-hidden="true" viewBox="0 0 30 30" style="position: absolute; left: 20px; top: 70px; width: 30px; height: 30px"><path d="M2 14V2H14" fill="none" stroke="#ffffff" stroke-width="1.5" transform="rotate(0 15 15)"></path></svg><svg class="c" aria-hidden="true" viewBox="0 0 30 30" style="position: absolute; left: 355px; top: 70px; width: 30px; height: 30px"><path d="M2 14V2H14" fill="none" stroke="#ffffff" stroke-width="1.5" transform="rotate(90 15 15)"></path></svg><svg class="c" aria-hidden="true" viewBox="0 0 30 30" style="position: absolute; left: 355px; top: 620px; width: 30px; height: 30px"><path d="M2 14V2H14" fill="none" stroke="#ffffff" stroke-width="1.5" transform="rotate(180 15 15)"></path></svg><svg class="c" aria-hidden="true" viewBox="0 0 30 30" style="position: absolute; left: 20px; top: 620px; width: 30px; height: 30px"><path d="M2 14V2H14" fill="none" stroke="#ffffff" stroke-width="1.5" transform="rotate(270 15 15)"></path></svg>
+<div class="c" style="position: absolute; left: 58px; top: 80px; font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .06em">CAMERA<br>PLAY ▶</div><div class="c" style="position: absolute; left: 282px; top: 630px; font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .06em">00:00:01</div>
+<div class="c" style="position: absolute; left: 58px; top: 632px; display: flex; align-items: center; gap: 6px; font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .06em"><span class="rec" style="width: 8px; height: 8px; border-radius: 50%; background: #E2584E"></span>REC</div>
+<div class="t1" style="position: absolute; left: 60px; top: 300px; font-size: 15px; font-weight: 600">NEW DROP 02 ______</div>
+<div class="t2" style="position: absolute; left: 60px; top: 330px; font-size: 17px; font-weight: 600; line-height: 1.15">A VISUAL LANGUAGE FOR<br>EVERYDAY DRESSING</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

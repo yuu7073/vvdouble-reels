@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 065</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital@0;1&amp;family=Inter:wght@500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#DDF39A}a:hover{color:#DDF39A}
+.a{animation:a 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes a{0%,3%{opacity:0;filter:blur(6px)}10%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.b{animation:b 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes b{0%,10%{opacity:0;filter:blur(6px)}18%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.c{animation:c 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c{0%,18%{opacity:0;filter:blur(6px)}26%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.d{animation:d 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes d{0%,30%{opacity:0;}38%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.tw{animation:tw 1.6s ease-in-out infinite alternate}@keyframes tw{from{opacity:.4;transform:scale(.7) rotate(-12deg)}to{opacity:1;transform:scale(1) rotate(10deg)}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #DDF39A">
+<video src="/_blob/c964a4314e764b973daa3bd2268d6212" poster="/_blob/ed7cb3974dcc553f08ddf72366874b2b" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.34)"></div>
+<div style="position: absolute; left: 0; right: 0; top: 370px; text-align: center; font-family: 'Cormorant Garamond', serif; color: #DDF39A">
+<div class="a" style="font-size: 34px; font-style: italic">a love letter to</div>
+<div class="b" style="font-size: 92px; line-height: .9; letter-spacing: -0.02em">everyday</div>
+<div class="c" style="font-size: 44px; font-style: italic; line-height: 1">dressing</div></div>
+<svg class="tw" aria-hidden="true" viewBox="0 0 100 100" style="position: absolute; left: 62px; top: 344px; width: 22px; height: 22px; animation-delay: 0s"><path d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0Z" fill="#DDF39A"></path></svg><svg class="tw" aria-hidden="true" viewBox="0 0 100 100" style="position: absolute; left: 318px; top: 560px; width: 18px; height: 18px; animation-delay: 0.5s"><path d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0Z" fill="#DDF39A"></path></svg>
+<div class="d" style="position: absolute; left: 0; right: 0; text-align: center; top: 650px; font-size: 11px; letter-spacing: .06em; color: #DDF39A">from all of us at vv double</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

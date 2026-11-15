@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 080</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&amp;family=Inter:wght@500;700&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F6EFDF}a:hover{color:#F6EFDF}
+.m{animation:m 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes m{0%,2%{opacity:0;}8%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.rl{animation:rl 4.8s cubic-bezier(.6,0,.2,1) infinite;transform-origin:left}@keyframes rl{0%,4%{transform:scaleX(0)}14%,94%{transform:scaleX(1);opacity:1}100%{opacity:0}}
+.h0{animation:h0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes h0{0%,10%{opacity:0;transform:translateY(14px)}16%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.h1{animation:h1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes h1{0%,16%{opacity:0;transform:translateY(14px)}22%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.p{animation:p 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes p{0%,26%{opacity:0;}34%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #F6EFDF">
+<video src="/_blob/2b77150b4d7c345d761da465204a4414" poster="/_blob/ff054ee85565d2deedfeb27aace008ec" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.34)"></div>
+<div class="m" style="position: absolute; left: 24px; right: 24px; top: 70px; display: flex; justify-content: space-between; font-size: 8.5px; font-weight: 700; letter-spacing: .12em"><span>VV DOUBLE STYLEGUIDE</span><span>@VVDOUBLEOFFICIAL</span></div>
+<div class="rl" style="position: absolute; left: 24px; right: 24px; top: 88px; border-top: 1px solid #F6EFDF"></div>
+<div style="position: absolute; left: 24px; top: 430px; font-family: 'Playfair Display', serif; font-size: 50px; line-height: .95; letter-spacing: -0.02em; color: #F4D66B"><div class="h0">Getting Dressed,</div><div class="h1"><i>Simplified.</i></div></div>
+<div class="p" style="position: absolute; left: 24px; width: 280px; top: 548px; font-size: 10px; font-weight: 500; line-height: 1.5; letter-spacing: .04em; color: #F4D66B">A FEW EASY PIECES, WORN ON REPEAT AND STYLED FOR REAL LIFE.</div>
+<div class="rl" style="position: absolute; left: 24px; right: 24px; top: 630px; border-top: 1px solid #F6EFDF"></div>
+<div class="m" style="position: absolute; left: 24px; right: 24px; top: 640px; display: flex; justify-content: space-between; font-size: 8.5px; font-weight: 700; letter-spacing: .12em"><span>SAVE FOR LATER</span><span>NO. 02</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

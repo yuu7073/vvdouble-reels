@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 078</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display&amp;family=Inter:wght@600&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#1E1C19}a:hover{color:#1E1C19}
+.m{animation:m 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes m{0%,1%{opacity:0;}6%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.t{animation:t 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes t{0%,3%{opacity:0;transform:scale(.9)}12%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.n0{animation:n0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes n0{0%,14%{opacity:0;transform:translateY(6px)}20%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.n1{animation:n1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes n1{0%,18%{opacity:0;transform:translateY(6px)}24%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.n2{animation:n2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes n2{0%,22%{opacity:0;transform:translateY(6px)}28%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.n3{animation:n3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes n3{0%,26%{opacity:0;transform:translateY(6px)}32%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #C9C6C0; font-family: 'Inter', sans-serif; color: #1E1C19">
+<video src="/_blob/2b77150b4d7c345d761da465204a4414" poster="/_blob/ff054ee85565d2deedfeb27aace008ec" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video>
+<div class="m" style="position: absolute; left: 24px; right: 24px; top: 28px; display: flex; justify-content: space-between; font-size: 9.5px; font-weight: 600; letter-spacing: .26em"><span>VV DOUBLE</span><span>ON-BODY NOTES</span></div>
+<div class="t" style="position: absolute; left: 0; right: 0; top: 400px; text-align: center; font-weight: 600; font-size: 56px; line-height: .92; letter-spacing: -0.045em; color: #ffffff; text-shadow: 0 1px 14px rgba(0,0,0,.25)">the a/w<br>styleguide</div><div class="n0" style="position: absolute; left: 24px; top: 350px; font-family: 'Playfair Display', serif; font-size: 16px; line-height: 1.05; width: 90px; text-align: center; color: #ffffff; text-shadow: 0 1px 14px rgba(0,0,0,.25)">layer it<br>up</div><div class="n1" style="position: absolute; left: 291px; top: 350px; font-family: 'Playfair Display', serif; font-size: 16px; line-height: 1.05; width: 90px; text-align: center; color: #ffffff; text-shadow: 0 1px 14px rgba(0,0,0,.25)">roll the<br>sleeves</div><div class="n2" style="position: absolute; left: 24px; top: 600px; font-family: 'Playfair Display', serif; font-size: 16px; line-height: 1.05; width: 90px; text-align: center; color: #ffffff; text-shadow: 0 1px 14px rgba(0,0,0,.25)">wear it<br>loose</div><div class="n3" style="position: absolute; left: 291px; top: 600px; font-family: 'Playfair Display', serif; font-size: 16px; line-height: 1.05; width: 90px; text-align: center; color: #ffffff; text-shadow: 0 1px 14px rgba(0,0,0,.25)">mix &amp;<br>match</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 064</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@1&amp;family=Courier+Prime&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.h{animation:h 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes h{0%,2%{opacity:0;}8%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.i0{animation:i0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes i0{0%,10%{opacity:0;transform:translateY(8px)}16%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.i1{animation:i1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes i1{0%,15%{opacity:0;transform:translateY(8px)}21%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.i2{animation:i2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes i2{0%,20%{opacity:0;transform:translateY(8px)}26%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.i3{animation:i3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes i3{0%,25%{opacity:0;transform:translateY(8px)}31%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.f{animation:f 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes f{0%,34%{opacity:0;}42%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/0554ffc59de31f3e62fd862d580107dd" poster="/_blob/152bace58ee611e4e02db73c6d3df4fd" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.38)"></div>
+<div class="h" style="position: absolute; left: 0; right: 0; text-align: center; top: 370px; font-family: 'Courier Prime', monospace; font-size: 16px; letter-spacing: .02em">currently wearing:</div>
+<div style="position: absolute; left: 0; right: 0; top: 410px; text-align: center"><div class="i0" style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 38px; line-height: 1.02">something soft,</div><div class="i1" style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 38px; line-height: 1.02">something easy,</div><div class="i2" style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 38px; line-height: 1.02">something that</div><div class="i3" style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 38px; line-height: 1.02">feels like me.</div></div>
+<div class="f" style="position: absolute; left: 0; right: 0; text-align: center; top: 620px; font-family: 'Courier Prime', monospace; font-size: 11px">@vvdoubleofficial</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

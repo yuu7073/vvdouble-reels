@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 090</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&amp;family=Inter:wght@600&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.w0{animation:w0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w0{0%,3%{opacity:0;filter:blur(6px)}9%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.w1{animation:w1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w1{0%,7%{opacity:0;filter:blur(6px)}13%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.w2{animation:w2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w2{0%,11%{opacity:0;filter:blur(6px)}17%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.w3{animation:w3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w3{0%,15%{opacity:0;filter:blur(6px)}21%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.w4{animation:w4 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w4{0%,19%{opacity:0;filter:blur(6px)}25%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.w5{animation:w5 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w5{0%,23%{opacity:0;filter:blur(6px)}29%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.s{animation:s 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes s{0%,32%{opacity:0;}40%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+div{text-shadow:0 1px 14px rgba(0,0,0,.22)}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/2b77150b4d7c345d761da465204a4414" poster="/_blob/ff054ee85565d2deedfeb27aace008ec" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.18)"></div>
+<div class="w0" style="position: absolute; left: 60px; top: 70px; font-family: 'Playfair Display', serif; font-size: 30px; font-style: normal; line-height: 1">the</div><div class="w1" style="position: absolute; left: 160px; top: 90px; font-family: 'Playfair Display', serif; font-size: 64px; font-style: italic; line-height: 1">outfit</div><div class="w2" style="position: absolute; left: 50px; top: 380px; font-family: 'Playfair Display', serif; font-size: 40px; font-style: normal; line-height: 1">you</div><div class="w3" style="position: absolute; left: 250px; top: 400px; font-family: 'Playfair Display', serif; font-size: 44px; font-style: normal; line-height: 1">keep</div><div class="w4" style="position: absolute; left: 60px; top: 480px; font-family: 'Playfair Display', serif; font-size: 64px; font-style: italic; line-height: 1">reaching</div><div class="w5" style="position: absolute; left: 270px; top: 570px; font-family: 'Playfair Display', serif; font-size: 48px; font-style: normal; line-height: 1">for.</div><div class="s" style="position: absolute; left: 0; right: 0; text-align: center; top: 640px; font-size: 10px; font-weight: 600; letter-spacing: .3em">VV DOUBLE</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

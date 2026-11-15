@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 067</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&amp;family=Instrument+Serif:ital@1&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.a{animation:a 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes a{0%,2%{opacity:0;transform:translateY(10px)}8%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.b{animation:b 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes b{0%,7%{opacity:0;transform:translateY(10px)}13%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.bx{animation:bx 4.8s cubic-bezier(.6,0,.2,1) infinite;transform-origin:left}@keyframes bx{0%,12%{transform:scaleX(0)}22%,94%{transform:scaleX(1);opacity:1}100%{opacity:0}}
+.w{animation:w 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w{0%,18%{opacity:0;}24%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.s{animation:s 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes s{0%,30%{opacity:0;}38%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/27730b530163a4ab4cc78f5d0ac84c72" poster="/_blob/5c6b2257f604897fae22ae88c2910fbc" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.24)"></div>
+<div style="position: absolute; left: 32px; top: 420px">
+<div class="a" style="font-family: 'Instrument Serif', serif; font-style: italic; font-size: 36px; line-height: 1">outfits that</div>
+<div class="b" style="font-weight: 700; font-size: 40px; line-height: 1.1; letter-spacing: -0.04em">feel like a</div>
+<div style="position: relative; display: inline-block; padding: 2px 12px 6px; margin: 6px 0 0 -12px"><div class="bx" style="position: absolute; inset: 0; background: #F4D66B"></div><span class="w" style="position: relative; font-weight: 800; font-size: 54px; letter-spacing: -0.05em; color: #1E1C19">deep breath</span></div></div>
+<div class="s" style="position: absolute; left: 0; right: 0; text-align: center; top: 640px; font-size: 11px; font-weight: 500; letter-spacing: .06em">easy pieces for every day</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

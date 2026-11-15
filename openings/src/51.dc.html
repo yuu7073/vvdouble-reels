@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 051</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@800&amp;family=Caveat&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.sh{text-shadow:0 2px 18px rgba(0,0,0,.25)}
+.tw{animation:tw 1.6s ease-in-out infinite alternate}@keyframes tw{from{opacity:.4;transform:scale(.7) rotate(-12deg)}to{opacity:1;transform:scale(1) rotate(10deg)}}
+.a{animation:a 4.8s cubic-bezier(.2,1.4,.4,1) infinite}@keyframes a{0%,2%{opacity:0;transform:scale(.3) rotate(-14deg)}8%,94%{opacity:1;transform:rotate(0deg)}100%{opacity:0;transform:rotate(0deg)}}
+.b{animation:b 4.8s cubic-bezier(.2,1.4,.4,1) infinite}@keyframes b{0%,8%{opacity:0;transform:scale(.3) rotate(-19deg)}14%,94%{opacity:1;transform:rotate(-5deg)}100%{opacity:0;transform:rotate(-5deg)}}
+.c{animation:c 4.8s cubic-bezier(.2,1.4,.4,1) infinite}@keyframes c{0%,14%{opacity:0;transform:scale(.3) rotate(-11deg)}20%,94%{opacity:1;transform:rotate(3deg)}100%{opacity:0;transform:rotate(3deg)}}
+.n{animation:n 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes n{0%,24%{opacity:0;}32%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.ul path{stroke-dasharray:420;stroke-dashoffset:420;animation:ul 4.8s ease infinite}@keyframes ul{0%,16%{stroke-dashoffset:420}30%,94%{stroke-dashoffset:0;opacity:1}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/0554ffc59de31f3e62fd862d580107dd" poster="/_blob/152bace58ee611e4e02db73c6d3df4fd" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.1)"></div>
+<div class="a sh" style="position: absolute; left: 46px; top: 408px; font-family: 'Instrument Serif', serif; font-size: 30px; line-height: 1; letter-spacing: .02em">the ones</div>
+<div class="b" style="position: absolute; left: 40px; top: 446px; transform: rotate(-5deg); display: inline-block; padding: 4px 18px 8px; border-radius: 999px; background: #F4D66B; color: #1E1C19; font-weight: 800; font-size: 54px; letter-spacing: -0.05em; line-height: 1">worn</div>
+<div class="c sh" style="position: absolute; left: 136px; top: 522px; font-family: 'Instrument Serif', serif; font-style: italic; font-size: 66px; line-height: .9; letter-spacing: -0.03em; white-space: nowrap; transform: rotate(3deg)">on repeat</div>
+<svg class="ul" aria-hidden="true" viewBox="0 0 405 720" style="position: absolute; inset: 0; width: 405px; height: 720px"><path d="M144 592 C 218 584, 318 586, 404 578 M 158 602 C 248 596, 338 596, 390 590" fill="none" stroke="#F5B8D0" stroke-width="3" stroke-linecap="round"></path></svg>
+<svg class="tw" aria-hidden="true" viewBox="0 0 100 100" style="position: absolute; left: 346px; top: 420px; width: 24px; height: 24px; animation-delay: 0s"><path d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0Z" fill="#DDF39A"></path></svg><svg class="tw" aria-hidden="true" viewBox="0 0 100 100" style="position: absolute; left: 36px; top: 560px; width: 18px; height: 18px; animation-delay: 0.4s"><path d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0Z" fill="#F5B8D0"></path></svg><svg class="tw" aria-hidden="true" viewBox="-10 -10 20 20" style="position: absolute; left: 312px; top: 470px; width: 20px; height: 20px; animation-delay: 0.8s"><g stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"><path d="M0-9V9"></path><path d="M-7.8-4.5L7.8 4.5"></path><path d="M-7.8 4.5L7.8-4.5"></path></g></svg>
+<div class="n sh" style="position: absolute; left: 0; right: 0; text-align: center; top: 622px; font-family: 'Caveat', cursive; font-size: 22px; transform: rotate(-2deg)">(since the first wear)</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

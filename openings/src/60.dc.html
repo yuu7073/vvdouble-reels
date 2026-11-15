@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 060</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&amp;family=Special+Elite&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.l0{animation:l0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes l0{0%,4%{opacity:0;transform:translateY(14px)}10%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.l1{animation:l1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes l1{0%,8%{opacity:0;transform:translateY(14px)}14%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.l2{animation:l2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes l2{0%,12%{opacity:0;transform:translateY(14px)}18%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.l3{animation:l3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes l3{0%,16%{opacity:0;transform:translateY(14px)}22%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.l4{animation:l4 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes l4{0%,20%{opacity:0;transform:translateY(14px)}26%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.l5{animation:l5 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes l5{0%,24%{opacity:0;transform:translateY(14px)}30%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.n{animation:n 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes n{0%,30%{opacity:0;}38%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.h{animation:h 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes h{0%,2%{opacity:0;}8%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/699cfc130329fe26818955bbae775cbf" poster="/_blob/266163afc39ae7d1c2a4172e74e14b84" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.2)"></div>
+<div class="h" style="position: absolute; left: 0; right: 0; text-align: center; top: 92px; font-family: 'Playfair Display', serif; font-size: 15px; line-height: 1.05">A Little Note On Getting Dressed:<br>You Don't Need A Perfect Closet</div>
+<div style="position: absolute; left: 30px; top: 170px; font-family: 'Playfair Display', serif; font-size: 60px; line-height: .72; letter-spacing: -0.05em; color: #D7EE8E"><div class="l0" style="font-style: normal; padding-left: 0px">What if</div><div class="l1" style="font-style: normal; padding-left: 0px">you</div><div class="l2" style="font-style: italic; padding-left: 60px">stopped</div><div class="l3" style="font-style: italic; padding-left: 10px">overthinking</div><div class="l4" style="font-style: normal; padding-left: 40px">every</div><div class="l5" style="font-style: normal; padding-left: 50px">outfit?</div></div>
+<div class="n" style="position: absolute; left: 30px; top: 520px; font-family: 'Special Elite', monospace; font-size: 12px; line-height: 1.5; color: #D7EE8E">Make one piece your<br>everyday favorite instead,<br>and let the rest follow.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

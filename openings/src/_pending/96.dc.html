@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 096</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@700&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#DAF89E}a:hover{color:#DAF89E}
+.pop{animation:pop 4.8s cubic-bezier(.2,.9,.3,1.5) infinite}@keyframes pop{0%,20%{opacity:0;transform:scale(.2) rotate(-20deg)}28%,94%{opacity:1;transform:none}100%{opacity:0}}.bob{animation:bob 2.4s ease-in-out infinite alternate}@keyframes bob{from{transform:translateY(-4px) rotate(-6deg)}to{transform:translateY(4px) rotate(6deg)}}
+.w0{animation:w0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w0{0%,4%{opacity:0;transform:translateX(-30px)}10%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.w1{animation:w1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w1{0%,10%{opacity:0;transform:translateX(-30px)}16%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.w2{animation:w2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w2{0%,16%{opacity:0;transform:translateX(-30px)}22%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.w3{animation:w3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w3{0%,22%{opacity:0;transform:translateX(-30px)}28%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.bob{animation:bob 2.4s ease-in-out infinite alternate}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #DAF89E">
+<video src="/_blob/4bc803b4d6f0557ad64a3dddae46e458" poster="/_blob/2bb37e47113ddc26398c62c7715fc5c0" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.1)"></div>
+<div style="position: absolute; left: 22px; top: 160px; font-weight: 700; font-size: 100px; line-height: .86; letter-spacing: -0.06em; color: #DAF89E"><div class="w0">things</div><div class="w1">i wore</div><div class="w2">on</div><div class="w3">repeat</div></div>
+<img class="pop" src="/_blob/c75efa66d9fef91d476b0affb078a19f" alt="" style="position: absolute; left: 200px; top: 330px; width: 60px; height: 60px; animation-delay: 0.2s"><img class="pop" src="/_blob/39d2a1aeef7ef42d17e944d54e4c857d" alt="" style="position: absolute; left: 300px; top: 470px; width: 48px; height: 48px; animation-delay: 0.4s">
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

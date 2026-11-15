@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 069</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&amp;family=Inter:wght@600&amp;family=Space+Mono&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.tag{animation:tag 2.4s ease-in-out infinite alternate;transform-origin:50% 0}@keyframes tag{from{transform:rotate(-7deg)}to{transform:rotate(5deg)}}
+.tg{animation:tg 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes tg{0%,2%{opacity:0;transform:translateY(-40px)}10%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/434131eeabb36ecbef47a3fec5e5c3d8" poster="/_blob/beea9590977abd4e2038c6d4f879f61a" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.15)"></div>
+<div class="tg" style="position: absolute; left: 31px; top: 92px; width: 140px">
+<div style="position: absolute; left: 69px; top: -80px; width: 1.5px; height: 92px; background: #E9E4DA"></div>
+<div class="tag" style="width: 140px; height: 250px; background: #F4EFE4; color: #2a2520; clip-path: polygon(22% 0, 78% 0, 100% 14%, 100% 100%, 0 100%, 0 14%); display: flex; flex-direction: column; align-items: center; padding-top: 22px; box-sizing: border-box; box-shadow: 0 10px 20px rgba(0,0,0,.25)">
+<div style="width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid #2a2520; background: transparent"></div>
+<div style="margin-top: 22px; font-size: 9px; font-weight: 600; letter-spacing: .24em">VV DOUBLE</div>
+<div style="margin-top: 14px; font-family: 'Playfair Display', serif; font-size: 38px; line-height: .9; text-align: center">New<br><i>In</i></div>
+<div style="margin-top: 18px; width: 70px; border-top: 1px solid #2a2520"></div>
+<div style="margin-top: 10px; font-family: 'Space Mono', monospace; font-size: 9px; text-align: center; line-height: 1.5">SIZE: YOURS<br>FIT: EASY</div>
+</div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

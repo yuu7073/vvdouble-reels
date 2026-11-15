@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 071</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display&amp;family=Anton&amp;family=Bodoni+Moda&amp;family=Archivo+Black&amp;family=Pixelify+Sans&amp;family=Gochi+Hand&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.lt0{animation:lt0 4.8s cubic-bezier(.2,.9,.3,1.5) infinite}@keyframes lt0{0%,1.0%{opacity:0;transform:scale(1.6) rotate(-6deg)}3.0%,94%{opacity:1;transform:rotate(-6deg)}100%{opacity:0;transform:rotate(-6deg)}}
+.lt1{animation:lt1 4.8s cubic-bezier(.2,.9,.3,1.5) infinite}@keyframes lt1{0%,3.5%{opacity:0;transform:scale(1.6) rotate(4deg)}5.5%,94%{opacity:1;transform:rotate(4deg)}100%{opacity:0;transform:rotate(4deg)}}
+.lt2{animation:lt2 4.8s cubic-bezier(.2,.9,.3,1.5) infinite}@keyframes lt2{0%,6.0%{opacity:0;transform:scale(1.6) rotate(-3deg)}8.0%,94%{opacity:1;transform:rotate(-3deg)}100%{opacity:0;transform:rotate(-3deg)}}
+.lt3{animation:lt3 4.8s cubic-bezier(.2,.9,.3,1.5) infinite}@keyframes lt3{0%,8.5%{opacity:0;transform:scale(1.6) rotate(6deg)}10.5%,94%{opacity:1;transform:rotate(6deg)}100%{opacity:0;transform:rotate(6deg)}}
+.lt4{animation:lt4 4.8s cubic-bezier(.2,.9,.3,1.5) infinite}@keyframes lt4{0%,11.0%{opacity:0;transform:scale(1.6) rotate(-5deg)}13.0%,94%{opacity:1;transform:rotate(-5deg)}100%{opacity:0;transform:rotate(-5deg)}}
+.s{animation:s 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes s{0%,14%{opacity:0;}20%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/7dd3d73530218c2fe48d8e16d1121437" poster="/_blob/3a85844a82ad34b5af889d1e07897b55" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.15)"></div>
+<div style="position: absolute; left: 0; right: 0; top: 310px; display: flex; justify-content: center; gap: 4px"><div class="lt0" style="width: 58px; height: 76px; background: #F4EFE4; color: #1a1a1a; font-family: 'Playfair Display', serif; font-size: 54px; line-height: 76px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,.25)">N</div><div class="lt1" style="width: 58px; height: 76px; background: #C9563D; color: #ffffff; font-family: 'Anton', serif; font-size: 54px; line-height: 76px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,.25)">E</div><div class="lt2" style="width: 58px; height: 76px; background: #1F2A44; color: #F4EFE4; font-family: 'Bodoni Moda', serif; font-size: 54px; line-height: 76px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,.25)">W</div><div style="width: 14px"></div><div class="lt3" style="width: 44px; height: 76px; background: #F6D515; color: #1a1a1a; font-family: 'Archivo Black', serif; font-size: 54px; line-height: 76px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,.25)">I</div><div class="lt4" style="width: 58px; height: 76px; background: #ffffff; color: #C9563D; font-family: 'Pixelify Sans', serif; font-size: 54px; line-height: 76px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,.25)">N</div></div>
+<div class="s" style="position: absolute; left: 0; right: 0; text-align: center; top: 410px; font-family: 'Gochi Hand', cursive; font-size: 22px">cut out for every day</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

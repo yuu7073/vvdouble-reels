@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 087</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital@0;1&amp;family=Inter:wght@500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F3EEE4}a:hover{color:#F3EEE4}
+.c0{animation:c0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c0{0%,4%{opacity:0;filter:blur(6px)}12%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.c1{animation:c1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c1{0%,12%{opacity:0;filter:blur(6px)}20%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.c2{animation:c2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c2{0%,20%{opacity:0;filter:blur(6px)}28%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.c3{animation:c3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c3{0%,28%{opacity:0;filter:blur(6px)}36%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.c4{animation:c4 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c4{0%,36%{opacity:0;filter:blur(6px)}44%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+div{text-shadow:0 1px 14px rgba(0,0,0,.22)}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #1a1816; font-family: 'Inter', sans-serif; color: #F3EEE4">
+<video src="/_blob/7dd3d73530218c2fe48d8e16d1121437" poster="/_blob/3a85844a82ad34b5af889d1e07897b55" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.24)"></div>
+<div style="position: absolute; left: 0; right: 0; top: 230px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center"><div class="c0" style="font-size: 10px; font-weight: 500; letter-spacing: .34em">VV DOUBLE PRESENTS</div><div class="c1" style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 22px">a film about</div><div class="c2" style="font-family: 'Cormorant Garamond', serif; font-size: 46px; line-height: 1">getting dressed</div><div class="c3" style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 22px">starring</div><div class="c4" style="font-family: 'Cormorant Garamond', serif; font-size: 72px; letter-spacing: .1em; line-height: 1">YOU</div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

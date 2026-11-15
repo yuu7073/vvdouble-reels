@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 062</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@1&amp;family=Inter:wght@600&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#FFFFFF}a:hover{color:#FFFFFF}
+.m{animation:m 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes m{0%,1%{opacity:0;}6%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.t{animation:t 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes t{0%,3%{opacity:0;filter:blur(6px)}12%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.s{animation:s 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes s{0%,12%{opacity:0;}20%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.rl{animation:rl 4.8s cubic-bezier(.6,0,.2,1) infinite;transform-origin:left}@keyframes rl{0%,4%{transform:scaleX(0)}14%,94%{transform:scaleX(1);opacity:1}100%{opacity:0}}
+.f{animation:f 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes f{0%,18%{opacity:0;}26%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+div,span{text-shadow:0 1px 16px rgba(0,0,0,.28)}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #FFFFFF">
+<video src="/_blob/2b77150b4d7c345d761da465204a4414" poster="/_blob/ff054ee85565d2deedfeb27aace008ec" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.14)"></div>
+<div class="m" style="position: absolute; left: 24px; right: 24px; top: 28px; display: flex; justify-content: space-between; font-size: 9.5px; font-weight: 600; letter-spacing: .26em"><span>A/W</span><span>STYLEGUIDE</span></div>
+<div class="t" style="position: absolute; left: 0; right: 0; top: 56px; text-align: center; font-family: 'Playfair Display', serif; font-style: italic; font-size: 66px; line-height: 1; letter-spacing: -0.02em">Styleguide</div>
+<div class="s" style="position: absolute; left: 0; right: 0; text-align: center; top: 138px; font-size: 9.5px; font-weight: 600; letter-spacing: .26em">VV DOUBLE A/W</div>
+<div class="rl" style="position: absolute; left: 24px; right: 24px; top: 664px; border-top: 1px solid #ffffff"></div><div class="f" style="position: absolute; left: 24px; right: 24px; top: 674px; display: flex; justify-content: space-between; font-size: 9.5px; font-weight: 600; letter-spacing: .26em; color: #ffffff"><span>ON-BODY</span><span>UP CLOSE</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

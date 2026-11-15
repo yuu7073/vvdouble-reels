@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 068</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.t{animation:t 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes t{0%,3%{opacity:0;transform:scale(.94)}10%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.k0{animation:k0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes k0{0%,14%{opacity:0;filter:blur(4px)}20%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.k1{animation:k1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes k1{0%,17%{opacity:0;filter:blur(4px)}23%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.k2{animation:k2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes k2{0%,20%{opacity:0;filter:blur(4px)}26%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.k3{animation:k3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes k3{0%,23%{opacity:0;filter:blur(4px)}29%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.k4{animation:k4 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes k4{0%,26%{opacity:0;filter:blur(4px)}32%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.k5{animation:k5 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes k5{0%,29%{opacity:0;filter:blur(4px)}35%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/2b77150b4d7c345d761da465204a4414" poster="/_blob/ff054ee85565d2deedfeb27aace008ec" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.4)"></div>
+<div class="t" style="position: absolute; left: 0; right: 0; top: 390px; text-align: center; font-weight: 700; font-size: 40px; line-height: .98; letter-spacing: -0.04em; color: #F5B8D0">little things<br>that make<br>an outfit:</div><div class="k0" style="position: absolute; left: 34px; top: 150px; font-size: 12px; font-weight: 500">the right length</div><div class="k1" style="position: absolute; left: 262px; top: 182px; font-size: 12px; font-weight: 500">a good shoe</div><div class="k2" style="position: absolute; left: 36px; top: 550px; font-size: 12px; font-weight: 500">one easy layer</div><div class="k3" style="position: absolute; left: 280px; top: 560px; font-size: 12px; font-weight: 500">how it moves</div><div class="k4" style="position: absolute; left: 50px; top: 630px; font-size: 12px; font-weight: 500">a little shine</div><div class="k5" style="position: absolute; left: 254px; top: 640px; font-size: 12px; font-weight: 500">feeling like you</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

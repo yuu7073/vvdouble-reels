@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 075</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F4D66B}a:hover{color:#F4D66B}
+.l0{animation:l0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes l0{0%,3%{opacity:0;transform:translateY(12px)}9%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.l1{animation:l1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes l1{0%,9%{opacity:0;transform:translateY(12px)}15%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.l2{animation:l2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes l2{0%,15%{opacity:0;transform:translateY(12px)}21%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.s{animation:s 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes s{0%,26%{opacity:0;}34%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.tw{animation:tw 1.6s ease-in-out infinite alternate}@keyframes tw{from{opacity:.4;transform:scale(.7) rotate(-12deg)}to{opacity:1;transform:scale(1) rotate(10deg)}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #F4D66B">
+<video src="/_blob/2b77150b4d7c345d761da465204a4414" poster="/_blob/ff054ee85565d2deedfeb27aace008ec" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.38)"></div>
+<div style="position: absolute; left: 0; right: 0; top: 380px; text-align: center; font-family: 'DM Serif Display', serif; font-size: 46px; line-height: 1; letter-spacing: -0.02em; color: #F4D66B"><div class="l0">Things my</div><div class="l1">closet taught me,</div><div class="l2"><i>quietly</i></div></div>
+<div class="s" style="position: absolute; left: 0; right: 0; text-align: center; top: 550px; font-family: 'DM Serif Display', serif; font-size: 17px; color: #F4D66B">a few notes from vv double</div>
+<svg class="tw" aria-hidden="true" viewBox="0 0 100 100" style="position: absolute; left: 58px; top: 350px; width: 22px; height: 22px; animation-delay: 0s"><path d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0Z" fill="#F4D66B"></path></svg><svg class="tw" aria-hidden="true" viewBox="0 0 100 100" style="position: absolute; left: 330px; top: 366px; width: 16px; height: 16px; animation-delay: 0.3s"><path d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0Z" fill="#F4D66B"></path></svg><svg class="tw" aria-hidden="true" viewBox="0 0 100 100" style="position: absolute; left: 80px; top: 600px; width: 16px; height: 16px; animation-delay: 0.6s"><path d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0Z" fill="#F4D66B"></path></svg><svg class="tw" aria-hidden="true" viewBox="0 0 100 100" style="position: absolute; left: 316px; top: 620px; width: 22px; height: 22px; animation-delay: 0.9s"><path d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0Z" fill="#F4D66B"></path></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

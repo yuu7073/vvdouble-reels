@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 057</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&amp;family=Pinyon+Script&amp;family=Inter:wght@400;600&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#F6D515}a:hover{color:#F6D515}
+.a{animation:a 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes a{0%,4%{opacity:0;transform:scale(1.2)}10%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.b{animation:b 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes b{0%,10%{opacity:0;filter:blur(4px)}16%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.c{animation:c 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes c{0%,16%{opacity:0;transform:scale(1.2)}22%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.d{animation:d 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes d{0%,24%{opacity:0;}30%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.e{animation:e 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes e{0%,30%{opacity:0;}36%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #F6D515">
+<video src="/_blob/67af9a38693961d15cfdd0114a2c3ae1" poster="/_blob/ab7d5959794a132bd6741deade5d02e9" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.16)"></div>
+<div style="position: absolute; left: 0; right: 0; top: 230px; text-align: center">
+<div class="a" style="font-family: 'DM Serif Display', serif; font-size: 96px; line-height: .86; letter-spacing: -0.01em; color: #F6D515">STYLE</div><div class="b" style="font-family: 'Pinyon Script', cursive; font-size: 54px; line-height: .8; color: #F6D515">with</div><div class="c" style="font-family: 'DM Serif Display', serif; font-size: 96px; line-height: .86; letter-spacing: -0.01em; color: #F6D515">ME</div>
+<div class="d" style="margin-top: 14px; font-size: 10px; font-weight: 600; letter-spacing: .1em; color: #F6D515">(IN UNDER A MINUTE)</div></div>
+<div class="e" style="position: absolute; left: 0; right: 0; text-align: center; top: 620px; font-size: 10px; color: #F6D515">@vvdoubleofficial</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

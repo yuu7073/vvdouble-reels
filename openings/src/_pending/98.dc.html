@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 098</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&amp;family=Inter:wght@400&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#FBEA9A}a:hover{color:#FBEA9A}
+.pop{animation:pop 4.8s cubic-bezier(.2,.9,.3,1.5) infinite}@keyframes pop{0%,20%{opacity:0;transform:scale(.2) rotate(-20deg)}28%,94%{opacity:1;transform:none}100%{opacity:0}}.bob{animation:bob 2.4s ease-in-out infinite alternate}@keyframes bob{from{transform:translateY(-4px) rotate(-6deg)}to{transform:translateY(4px) rotate(6deg)}}
+.w0{animation:w0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w0{0%,4%{opacity:0;transform:translateY(14px)}10%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.w1{animation:w1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w1{0%,10%{opacity:0;transform:translateY(14px)}16%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.w2{animation:w2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w2{0%,16%{opacity:0;transform:translateY(14px)}22%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.w3{animation:w3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes w3{0%,22%{opacity:0;transform:translateY(14px)}28%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.g{animation:g 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes g{0%,0%{opacity:0;}6%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #FBEA9A">
+<video src="/_blob/434131eeabb36ecbef47a3fec5e5c3d8" poster="/_blob/beea9590977abd4e2038c6d4f879f61a" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.06)"></div><div class="g" style="position: absolute; left: 135px; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,.45)"></div><div class="g" style="position: absolute; left: 270px; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,.45)"></div><div class="g" style="position: absolute; top: 240px; left: 0; right: 0; height: 1px; background: rgba(255,255,255,.45)"></div><div class="g" style="position: absolute; top: 480px; left: 0; right: 0; height: 1px; background: rgba(255,255,255,.45)"></div>
+<div style="position: absolute; left: 0; right: 0; top: 196px; text-align: center; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 54px; line-height: 1; letter-spacing: -0.03em; color: #FBEA9A; text-shadow: 0 2px 10px rgba(0,0,0,.18)"><div class="w0">Tiny</div><div class="w1">reminders</div><div class="w2">for getting</div><div class="w3">dressed</div></div>
+<img class="pop" src="/_blob/b92209caf847b947f04c048bcd5bc0b5" alt="" style="position: absolute; left: 290px; top: 170px; width: 46px; height: 46px; animation-delay: 0.3s">
+<div class="g" style="position: absolute; left: 132px; top: 640px; display: flex; gap: 8px; padding: 5px; border-radius: 999px; background: rgba(60,60,60,.45); font-size: 11px; color: #ffffff"><span style="width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center">0,5</span><span style="width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; color: #FBEA9A">1x</span><span style="width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center">3</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

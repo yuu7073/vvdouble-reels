@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opening 081</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&amp;family=Inter:wght@500&amp;display=swap">
+<style>
+html,body{margin:0;overflow:hidden;scrollbar-width:none}
+a{color:#ffffff}a:hover{color:#ffffff}
+.t{animation:t 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes t{0%,3%{opacity:0;transform:translateY(12px)}11%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.p0{animation:p0 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes p0{0%,14%{opacity:0;transform:scale(.6)}20%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.p1{animation:p1 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes p1{0%,17%{opacity:0;transform:scale(.6)}23%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.p2{animation:p2 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes p2{0%,20%{opacity:0;transform:scale(.6)}26%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.p3{animation:p3 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes p3{0%,23%{opacity:0;transform:scale(.6)}29%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.p4{animation:p4 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes p4{0%,26%{opacity:0;transform:scale(.6)}32%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+.p5{animation:p5 4.8s cubic-bezier(.2,.8,.2,1) infinite}@keyframes p5{0%,29%{opacity:0;transform:scale(.6)}35%,94%{opacity:1;transform:none;filter:none}100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: 405px; height: 720px; position: relative; overflow: hidden; background: #2a2620; font-family: 'Inter', sans-serif; color: #ffffff">
+<video src="/_blob/0554ffc59de31f3e62fd862d580107dd" poster="/_blob/152bace58ee611e4e02db73c6d3df4fd" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></video><div style="position: absolute; inset: 0; background: rgba(22, 20, 17, 0.3)"></div>
+<div class="t" style="position: absolute; left: 0; right: 0; top: 52px; text-align: center; font-family: 'Playfair Display', serif; font-size: 52px; line-height: 1; letter-spacing: -0.02em"><i>made for</i> Moving</div><div class="p0" style="position: absolute; left: 24px; top: 300px; padding: 5px 12px; border-radius: 999px; background: #F1ECE2; color: #2a2520; font-size: 11px; font-weight: 500">Easy to wear</div><div class="p1" style="position: absolute; left: 266px; top: 330px; padding: 5px 12px; border-radius: 999px; background: #F1ECE2; color: #2a2520; font-size: 11px; font-weight: 500">Day to night</div><div class="p2" style="position: absolute; left: 30px; top: 420px; padding: 5px 12px; border-radius: 999px; background: #F1ECE2; color: #2a2520; font-size: 11px; font-weight: 500">Mix &amp; match</div><div class="p3" style="position: absolute; left: 280px; top: 450px; padding: 5px 12px; border-radius: 999px; background: #F1ECE2; color: #2a2520; font-size: 11px; font-weight: 500">Every day</div><div class="p4" style="position: absolute; left: 22px; top: 540px; padding: 5px 12px; border-radius: 999px; background: #F1ECE2; color: #2a2520; font-size: 11px; font-weight: 500">One more layer</div><div class="p5" style="position: absolute; left: 282px; top: 570px; padding: 5px 12px; border-radius: 999px; background: #F1ECE2; color: #2a2520; font-size: 11px; font-weight: 500">Your way</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":405,"height":720}}'>
+class Component extends DCLogic {
+componentDidMount() {
+setTimeout(function () {
+var vs = document.querySelectorAll('video');
+for (var i = 0; i < vs.length; i++) { vs[i].muted = true; var p = vs[i].play(); if (p && p.catch) p.catch(function () {}); }
+}, 300);
+}
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
