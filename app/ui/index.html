@@ -88,6 +88,9 @@ input.ipt::placeholder{color:var(--faint)}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
 .num{position:absolute;top:8px;left:8px;width:26px;height:26px;border-radius:13px;background:var(--ink);color:var(--onink);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .clip.closeup .num{background:var(--blue)}
+.clip.multi{border-color:#7a5cff}
+.thumb .mu{position:absolute;left:36px;bottom:6px;width:24px;height:24px;border-radius:6px;border:1px solid rgba(255,255,255,.6);background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;z-index:2}
+.thumb .mu.on{background:#7a5cff;border-color:#7a5cff}
 .dur{position:absolute;bottom:8px;right:8px;height:20px;padding:0 7px;border-radius:6px;background:rgba(0,0,0,.72);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;border:1px solid rgba(255,255,255,.35);text-shadow:0 1px 2px rgba(0,0,0,.8);transition:right .12s}
 .del{position:absolute;bottom:8px;right:8px;width:24px;height:24px;border-radius:12px;background:rgba(200,60,60,.85);color:#fff;display:none;align-items:center;justify-content:center;font-size:14px;z-index:3}
 .clip:hover .dur{right:38px}
@@ -503,7 +506,7 @@ const app = {
   drawOpeningPreview(P, lib){
     const cv=$('#opPrev'); if(!cv) return; const ctx=cv.getContext('2d'); ctx.clearRect(0,0,cv.width,cv.height);
     ctx.fillStyle='#1c1c1c'; ctx.fillRect(0,0,cv.width,cv.height);
-    const clip=(P.clips||[]).find(c=>c.use!==false&&!c.closeup)||(P.clips||[]).find(c=>c.use!==false);
+    const clip=(P.clips||[]).find(c=>c.use!==false&&c.multi)||(P.clips||[]).find(c=>c.use!==false&&!c.closeup)||(P.clips||[]).find(c=>c.use!==false);
     const it=lib.find(i=>i.path===P.opening);
     const token=(this._opPrevToken=(this._opPrevToken||0)+1);
     const cover=(img)=>{ const r=Math.max(cv.width/img.width, cv.height/img.height); const w=img.width*r, h=img.height*r; ctx.drawImage(img,(cv.width-w)/2,(cv.height-h)/2,w,h); };
@@ -519,7 +522,7 @@ const app = {
     const clipV=$('#opPrevClip'), animV=$('#opPrevAnim'); if(!clipV||!animV) return;
     if(!on){ [clipV,animV].forEach(v=>{ v.pause(); v.style.display='none'; v.removeAttribute('src'); v.load(); }); return; }
     if(!P) return;
-    const clip=(P.clips||[]).find(c=>c.use!==false&&!c.closeup)||(P.clips||[]).find(c=>c.use!==false);
+    const clip=(P.clips||[]).find(c=>c.use!==false&&c.multi)||(P.clips||[]).find(c=>c.use!==false&&!c.closeup)||(P.clips||[]).find(c=>c.use!==false);
     const it=lib.find(i=>i.path===P.opening);
     if(clip&&clip.path){ clipV.src='/media?p='+encodeURIComponent(clip.path)+'#t='+(clip.start!==''&&clip.start!=null?(+clip.start):0.5); clipV.style.display=''; clipV.loop=true; clipV.play().catch(()=>{}); }
     if(it&&it.preview){ animV.src=it.preview; animV.style.display=''; animV.loop=true; animV.play().catch(()=>{}); }
@@ -788,21 +791,22 @@ const app = {
     const known=new Set(P.clips.map(c=>c.path));
     for (const c of (res.clips||[])) {
       if (known.has(c.path)) continue;
-      const last=P.clips.filter(x=>!x.closeup).slice(-1)[0];
+      const last=P.clips.filter(x=>!x.closeup&&!x.multi).slice(-1)[0];
       // 先從檔名讀：模特_著大碼舒適 (1).MP4 / 近拍 (1).mov / 名字@12
       const stem=c.name.replace(/\.[^.]+$/,'').replace(/\s*@\d+(\.\d+)?\s*$/,'').replace(/\s*[\(（]\d+[\)）]\s*$/,'').replace(/^\d+[_\-\s]+/,'');
       const parts=stem.split(/[_\-]/).map(x=>x.trim()).filter(Boolean);
       const up=c.name.toUpperCase(); const byName=this.state.models.find(m=>parts[0]&&parts[0].toUpperCase()===m.name.toUpperCase())||this.state.models.filter(m=>m.name&&up.includes(m.name.toUpperCase())).sort((a,b)=>b.name.length-a.name.length)[0];
       const isClose=c.closeup||/近拍/.test(c.name);
+      const isMulti=!isClose&&(c.multi||/多人|合照/.test(c.name));
       let size='', fit='';
       const wear=parts.find(x=>x.startsWith('著'));
       if (wear) { const m=wear.slice(1).match(/^(大碼|中碼|小碼|SM|ML|XL2L|3L4L|5L6L|XL|2L|3L|4L|5L|6L)(.*)$/i); if(m){ size=m[1]; fit=m[2]; } else { size=wear.slice(1); } }
       else if (parts[2] && SIZES.includes(parts[2])) size=parts[2];
       const startM=c.name.match(/@(\d+(?:\.\d+)?)/);
-      const modelName=isClose?'':(byName?byName.name:(last?last.model:(s.last_model||(this.state.models[0]?.name||''))));
+      const modelName=(isClose||isMulti)?'':(byName?byName.name:(last?last.model:(s.last_model||(this.state.models[0]?.name||''))));
       const sheet=(P.modelSizes||{})[modelName.toUpperCase()]||null;   // 上架排程表裡這位模特的著用尺碼
-      P.clips.push({...c, closeup:isClose, model: modelName,
-        size: isClose?'':(size||(sheet&&sheet.size)||(last?last.size:(s.last_size||'大碼'))),
+      P.clips.push({...c, closeup:isClose, multi:isMulti, model: modelName,
+        size: (isClose||isMulti)?'':(size||(sheet&&sheet.size)||(last?last.size:(s.last_size||'大碼'))),
         fit: fit||(sheet&&sheet.fit)||(last?last.fit:'舒適'), start: startM?startM[1]:''});
     }
     if (res.music && res.music.length && !P.music) { P.music={path:res.music[0].path, name:res.music[0].name, external:true}; }
@@ -821,8 +825,8 @@ const app = {
     P.music={path:t.path, name:t.name, auto:true}; if(this.P()===P){ this.renderMusicSel(); this.renderList(); this.renderEstimate(); }
   },
   scrub(el,e){ const r=el.getBoundingClientRect(); const k=Math.max(0,Math.min(5,Math.floor((e.clientX-r.left)/r.width*6))); el.style.backgroundPosition=`${k*20}% 0`; const b=el.querySelector('b'); if(b) b.style.marginLeft=`${k*16.6}%`; },
-  setClip(i, k, v) { const c=this.P().clips[i]; if(k==='use'){ c.use=(v===true||v==='true'); this.renderGrid(); return; } c[k]=v; if(k==='closeup'){ if(v){c.model='';c.size='';} else {c.model=c.model||this.state.models[0]?.name||''; c.size=c.size||'大碼';} this.renderGrid(); } else { if(k==='model'){ this.state.settings.last_model=v; const sh=(this.P().modelSizes||{})[String(v).toUpperCase()]; if(sh&&sh.size){ c.size=sh.size; if(sh.fit) c.fit=sh.fit; this.renderGrid(); return; } } if(k==='size') this.state.settings.last_size=v; this.renderCounts(); } },
-  applyToRest(i) { const src=this.P().clips[i]; this.P().clips.forEach((c,j)=>{ if(j>i && !c.closeup){c.model=src.model;c.size=src.size;c.fit=src.fit;} }); this.renderGrid(); this.toast('已套用到後面的片段'); },
+  setClip(i, k, v) { const c=this.P().clips[i]; if(k==='use'){ c.use=(v===true||v==='true'); this.renderGrid(); return; } c[k]=v; if(k==='closeup'||k==='multi'){ if(v){ c.model=''; c.size=''; if(k==='closeup') c.multi=false; else c.closeup=false; } else {c.model=c.model||this.state.models[0]?.name||''; c.size=c.size||'大碼';} this.renderGrid(); } else { if(k==='model'){ this.state.settings.last_model=v; const sh=(this.P().modelSizes||{})[String(v).toUpperCase()]; if(sh&&sh.size){ c.size=sh.size; if(sh.fit) c.fit=sh.fit; this.renderGrid(); return; } } if(k==='size') this.state.settings.last_size=v; this.renderCounts(); } },
+  applyToRest(i) { const src=this.P().clips[i]; this.P().clips.forEach((c,j)=>{ if(j>i && !c.closeup && !c.multi){c.model=src.model;c.size=src.size;c.fit=src.fit;} }); this.renderGrid(); this.toast('已套用到後面的片段'); },
   move(from,to) { const a=this.P().clips; const [x]=a.splice(from,1); a.splice(to,0,x); this.renderGrid(); },
 
   renderAll() { this.renderList(); $('#prodName').value=this.P().name; this.renderGrid(); this.renderMusicSel(); this.renderLayoutSel(); this.renderBgPick(); this.renderOpening(); },
@@ -837,23 +841,23 @@ const app = {
   renderList() {
     $('#prodCount').textContent=this.products.length;
     $('#plist').innerHTML=this.products.map((p,i)=>{
-      const n=p.clips.filter(c=>!c.closeup).length, k=p.clips.filter(c=>c.closeup).length;
+      const n=p.clips.filter(c=>!c.closeup&&!c.multi).length, k=p.clips.filter(c=>c.closeup).length;
       const m=p.music?'音樂 ✓':'<span style="color:var(--red)">缺音樂</span>';
       return `<div class="pitem ${i===this.cur?'on':''}" onclick="app.selectProduct(${i})"><div class="n">${esc(p.name)||'<span style="color:var(--faint)">未命名</span>'}${p.unmatched?' <span style="color:var(--red);font-size:11px">未配對</span>':''}</div><div class="m">${p.clips.length?`${n} 段實穿・${k} 段近拍・${m}`:'尚未放入影片'}${this.products.length>1?` <a href="#" onclick="event.stopPropagation();app.removeProduct(${i});return false" style="float:right;color:var(--faint);text-decoration:none">✕</a>`:''}</div></div>`;
     }).join('');
   },
   renderCounts() {
     const cl=this.P().clips; const byM={};
-    cl.filter(c=>!c.closeup).forEach(c=>{byM[c.model||'未選']=(byM[c.model||'未選']||0)+1});
+    cl.filter(c=>!c.closeup&&!c.multi).forEach(c=>{byM[c.model||'未選']=(byM[c.model||'未選']||0)+1});
     $('#cntAll').textContent=`選入 ${cl.filter(c=>c.use!==false).length} / ${cl.length}`;
     $('#cntModel').innerHTML=Object.entries(byM).map(([k,v])=>`${esc(k)} ${v}`).join('　')||'—';
-    $('#cntClose').textContent=`近拍 ${cl.filter(c=>c.closeup).length}`;
+    $('#cntClose').textContent=`近拍 ${cl.filter(c=>c.closeup).length}`+(cl.some(c=>c.multi)?`・多人 ${cl.filter(c=>c.multi).length}`:'');
     this.renderEstimate();
   },
   renderEstimate() {
     const P=this.P(); if(!P) return; const mode=P.lengthMode||this.state.settings.length_mode||'20';
-    const used=P.clips.filter(c=>c.use!==false); const nM=used.filter(c=>!c.closeup).length, nD=used.filter(c=>c.closeup).length;
-    $('#lenMeta').textContent=P.clips.length?`選入 ${used.length} 支（滿版 ${nM}・近拍 ${nD}）`:'';
+    const used=P.clips.filter(c=>c.use!==false); const nM=used.filter(c=>!c.closeup&&!c.multi).length, nD=used.filter(c=>c.closeup).length, nG=used.filter(c=>c.multi).length;
+    $('#lenMeta').textContent=P.clips.length?`選入 ${used.length} 支（滿版 ${nM}・近拍 ${nD}${nG?'・多人 '+nG:''}）`:'';
     const btn=(m,label,sub)=>`<button class="btn ${mode===m?'k':'w'}" style="height:50px;flex-direction:column;gap:2px;padding:0" onclick="app.setLength('${m}')"><span style="font-weight:700">${label}</span><span style="font-size:11px;font-weight:400;opacity:.8">${sub||'　'}</span></button>`;
     if(!used.length){ $('#lenBtns').innerHTML=btn('20','20 秒','')+btn('25','25 秒','')+btn('fit','依片段',''); $('#estTotal').textContent='—'; $('#rhythm').innerHTML=''; $('#estUse').textContent='—'; return; }
     clearTimeout(this._planT);
@@ -864,7 +868,7 @@ const app = {
       const x=r.modes[mode]; if(!x||x.error){ $('#estTotal').textContent='—'; return; }
       $('#estTotal').textContent=`${x.total} 秒・${x.seq.length} 段${r.bpm?'・'+r.bpm+' BPM':''}`;
       this._planTotal=x.total; this.musicDraw();
-      $('#rhythm').innerHTML=x.seq.map(sg=>`<div class="rb ${sg.kind==='layout'?'l':(sg.kind==='close'?'d':'m')}" style="flex:${Math.max(1,Math.round(sg.sec*10))}" title="${esc(sg.name)}"><span>${sg.kind==='layout'?'版型':(sg.kind==='close'?'近拍':esc(sg.model||'滿版'))}</span><span style="opacity:.75">${sg.kind==='layout'?sg.sec+'s':(sg.beats?sg.beats+' 拍':sg.sec+'s')}</span></div>`).join('');
+      $('#rhythm').innerHTML=x.seq.map(sg=>`<div class="rb ${sg.kind==='layout'?'l':(sg.kind==='close'?'d':'m')}" style="flex:${Math.max(1,Math.round(sg.sec*10))};${sg.kind==='multi'?'outline:1px solid #7a5cff;outline-offset:-1px':''}" title="${esc(sg.name)}"><span>${sg.kind==='layout'?'版型':(sg.kind==='close'?'近拍':(sg.kind==='multi'?'多人':esc(sg.model||'滿版')))}</span><span style="opacity:.75">${sg.kind==='layout'?sg.sec+'s':(sg.beats?sg.beats+' 拍':sg.sec+'s')}</span></div>`).join('');
       $('#estUse').textContent=x.skipped.length?`這次沒放：${x.skipped.join('、')}`:'選入的全部放入';
     }, 250);
   },
@@ -874,31 +878,31 @@ const app = {
     $('#emptyHint').style.display=P.clips.length?'none':'flex'; g.style.display=P.clips.length?'grid':'none';
     const seen={}; P.clips.forEach(c=>{ seen[c.path]=(seen[c.path]||0)+1; });
     const groups=[]; const idxOf={};
-    P.clips.forEach((c,i)=>{ const k=c.closeup?'__close':(c.model||'__none'); if(!(k in idxOf)){ idxOf[k]=groups.length; groups.push({k,items:[]}); } groups[idxOf[k]].items.push(i); });
-    groups.sort((a,b)=>(a.k==='__close')-(b.k==='__close'));
+    P.clips.forEach((c,i)=>{ const k=c.closeup?'__close':(c.multi?'__multi':(c.model||'__none')); if(!(k in idxOf)){ idxOf[k]=groups.length; groups.push({k,items:[]}); } groups[idxOf[k]].items.push(i); });
+    const rank=k=>k==='__multi'?-1:(k==='__close'?1:0); groups.sort((a,b)=>rank(a.k)-rank(b.k));
     const card=(c,i)=>{
-      const sh=(P.modelSizes||{})[(c.model||'').toUpperCase()]; const noModel=!c.closeup&&!c.model; const noSize=!c.closeup&&c.model&&!(sh&&sh.size);
+      const sh=(P.modelSizes||{})[(c.model||'').toUpperCase()]; const noModel=!c.closeup&&!c.multi&&!c.model; const noSize=!c.closeup&&!c.multi&&c.model&&!(sh&&sh.size);
       const warn=(c.duration&&c.duration<2.5)?'太短':(seen[c.path]>1?'重複':'');
       const edit=c._edit;
-      return `<div class="card clip ${c.closeup?'closeup':''} ${c.use===false?'unused':''}" draggable="true" data-i="${i}">
-        <div class="thumb">${c.thumb?`<img src="${c.thumb}" alt="">`:''}<div class="use ${c.use===false?'':'on'}" title="選入／不選入" onclick="app.setClip(${i},'use',${c.use===false?'true':'false'})">${c.use===false?'':'✓'}</div>${c.strip?`<div class="strip" style="background-image:url(${c.strip})" onmousemove="app.scrub(this,event)"><i><b></b></i></div>`:''}<div class="num">${i+1}</div><div class="dur">${c.duration}s</div><div class="cu ${c.closeup?'on':''}" title="${c.closeup?'近拍（點一下改滿版）':'標為近拍'}" onclick="app.setClip(${i},'closeup',${!c.closeup})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg></div>${warn?`<span class="warnchip">${warn}</span>`:''}<button class="del" onclick="app.removeClip(${i})" title="移除">✕</button></div>
-        ${c.closeup?`<div class="pill" style="color:var(--orange);border-color:var(--orange)">近拍 CLOSE UP</div>`:(edit?`
+      return `<div class="card clip ${c.closeup?'closeup':''} ${c.multi?'multi':''} ${c.use===false?'unused':''}" draggable="true" data-i="${i}">
+        <div class="thumb">${c.thumb?`<img src="${c.thumb}" alt="">`:''}<div class="use ${c.use===false?'':'on'}" title="選入／不選入" onclick="app.setClip(${i},'use',${c.use===false?'true':'false'})">${c.use===false?'':'✓'}</div>${c.strip?`<div class="strip" style="background-image:url(${c.strip})" onmousemove="app.scrub(this,event)"><i><b></b></i></div>`:''}<div class="num">${i+1}</div><div class="dur">${c.duration}s</div><div class="cu ${c.closeup?'on':''}" title="${c.closeup?'近拍（點一下改滿版）':'標為近拍'}" onclick="app.setClip(${i},'closeup',${!c.closeup})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg></div><div class="mu ${c.multi?'on':''}" title="${c.multi?'多人（點一下改滿版）':'標為多人'}" onclick="app.setClip(${i},'multi',${!c.multi})"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3"/><circle cx="16.5" cy="9" r="2.5"/><path d="M2.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M14 18.5c.3-2.4 1.6-3.7 4-3.7 2 0 3.5 1.2 3.5 3.2"/></svg></div>${warn?`<span class="warnchip">${warn}</span>`:''}<button class="del" onclick="app.removeClip(${i})" title="移除">✕</button></div>
+        ${c.closeup?`<div class="pill" style="color:var(--orange);border-color:var(--orange)">近拍 CLOSE UP</div>`:(c.multi?`<div class="pill" style="color:#b9a6ff;border-color:#7a5cff">多人 ALL SIZES</div>`:(edit?`
         <div class="two">
           <select class="sel" onchange="app.setClip(${i},'model',this.value)">${ms.map(m=>`<option ${m.name===c.model?'selected':''}>${esc(m.name)}</option>`).join('')}${ms.some(m=>m.name===c.model)?'':`<option selected>${esc(c.model||'選模特')}</option>`}</select>
           <select class="sel" onchange="app.setClip(${i},'size',this.value)">${SIZES.map(s=>`<option ${s===c.size?'selected':''}>${s}</option>`).join('')}</select>
         </div>
         <div class="two"><input class="ipt" value="${esc(c.fit)}" placeholder="舒適" oninput="app.setClip(${i},'fit',this.value)"><button class="btn l sm" onclick="app.editDone(${i})">完成</button></div>
-        <div style="display:flex;gap:8px;font-size:12px"><a href="#" onclick="app.applySame(${i});return false">套用到其他 ${P.clips.filter((x,j)=>j!==i&&!x.closeup&&x.model===c.model).length} 支${esc(c.model||'')}</a><div class="sp"></div><a href="#" style="color:var(--mute)" onclick="app.setClip(${i},'closeup',true);return false">改成近拍</a></div>`:`
-        <div class="pill ${noModel?'bad':(noSize?'warn':'')}" onclick="app.editOpen(${i})" title="點一下編輯">${noModel?'選模特':esc(c.model)+'・'+esc(c.size||'?')+'・'+esc(c.fit||'')}</div>`)}
+        <div style="display:flex;gap:8px;font-size:12px"><a href="#" onclick="app.applySame(${i});return false">套用到其他 ${P.clips.filter((x,j)=>j!==i&&!x.closeup&&x.model===c.model).length} 支${esc(c.model||'')}</a><div class="sp"></div><a href="#" style="color:var(--mute)" onclick="app.setClip(${i},'closeup',true);return false">改成近拍</a><a href="#" style="color:var(--mute)" onclick="app.setClip(${i},'multi',true);return false">改成多人</a></div>`:`
+        <div class="pill ${noModel?'bad':(noSize?'warn':'')}" onclick="app.editOpen(${i})" title="點一下編輯">${noModel?'選模特':esc(c.model)+'・'+esc(c.size||'?')+'・'+esc(c.fit||'')}</div>`))}
         <div class="row" style="min-height:22px"><span style="color:var(--mute);font-size:12px">從第幾秒</span><input class="ipt" style="width:64px;height:22px;font-size:12px" placeholder="自動" value="${esc(c.start)}" oninput="app.setClip(${i},'start',this.value)"></div>
       </div>`;
     };
-    g.innerHTML=groups.map(gr=>{ const items=gr.items; const first=P.clips[items[0]]; const sh=gr.k!=='__close'&&gr.k!=='__none'?(P.modelSizes||{})[gr.k.toUpperCase()]:null;
+    g.innerHTML=groups.map(gr=>{ const items=gr.items; const first=P.clips[items[0]]; const sh=gr.k!=='__close'&&gr.k!=='__none'&&gr.k!=='__multi'?(P.modelSizes||{})[gr.k.toUpperCase()]:null;
       const gk=gr.k, ge=this._groupEdit===gk;
-      const head=gk==='__close'?`<b>近拍</b><span style="color:var(--mute)">${items.length} 支</span>`:(gk==='__none'?`<b style="color:var(--red)">未指定模特</b><span style="color:var(--mute)">${items.length} 支</span>`:
+      const head=gk==='__close'?`<b>近拍</b><span style="color:var(--mute)">${items.length} 支</span>`:(gk==='__multi'?`<b>多人</b><span style="color:var(--mute)">${items.length} 支・第一支放最前面、其餘放最後</span>`:(gk==='__none'?`<b style="color:var(--red)">未指定模特</b><span style="color:var(--mute)">${items.length} 支</span>`:
         `<b>${esc(gk)}</b><span style="color:var(--mute)">${items.length} 支</span>`+(ge?
         `<select class="sel" style="height:28px;width:auto" id="ge-size">${SIZES.map(x=>`<option ${x===first.size?'selected':''}>${x}</option>`).join('')}</select><input class="ipt" id="ge-fit" style="width:80px;height:28px" value="${esc(first.fit||'')}" placeholder="舒適"><button class="btn k sm" onclick="app.groupApply('${esc(gk)}')">套用到 ${items.length} 支</button><button class="btn l sm" onclick="app._groupEdit=null;app.renderGrid()">取消</button>`:
-        `<span class="pill" style="height:26px" title="點一下改這位模特全部的尺寸" onclick="app._groupEdit='${esc(gk)}';app.renderGrid()">${esc(first.size||'?')}・${esc(first.fit||'')}${sh&&sh.size&&sh.size!==first.size?`<span style="color:var(--orange)">（商品表 ${esc(sh.size)}）</span>`:''}</span>`));
+        `<span class="pill" style="height:26px" title="點一下改這位模特全部的尺寸" onclick="app._groupEdit='${esc(gk)}';app.renderGrid()">${esc(first.size||'?')}・${esc(first.fit||'')}${sh&&sh.size&&sh.size!==first.size?`<span style="color:var(--orange)">（商品表 ${esc(sh.size)}）</span>`:''}</span>`)));
       return `<div class="mgrp">${head}</div>`+items.map(i=>card(P.clips[i],i)).join(''); }).join('');
     g.querySelectorAll('.clip').forEach(el=>{
       el.addEventListener('dragstart',e=>{ if(e.target.closest('input,select')) {e.preventDefault();return;} e.dataTransfer.setData('text/plain',el.dataset.i); el.classList.add('ghost'); e.dataTransfer.effectAllowed='move'; });
@@ -1038,13 +1042,13 @@ const app = {
   async pickSetting(k){ const p=await this.call('choose_folder'); if(!p) return; this.state.settings[k]=p; await this.call('save_settings',{[k]:p}); this.renderSettings(); if(k==='music_folder'){ this.state.music=await this.call('music_set_folder',p); this.renderMusic(); this.renderMusicSel(); } },
 
   /* ---------- generate ---------- */
-  spec(P){ return { name:P.name||'未命名', clips:P.clips.filter(c=>c.use!==false).map((c,i)=>({path:c.path, name:c.name, model:c.closeup?'':c.model, size_text:c.closeup?'':('著'+c.size+(c.fit||'')), closeup:!!c.closeup, start:c.start===''?null:+c.start, order:i})), music:P.music?{path:P.music.path, start:P.musicStart===''?null:+P.musicStart}:null, colors:P.colors||[], sku:P.sku||'', features:P.features||[], category:P.category||'', background:P.background||'', layout:P.layout||'', opening:(P.opening===undefined?'random':P.opening), options:{length_mode:P.lengthMode||this.state.settings.length_mode||'20'} }; },
+  spec(P){ return { name:P.name||'未命名', clips:P.clips.filter(c=>c.use!==false).map((c,i)=>({path:c.path, name:c.name, model:(c.closeup||c.multi)?'':c.model, size_text:(c.closeup||c.multi)?'':('著'+c.size+(c.fit||'')), closeup:!!c.closeup, multi:!!c.multi, start:c.start===''?null:+c.start, order:i})), music:P.music?{path:P.music.path, start:P.musicStart===''?null:+P.musicStart}:null, colors:P.colors||[], sku:P.sku||'', features:P.features||[], category:P.category||'', background:P.background||'', layout:P.layout||'', opening:(P.opening===undefined?'random':P.opening), options:{length_mode:P.lengthMode||this.state.settings.length_mode||'20'} }; },
   setLength(m){ const P=this.P(); if(!P) return; P.lengthMode=m; this.state.settings.length_mode=m; this.call('save_settings',{length_mode:m}); this.renderEstimate(); },
   async generate(all){
     const list=all?this.products:[this.P()];
     const bad=list.filter(p=>!p.clips.length); if(bad.length){ this.toast('有商品還沒放影片',true); return; }
     const noname=list.filter(p=>!p.name.trim()); if(noname.length){ this.toast('請輸入商品名稱',true); return; }
-    const nomodel=list.flatMap(p=>p.clips).filter(c=>!c.closeup&&!c.model); if(nomodel.length){ this.toast('有片段還沒選模特',true); return; }
+    const nomodel=list.flatMap(p=>p.clips).filter(c=>!c.closeup&&!c.multi&&!c.model); if(nomodel.length){ this.toast('有片段還沒選模特',true); return; }
     const r=await this.call('generate', list.map(p=>this.spec(p)));
     if(!r||!r.ok){ this.toast(r?r.error:'無法開始',true); return; }
     this.busy=true; this.results=[]; this._jobsN=list.length; this.updateCapcut(false); $('#doneList').innerHTML=''; this.go('done');

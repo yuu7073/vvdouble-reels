@@ -311,11 +311,12 @@ def _thumb_strip(path, dur, key, n=6):
 
 
 def _has_person(path, duration):
-    """快速看 3 格有沒有人；偵測不到 → 當近拍"""
+    """快速看 5 格有沒有人；偵測不到 → 當近拍。回傳 (有人, 多人)：2 格以上看到 2 個人就算多人合照（站太近重疊時可能數不到，介面可手動改）"""
     if vision is None or not vision.available():
-        return None
+        return None, False
     found = 0
-    for frac in (0.25, 0.5, 0.75):
+    multi = 0
+    for frac in (0.15, 0.35, 0.5, 0.65, 0.85):
         t = max(0.0, duration * frac)
         r = _run([_ffmpeg(), "-hide_banner", "-ss", f"{t:.2f}", "-i", path, "-frames:v", "1",
                   "-vf", "scale=320:-2", "-f", "rawvideo", "-pix_fmt", "bgr24", "-"])
@@ -330,7 +331,9 @@ def _has_person(path, duration):
             people = None
         if people and people[0] is not None:
             found += 1
-    return found >= 1
+            if people[0].get("count", 1) >= 2:
+                multi += 1
+    return found >= 1, multi >= 2
 
 
 class Api:
@@ -539,10 +542,11 @@ class Api:
                     strip = _thumb_strip(fp, dur, key)
                 except Exception:
                     strip = ""
-                person = _has_person(fp, dur)
+                person, multi = _has_person(fp, dur)
                 out["clips"].append({
                     "id": key, "path": fp, "source": src, "name": os.path.basename(src), "duration": round(dur, 1),
-                    "thumb": thumb, "strip": strip, "closeup": (person is False), "person": person, "transcoded": bool(note),
+                    "thumb": thumb, "strip": strip, "closeup": (person is False), "multi": bool(multi), "person": person,
+                    "transcoded": bool(note),
                 })
             except Exception as e:
                 out["clips"].append({"id": _file_key(fp), "path": fp, "name": os.path.basename(fp),
@@ -576,8 +580,9 @@ class Api:
     def plan_preview(self, spec):
         import planner as P
         clips = [c for c in (spec.get("clips") or []) if c.get("path")]
-        models = [c for c in clips if not c.get("closeup")]
         closes = [c for c in clips if c.get("closeup")]
+        multis = [c for c in clips if c.get("multi") and not c.get("closeup")]
+        models = [c for c in clips if not c.get("closeup") and not c.get("multi")]
         groups, order = {}, []
         for c in models:
             k = (c.get("model") or "").upper()
@@ -597,7 +602,7 @@ class Api:
         out = {"bpm": bpm, "modes": {}}
         for mode in ("20", "25", "fit"):
             try:
-                r = P.build_sequence(groups, closes, pattern, mode, beat_len, spec.get("layout") or "")
+                r = P.build_sequence(groups, closes, pattern, mode, beat_len, spec.get("layout") or "", multis=multis)
             except Exception as e:
                 out["modes"][mode] = {"error": str(e)}
                 continue

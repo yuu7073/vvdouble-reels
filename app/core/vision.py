@@ -90,6 +90,7 @@ def _load():
 
     class Det:
         score_threshold = 0.45
+        nms_thr = 0.5      # 多人站得近時框會重疊，放寬一點才數得到第二、三個人
 
         def infer(self, image):
             """image: BGR uint8 [h,w,3] → rows [x1,y1,x2,y2, 4 個關鍵點 x,y..., score]（像素座標）"""
@@ -119,7 +120,7 @@ def _load():
             if not m.any():
                 return np.empty((0, 13))
             idx = np.where(m)[0]
-            keep = nms(boxes[idx], score[idx])
+            keep = nms(boxes[idx], score[idx], thr=self.nms_thr)
             sel = idx[keep]
             lms = lm_delta[sel].reshape(-1, 4, 2) / 224.0 + anchors[sel][:, None, :]
             lms = lms * big - pad
@@ -175,9 +176,24 @@ def detect_people(frames):
         cx = float((hip[0] + shoulder[0]) / 2)
         # 身體圓：中心在 hip，半徑到 top；腳大約在 hip + (hip - top) 的位置
         bottom = float(min(1.0, hip[1] + (hip[1] - top[1])))
+        # 多人：算幾個人（分數夠高、位置不重疊的偵測），和整群人的中心
+        strong = [x for x in r if x[-1] >= 0.4]
+        cxs = []
+        for x in strong:
+            l2 = x[4:12].reshape(4, 2) / [w, h]
+            c2 = float((l2[0][0] + l2[2][0]) / 2)
+            if all(abs(c2 - o) > 0.08 for o in cxs):
+                cxs.append(c2)
         out.append({"cx": cx, "top": float(top[1]), "bottom": bottom,
-                    "size": float(bottom - top[1]), "score": float(row[-1])})
+                    "size": float(bottom - top[1]), "score": float(row[-1]),
+                    "count": max(1, len(cxs)), "gcx": float(sum(cxs) / len(cxs)) if cxs else cx})
     return out
+
+
+def people_count(people):
+    """整支影片畫面上通常有幾個人（有人的格子取中位數）"""
+    ns = sorted(p.get("count", 1) for p in (people or []) if p is not None)
+    return ns[len(ns) // 2] if ns else 0
 
 
 def framing_score(p):
@@ -189,11 +205,12 @@ def framing_score(p):
     return 0.6 * center + 0.4 * head_ok
 
 
-def person_offset(people, times, t0, t1):
-    """某時間窗內人物平均水平位置相對中心的偏移（-0.5~0.5），沒人回傳 None"""
+def person_offset(people, times, t0, t1, group=False):
+    """某時間窗內人物平均水平位置相對中心的偏移（-0.5~0.5），沒人回傳 None；group=True 用整群人的中心"""
     if not people:
         return None
-    xs = [p["cx"] for p, t in zip(people, times) if p is not None and t0 <= t <= t1]
+    key = "gcx" if group else "cx"
+    xs = [p.get(key, p["cx"]) for p, t in zip(people, times) if p is not None and t0 <= t <= t1]
     if not xs:
         return None
     return float(np.median(xs) - 0.5)

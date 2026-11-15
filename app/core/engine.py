@@ -211,9 +211,10 @@ def build_draft(spec, models, log=None, progress=None):
 
     name = (spec.get("name") or "未命名").strip()
     clips_in = sorted(spec.get("clips") or [], key=lambda c: c.get("order", 0))
-    model_clips = [c for c in clips_in if not c.get("closeup")]
     closeups = [c for c in clips_in if c.get("closeup")]
-    if not model_clips and not closeups:
+    multis = [c for c in clips_in if c.get("multi") and not c.get("closeup")]      # 多人合照
+    model_clips = [c for c in clips_in if not c.get("closeup") and not c.get("multi")]
+    if not model_clips and not closeups and not multis:
         return {"ok": False, "error": "沒有影片"}
 
     music = spec.get("music") or None
@@ -316,7 +317,8 @@ def build_draft(spec, models, log=None, progress=None):
             L = None
     pattern = L["pattern"].split(",") if L else None
     length_mode = str(opt.get("length_mode") or "").strip() or ("fit" if g.MAX_TOTAL_SEC >= 28 else str(int(g.MAX_TOTAL_SEC)))
-    plan = P.build_sequence(groups, cl_pairs, pattern, length_mode, beat_len if beats else 0.5, layout_id)
+    mu_pairs = [(c.get("path"), c) for c in multis]
+    plan = P.build_sequence(groups, cl_pairs, pattern, length_mode, beat_len if beats else 0.5, layout_id, multis=mu_pairs)
     sequence = [(kind, item[0] if item else None, item[1] if item else None, nb) for kind, item, nb in plan["seq"]]
     picked_groups = []
     for k, grp in groups:
@@ -324,7 +326,7 @@ def build_draft(spec, models, log=None, progress=None):
         picked_groups.append((k, used or grp[:1]))
     skipped = len(plan["skipped"])
     mode_name = {"fit": "依片段"}.get(length_mode, f"{length_mode} 秒")
-    _log(log, f"長度「{mode_name}」：滿版 {plan['n_m']} 段、近拍 {plan['n_d']} 段，預計 {plan['total']} 秒" + (f"，略過 {skipped} 支" if skipped else ""))
+    _log(log, f"長度「{mode_name}」：滿版 {plan['n_m'] - plan.get('n_mu', 0)} 段、近拍 {plan['n_d']} 段" + (f"、多人 {plan['n_mu']} 段" if plan.get('n_mu') else "") + f"，預計 {plan['total']} 秒" + (f"，略過 {skipped} 支" if skipped else ""))
     if L:
         _log(log, f"版型「{L['name']}」：{' → '.join('版型' if t[0] == 'layout' else ('滿版' if t[0] == 'clip' else '近拍') for t in sequence)}")
 
@@ -526,7 +528,8 @@ def build_draft(spec, models, log=None, progress=None):
     g.LAYOUT_ADJUSTS.clear()
     layout_windows = []     # [(t0, dur)] 版型段的時間，網址／商品名稱要避開或改位置
     cursor = 0
-    card_runs, close_runs, out_segments = [], [], []
+    card_runs, close_runs, multi_runs, out_segments = [], [], [], []
+    first_model_key = next(((c.get("model") or "").strip().upper() for c in model_clips if (c.get("model") or "").strip()), "")
     first_clip_us = None    # 第一段實拍的精確長度（微秒）
     seg_ends = []           # 每段實拍結束的時間點（微秒），開頭動畫要結束在其中一個切點上
     total_steps = max(1, len(sequence))
@@ -591,8 +594,13 @@ def build_draft(spec, models, log=None, progress=None):
             seg_ends.append(cursor)
             continue
 
-        model_name = (c.get("model") or "").strip()
-        g.MODEL_BY_PATH[full] = model_name.upper() if (model_name and beauty_on) else ""
+        is_multi = (kind == "multi")
+        model_name = "" if is_multi else (c.get("model") or "").strip()
+        if is_multi:
+            # 多人：不放 MODEL 卡；臉部潤飾套第一位模特的設定（CapCut 的潤飾會作用在畫面裡每張臉）
+            g.MODEL_BY_PATH[full] = first_model_key if (first_model_key and beauty_on) else ""
+        else:
+            g.MODEL_BY_PATH[full] = model_name.upper() if (model_name and beauty_on) else ""
         skip, _ = g.cut(mat, target, g.CLIP_SKIP)
         dur = length_for(mat, target, skip, exact=bool(beats and nb))
         info = g.analyze_clip(full) if g.AUTO_BEST_SEGMENT else None
@@ -602,7 +610,7 @@ def build_draft(spec, models, log=None, progress=None):
         else:
             skip, how = g.choose_start(fname, full, mat, dur, skip, info=info)
         how = g.maybe_stabilize(mat, full, skip, dur, how)
-        cs = g.center_settings(info, skip / SEC, (skip + dur) / SEC)
+        cs = g.center_settings(info, skip / SEC, (skip + dur) / SEC, group=is_multi)
         clip_settings = None
         scale = 1.0
         if cs:
@@ -612,6 +620,11 @@ def build_draft(spec, models, log=None, progress=None):
         script.add_segment(cc.VideoSegment(mat, cc.Timerange(cursor, dur),
                                            source_timerange=cc.Timerange(skip, dur), volume=0.0,
                                            clip_settings=clip_settings), "影片")
+        if is_multi:
+            if multi_runs and multi_runs[-1][0] + multi_runs[-1][1] == cursor:
+                multi_runs[-1][1] += dur
+            else:
+                multi_runs.append([cursor, dur])
         model = models.get(model_name.upper()) if model_name else None
         if model:
             size_text = (c.get("size_text") or "").strip()
@@ -620,10 +633,10 @@ def build_draft(spec, models, log=None, progress=None):
                 card_runs[-1][2] += dur
             else:
                 card_runs.append([text, cursor, dur])
-        out_segments.append({"path": full, "name": fname, "closeup": False, "model": model_name,
+        out_segments.append({"path": full, "name": fname, "closeup": False, "multi": is_multi, "model": model_name,
                              "start": round(skip / SEC, 2), "dur": round(dur / SEC, 2), "how": how,
                              "scale": round(scale, 2), "stabilized": mat.material_id in g.STABILIZE_IDS})
-        _log(log, f"{fname} 從 {skip / SEC:.1f}s 取 {dur / SEC:.1f}s（{how}）")
+        _log(log, f"{fname} 從 {skip / SEC:.1f}s 取 {dur / SEC:.1f}s（{how}{'，多人' if is_multi else ''}）")
         next_start(full, skip, dur)
         if first_clip_us is None:
             first_clip_us = dur
@@ -670,6 +683,15 @@ def build_draft(spec, models, log=None, progress=None):
                 start = o_end
             trimmed.append([text, start, dur])
         card_runs = trimmed
+        trimmed = []
+        for start, dur in multi_runs:
+            if start + dur <= o_end:
+                continue
+            if start < o_end:
+                dur -= (o_end - start)
+                start = o_end
+            trimmed.append([start, dur])
+        multi_runs = trimmed
 
     _log(log, "加入字卡…")
     for text, start, dur in card_runs:
@@ -681,6 +703,13 @@ def build_draft(spec, models, log=None, progress=None):
             script.add_segment(cc.TextSegment("- CLOSE UP DETAIL -", cc.Timerange(start, dur),
                                               style=TextStyle(size=5.0, bold=True, align=1, letter_spacing=2),
                                               clip_settings=ClipSettings(transform_y=g.CLOSEUP_Y)), "近拍標示")
+    if multi_runs:
+        # 多人段：不放 MODEL 卡，改放一行 ALL SIZES（樣式跟近拍標示一樣，位置在 MODEL 卡的高度）
+        script.add_track(cc.TrackType.text, "多人標示", relative_index=5)
+        for start, dur in multi_runs:
+            script.add_segment(cc.TextSegment("ALL SIZES", cc.Timerange(start, dur),
+                                              style=TextStyle(size=5.0, bold=True, align=1, letter_spacing=2),
+                                              clip_settings=ClipSettings(transform_y=g.CARD_Y)), "多人標示")
     title_size = min(5.0, 5.0 * 30 / max(len(base_name), 1))
 
     def outside_windows(total, windows):

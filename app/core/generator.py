@@ -237,11 +237,11 @@ def best_window(path, length_sec, total_sec, edge=0.5, info=None, want_person=Tr
     return best_t
 
 
-def center_settings(info, t0, t1):
-    """人物偏離中心時，回傳 (scale, transform_x) 讓人置中；不需要時回傳 None"""
+def center_settings(info, t0, t1, group=False):
+    """人物偏離中心時，回傳 (scale, transform_x) 讓人置中；不需要時回傳 None；group=True 以整群人為中心"""
     if not PERSON_CENTER or info is None or not info.get("people"):
         return None
-    off = vision.person_offset(info["people"], info["times"], t0, t1)
+    off = vision.person_offset(info["people"], info["times"], t0, t1, group=group)
     if off is None or abs(off) < 0.05:
         return None
     shift = -2 * off                              # 單位：半個畫布寬
@@ -738,6 +738,8 @@ def text_role(text):
         return "model"
     if "CLOSE UP" in text:
         return "close"
+    if text == "ALL SIZES":
+        return "allsizes"      # 多人段的字：樣式跟近拍標示一樣，位置照工具放的
     if text == SITE_TEXT:
         return "site"
     return "title"
@@ -797,7 +799,7 @@ def apply_presets(draft_name):
                 continue
             text = json.loads(mat["content"])["text"]
             role = text_role(text)
-            src = styles.get(role)
+            src = styles.get(role) or (styles.get("close") if role == "allsizes" else None)
             if not src:
                 continue
             new = copy.deepcopy(src["material"])
@@ -816,6 +818,8 @@ def apply_presets(draft_name):
                 clip = copy.deepcopy(src["clip"])
                 if role == "close":
                     clip["transform"]["x"], clip["transform"]["y"] = 0.0, 0.0
+                elif role == "allsizes":
+                    clip["transform"] = copy.deepcopy(seg["clip"]["transform"])
                 elif role == "model" and pos_cycle:
                     # 每位模特的卡片位置照「實穿模板」；模板沒有這位就輪流用模板裡的位置
                     name = text.split("\n")[0].replace("MODEL", "").strip().upper()

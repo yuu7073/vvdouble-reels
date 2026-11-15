@@ -120,18 +120,28 @@ def _pick_even(items, n):
     return [items[int(i * step)] for i in range(n)]
 
 
-def build_sequence(groups, closeups, pattern, mode, beat_len, layout_id=""):
-    """groups=[(model_key, [clip,...])]（照放入順序）、closeups=[clip,...]
+def build_sequence(groups, closeups, pattern, mode, beat_len, layout_id="", multis=None):
+    """groups=[(model_key, [clip,...])]（照放入順序）、closeups=[clip,...]、multis=[clip,...]（多人合照）
     回傳 {"seq": [(kind, clip|None, beats|None)], "n_m", "n_d", "mid", "total", "skipped": [clip,...]}
-    kind: "layout" / "clip" / "close"；layout 段 beats=None（固定 3.2 秒）"""
+    kind: "layout" / "clip" / "close" / "multi"；layout 段 beats=None（固定 3.2 秒）
+    多人：節奏跟滿版一樣，選入的全部都放——第一支放最前面（套開頭動畫），其餘放最後當結尾"""
+    multis = list(multis or [])
+    n_mu = len(multis)
     has_layout = bool(pattern and "#" in pattern)
     n_m_avail = sum(len(g) for _, g in groups)
     n_models = sum(1 for _, g in groups if g)
     # 影片太少時至少撐到版型本來的段數（沒版型就 4 段），同一支影片會接著上一段的結尾再取一段
     # 固定長度：影片少（<5 支）時允許同一支再取一段（接著上一段結尾），把長度撐到接近目標；依片段不重複
     eff = n_m_avail if (mode == "fit" or n_m_avail >= 5 or n_m_avail == 0) else min(n_m_avail * 2, 8)
-    n_m, n_d, mid, total = choose_counts(eff, len(closeups), n_models, mode, beat_len, has_layout)
-    quota = _quota([g for _, g in groups], min(n_m, n_m_avail))
+    n_m, n_d, mid, total = choose_counts(eff + n_mu, len(closeups), n_models + (1 if n_mu else 0), mode, beat_len, has_layout)
+    # 多人全放：滿版段數扣掉多人後，每位模特至少還要 1 段（放不下就讓總長略超過）
+    n_m_model = n_m - n_mu
+    floor_m = min(n_models, n_m_avail)
+    if n_m_model < floor_m:
+        n_m_model = floor_m
+        n_m = n_m_model + n_mu
+        total = total_sec(n_m, n_d, mid, beat_len, has_layout)
+    quota = _quota([g for _, g in groups], min(n_m_model, n_m_avail))
     picked = [(k, _pick_even(g, q)) for (k, g), q in zip(groups, quota)]
     # 滿版輪流：每輪各模特出一支（模特交錯，不會一整排同一人）
     m_slots = []
@@ -140,13 +150,14 @@ def build_sequence(groups, closeups, pattern, mode, beat_len, layout_id=""):
         for p in pools:
             if p:
                 m_slots.append(p.pop(0))
-    if m_slots and n_m > len(m_slots):
+    if m_slots and n_m_model > len(m_slots):
         base = list(m_slots)
-        while len(m_slots) < n_m:
+        while len(m_slots) < n_m_model:
             m_slots.append(base[len(m_slots) % len(base)])
     d_slots = _pick_even(closeups, n_d)
     used = set(id(c) for c in m_slots) | set(id(c) for c in d_slots)
     skipped = [c for _, g in groups for c in g if id(c) not in used] + [c for c in closeups if id(c) not in used]
+    n_m_model = len(m_slots)
 
     # 骨架：有版型照版型順序（M／D 數量調到 n_m／n_d），沒有就 M 之間穿插 D
     if has_layout:
@@ -162,7 +173,7 @@ def build_sequence(groups, closeups, pattern, mode, beat_len, layout_id=""):
                 at = idxs[len(idxs) // 2] + 1 if idxs else len(toks)
                 toks.insert(at, tok)
                 have += 1
-        adjust("M", n_m)
+        adjust("M", n_m_model)
         # 近拍：拿掉從中間拿，加的放在離其他近拍最遠的位置（不放第一段、不放最後一段）
         while toks.count("D") > n_d:
             idxs = [i for i, t in enumerate(toks) if t == "D"]
@@ -178,22 +189,28 @@ def build_sequence(groups, closeups, pattern, mode, beat_len, layout_id=""):
                     best, best_gap = pos, gap
             toks.insert(best if best is not None else len(toks) - 1, "D")
     else:
-        toks = ["M"] * n_m
+        toks = ["M"] * n_m_model
         # 近拍平均穿插在滿版之間（不放第一段、不放最後一段）
         for j in range(n_d):
             pos = int(round((j + 1) * len(toks) / (n_d + 1)))
             pos = max(1, min(len(toks) - 1, pos)) if len(toks) > 1 else len(toks)
             toks.insert(pos, "D")
-    mb = m_beats(n_m, mid, beat_len)
-    seq, mi, di = [], 0, 0
+    # 多人：第一支放最前面、其餘放最後
+    if n_mu:
+        toks = ["G"] + toks + ["G"] * (n_mu - 1)
+    mb = m_beats(n_m_model + n_mu, mid, beat_len)
+    seq, mi, di, gi, bi = [], 0, 0, 0, 0
     for t in toks:
         if t == "#":
             seq.append(("layout", None, None))
         elif t == "M" and mi < len(m_slots):
-            seq.append(("clip", m_slots[mi], mb[mi] if mi < len(mb) else mb[-1]))
-            mi += 1
+            seq.append(("clip", m_slots[mi], mb[bi] if bi < len(mb) else mb[-1]))
+            mi += 1; bi += 1
+        elif t == "G" and gi < n_mu:
+            seq.append(("multi", multis[gi], mb[bi] if bi < len(mb) else mb[-1]))
+            gi += 1; bi += 1
         elif t == "D" and di < len(d_slots):
             seq.append(("close", d_slots[di], D_BEATS))
             di += 1
-    return {"seq": seq, "n_m": n_m, "n_d": n_d, "mid": mid, "total": round(total, 1), "skipped": skipped,
+    return {"seq": seq, "n_m": n_m, "n_d": n_d, "n_mu": n_mu, "mid": mid, "total": round(total, 1), "skipped": skipped,
             "beat_len": beat_len}
