@@ -915,6 +915,8 @@ def apply_presets(draft_name):
         for seg in t["segments"]:
             v = videos.get(seg["material_id"], {})
             fname = v.get("material_name") or os.path.basename(v.get("path", ""))
+            if fname.lower().endswith((".mov", ".png", ".jpg", ".jpeg", ".webm")) or t.get("name", "").startswith("開頭"):
+                continue                  # 開頭動畫圖層、底圖不是人
             mapped = MODEL_BY_PATH.get(v.get("path", ""))
             if mapped is None:
                 mapped = MODEL_BY_PATH.get(fname)
