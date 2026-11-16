@@ -417,7 +417,7 @@ const app = {
     setInterval(() => this.sessionSave(), 3000);
     window.addEventListener('beforeunload', () => this.sessionSave(true));
     setInterval(() => this.poll(), 500);
-    $('#verInfo').textContent = `版本 ${this.state.version||''}・人物偵測 ${this.state.vision_ok?'可用':'未啟用：'+(this.state.vision_error||'')}`;
+    const dk=this.state.disk||{}; $('#verInfo').innerHTML = `版本 ${esc(this.state.version||'')}・人物偵測 ${this.state.vision_ok?'可用':'未啟用：'+esc(this.state.vision_error||'')}・C 槽剩 <b style="color:${dk.free_gb<5?'var(--orange)':'inherit'}">${dk.free_gb??'?'} GB</b>・轉檔快取 ${dk.transcode_mb??0} MB <a href="#" style="color:var(--mute);margin-left:4px" onclick="app.clearTranscode();return false">清理</a>`;
     const ready = () => this.call('ui_ready');
     if (window.pywebview) setTimeout(ready, 300); else window.addEventListener('pywebviewready', () => setTimeout(ready, 300));
     setTimeout(ready, 3000);
@@ -572,6 +572,7 @@ const app = {
   },
 
   /* ---------- 更新／錯誤回報 ---------- */
+  async clearTranscode(){ const r=await this.call('clear_transcode'); if(!r) return; this.toast(`已清理 ${r.freed_mb} MB，C 槽剩 ${r.free_gb} GB`); const st=await this.call('get_state'); if(st){ this.state.disk=st.disk; this.renderSettings(); } },
   async checkUpdate(manual){
     const r=await this.call('check_update'); this.upd=r;
     if(!r||!r.ok){ if(manual) this.toast(r?('無法檢查更新：'+r.error):'無法檢查更新',true); return; }

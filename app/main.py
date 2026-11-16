@@ -218,6 +218,61 @@ def _probe_duration(path):
 
 HEAVY_MBPS = 80          # 超過這個碼率（或 >50fps）的相機檔，CapCut 時間軸會播不動、匯出凍格，先轉成 30fps H.264
 TRANSCODE_DIR = os.path.join(DATA_DIR, "transcode")
+TRANSCODE_KEEP_DAYS = 14          # 轉檔快取放超過兩週就刪
+TRANSCODE_MAX_GB = 6              # 快取總量上限，超過就從最舊的刪
+MIN_FREE_GB = 3                   # 產生草稿前至少要有的剩餘空間
+
+
+def _disk_free_gb(path):
+    try:
+        return shutil.disk_usage(path).free / 1e9
+    except Exception:
+        return 999.0
+
+
+def _dir_size(path):
+    total = 0
+    for root, _, files in os.walk(path):
+        for f in files:
+            try:
+                total += os.path.getsize(os.path.join(root, f))
+            except Exception:
+                pass
+    return total
+
+
+def _prune_transcode(force_all=False):
+    """清轉檔快取：太舊的、超過總量的、沒轉完的 .part；回傳刪掉幾 MB"""
+    if not os.path.isdir(TRANSCODE_DIR):
+        return 0
+    now = time.time()
+    files = []
+    for f in os.listdir(TRANSCODE_DIR):
+        fp = os.path.join(TRANSCODE_DIR, f)
+        try:
+            st = os.stat(fp)
+        except Exception:
+            continue
+        files.append((fp, st.st_mtime, st.st_size))
+    freed = 0
+    keep = []
+    for fp, mt, sz in files:
+        if force_all or fp.endswith(".part.mp4") or now - mt > TRANSCODE_KEEP_DAYS * 86400:
+            try:
+                os.remove(fp); freed += sz
+            except Exception:
+                pass
+        else:
+            keep.append((fp, mt, sz))
+    keep.sort(key=lambda x: x[1])
+    total = sum(sz for _, _, sz in keep)
+    while keep and total > TRANSCODE_MAX_GB * 1e9:
+        fp, _, sz = keep.pop(0)
+        try:
+            os.remove(fp); freed += sz; total -= sz
+        except Exception:
+            pass
+    return freed // 1_000_000
 
 
 def _probe_info(path):
@@ -419,6 +474,7 @@ class Api:
             "vision_ok": bool(vision and vision.available()),
             "vision_error": VISION_ERROR or ("" if (vision and vision.available()) else getattr(vision, "LOAD_ERROR", "模型或套件缺少")),
             "version": VERSION,
+            "disk": {"free_gb": round(_disk_free_gb(DATA_DIR), 1), "transcode_mb": _dir_size(TRANSCODE_DIR) // 1_000_000 if os.path.isdir(TRANSCODE_DIR) else 0},
             # 版型（LOOKBOOK／相機／郵票…）已停用，改用開頭動畫；設定 show_layouts=true 可叫回來
             "layouts": layouts.list_layouts() if (layouts and self.settings.get("show_layouts")) else [],
             "openings": self.opening_list(),
@@ -616,12 +672,23 @@ class Api:
         return out
 
     # ---------- 產生 ----------
+    def clear_transcode(self):
+        """設定頁「清理」：把轉檔快取全部刪掉（下次用到會再轉）"""
+        mb = _prune_transcode(force_all=True)
+        return {"ok": True, "freed_mb": mb, "free_gb": round(_disk_free_gb(DATA_DIR), 1)}
+
     def generate(self, jobs):
         """jobs = [spec, ...]；在背景執行，進度用事件回報"""
         if self._busy:
             return {"ok": False, "error": "還在產生中"}
         if g.capcut_running():
             return {"ok": False, "error": "CapCut 還開著，請先完全關閉"}
+        # 磁碟快滿會在轉檔／寫草稿時 Errno 28，先擋下來講清楚
+        _prune_transcode()
+        for label, path in (("C 槽", DATA_DIR), ("草稿資料夾", self.settings.get("draft_folder") or DATA_DIR)):
+            free = _disk_free_gb(path)
+            if free < MIN_FREE_GB:
+                return {"ok": False, "error": f"磁碟空間不足：{label}只剩 {free:.1f} GB（至少要 {MIN_FREE_GB} GB）。請清理硬碟（CapCut 舊草稿、下載資料夾、資源回收桶）後再試"}
         self._busy = True
         threading.Thread(target=self._generate_worker, args=(jobs,), daemon=True).start()
         return {"ok": True}
@@ -2125,6 +2192,7 @@ def main():
     win.events.loaded += _hook_drop
     threading.Timer(3.0, api._warm_todo).start()
     threading.Thread(target=api._watch_exports, daemon=True).start()
+    threading.Thread(target=_prune_transcode, daemon=True).start()     # 開機順便清轉檔快取
     def _opening_sync_loop():
         while True:
             api._opening_sync()
