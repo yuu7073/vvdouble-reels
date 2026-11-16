@@ -2153,7 +2153,17 @@ def _serve(api):
                 body = json.dumps({"error": str(e)}, ensure_ascii=False).encode("utf-8")
             self._send(200, body)
 
-    srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
+    class Srv(ThreadingHTTPServer):
+        daemon_threads = True
+
+        def handle_error(self, request, client_address):
+            # 瀏覽器拖影片進度條／切換預覽時會直接斷線，這是正常的，不要把整段 traceback 印進錯誤紀錄
+            et = sys.exc_info()[0]
+            if et in (ConnectionResetError, ConnectionAbortedError, BrokenPipeError) or (et is OSError and getattr(sys.exc_info()[1], "errno", None) in (22, 32)):
+                return
+            super().handle_error(request, client_address)
+
+    srv = Srv(("127.0.0.1", 0), H)
     srv.daemon_threads = True
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv.server_address[1]
